@@ -1,5 +1,4 @@
 #![feature(generic_const_exprs)]
-#![feature(option_result_contains)]
 
 use server::Server;
 
