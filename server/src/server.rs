@@ -21,6 +21,7 @@ use protocol::packet::world_update::WorldUpdate;
 use protocol::utils::{ReadExtension, WriteExtension};
 use crate::creature_id_pool::CreatureIdPool;
 use crate::player::Player;
+use crate::pvp::enable_pvp;
 use crate::traffic_filter::filter;
 
 pub struct Server {
@@ -93,7 +94,8 @@ fn handle_new_player(server: &Arc<Server>, stream: &mut TcpStream, assigned_id: 
 	if stream.read_struct::<PacketId>()? != PacketId::CreatureUpdate {
 		return Err(io::Error::from(ErrorKind::InvalidData))
 	}
-	let full_creature_update = CreatureUpdate::read_from(stream)?;
+	let mut full_creature_update = CreatureUpdate::read_from(stream)?;
+	enable_pvp(&mut full_creature_update);
 
 	let me = Player::new(
 		full_creature_update,
@@ -138,6 +140,7 @@ fn read_packets<T: Read>(server: &Arc<Server>, source: Arc<Player>, readable: &m
 			PacketId::CreatureUpdate => {
 				let mut creature_update = CreatureUpdate::read_from(readable)?;
 
+				enable_pvp(&mut creature_update);
 				if filter(&mut creature_update, &source) {
 					server.broadcast(&creature_update, Some(&source));
 				}

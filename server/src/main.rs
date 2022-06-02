@@ -6,6 +6,7 @@ mod server;
 mod creature_id_pool;
 mod player;
 mod traffic_filter;
+mod pvp;
 
 fn main() {
 	println!("go");
