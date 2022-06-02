@@ -3,6 +3,7 @@ use std::io::{ErrorKind, Read};
 use std::mem::size_of;
 use std::net::{Shutdown, TcpListener, TcpStream};
 use std::sync::{Arc, RwLock};
+use std::time::Duration;
 use protocol::packet::{CwSerializable, Packet, PacketId};
 use protocol::packet::chat_message::{ChatMessageFromClient, ChatMessageFromServer};
 use protocol::packet::chunk_discovery::ChunkDiscovery;
@@ -25,6 +26,8 @@ pub struct Server {
 	id_pool: RwLock<CreatureIdPool>
 }
 
+const TIMEOUT: Duration = Duration::from_secs(5);
+
 impl Server {
 	pub fn new() -> Self {
 		Self {
@@ -38,13 +41,16 @@ impl Server {
 
 		let listener = TcpListener::bind("0.0.0.0:12345").expect("unable to bind listening socket");
 
-		let arc = Arc::new(self);
+		let self_arc = Arc::new(self);
 
 		loop {
 			let (mut stream, _) = listener.accept().unwrap();
-			let arc2 = arc.clone();
+			stream.set_read_timeout(Some(TIMEOUT)).expect("read timeout rejected");
+			stream.set_write_timeout(Some(TIMEOUT)).expect("write timeout rejected");
+
+			let self_arc_clone = self_arc.clone();
 			thread::spawn(move || {
-				if let Err(_) = handle_new_connection(arc2, &mut stream) {
+				if let Err(_) = handle_new_connection(self_arc_clone, &mut stream) {
 					//TODO: error logging
 				}
 				stream.shutdown(Shutdown::Both).expect("TODO: panic message");
