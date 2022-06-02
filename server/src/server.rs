@@ -16,6 +16,7 @@ use protocol::packet::projectile::Projectile;
 use protocol::packet::protocol_version::ProtocolVersion;
 use protocol::packet::sector_discovery::SectorDiscovery;
 use protocol::packet::status_effect::StatusEffect;
+use protocol::packet::world_update::pickup::Pickup;
 use protocol::packet::world_update::WorldUpdate;
 use protocol::utils::{ReadExtension, WriteExtension};
 use crate::creature_id_pool::CreatureIdPool;
@@ -140,9 +141,12 @@ fn read_packets<T: Read>(server: &Arc<Server>, source: Arc<Player>, readable: &m
 			},
 			PacketId::CreatureAction => {
 				let creature_action = CreatureAction::read_from(readable)?;
+
+				let mut reimburse_item = false;
 				match creature_action.type_ {
 					CreatureActionType::Bomb => {
 						source.notify("bombs are disabled".to_owned());
+						reimburse_item = true;
 					}
 					CreatureActionType::Talk => {
 						source.notify("quests coming soon(tm)".to_owned());
@@ -154,11 +158,21 @@ fn read_packets<T: Read>(server: &Arc<Server>, source: Arc<Player>, readable: &m
 						source.notify("ground items aren't implemented yet".to_owned());
 					}
 					CreatureActionType::Drop => {
-						//todo
+						source.notify("ground items aren't implemented yet".to_owned());
+						reimburse_item = true;
 					}
 					CreatureActionType::CallPet => {
 						//source.notify("pets are disabled".to_owned());
 					}
+				}
+				if reimburse_item {
+					source.send(&WorldUpdate {
+						pickups: vec![Pickup {
+							interactor: source.creature.id,
+							item: creature_action.item
+						}],
+						..Default::default()
+					});
 				}
 			}
 			PacketId::Hit => {
