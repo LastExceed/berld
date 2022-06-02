@@ -1,4 +1,3 @@
-use std::ops::Index;
 use protocol::packet::creature_update::CreatureId;
 
 pub struct CreatureIdPool {

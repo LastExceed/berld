@@ -1,5 +1,5 @@
 use std::io::{Error, Read, Write};
-use std::mem::{size_of, transmute};
+use std::mem::size_of;
 use std::slice::from_raw_parts;
 
 pub trait ReadExtension: Read {

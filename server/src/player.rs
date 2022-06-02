@@ -1,4 +1,3 @@
-use std::io;
 use std::mem::size_of;
 use std::net::TcpStream;
 use std::sync::Mutex;
