@@ -13,7 +13,3 @@ fn main() {
 	Server::new().run();
 }
 
-//todo
-//nothing type?
-//half open connection vulnerability
-//lock scoping necessary?
