@@ -141,12 +141,24 @@ fn read_packets<T: Read>(server: &Arc<Server>, source: Arc<Player>, readable: &m
 			PacketId::CreatureAction => {
 				let creature_action = CreatureAction::read_from(readable)?;
 				match creature_action.type_ {
-					CreatureActionType::Bomb => {}
-					CreatureActionType::Talk => {}
-					CreatureActionType::ObjectInteraction => {}
-					CreatureActionType::PickUp => {}
-					CreatureActionType::Drop => {}
-					CreatureActionType::CallPet => {}
+					CreatureActionType::Bomb => {
+						source.notify("bombs are disabled".to_owned());
+					}
+					CreatureActionType::Talk => {
+						source.notify("quests coming soon(tm)".to_owned());
+					}
+					CreatureActionType::ObjectInteraction => {
+						source.notify("object interactions are disabled".to_owned());
+					}
+					CreatureActionType::PickUp => {
+						source.notify("ground items aren't implemented yet".to_owned());
+					}
+					CreatureActionType::Drop => {
+						//todo
+					}
+					CreatureActionType::CallPet => {
+						//source.notify("pets are disabled".to_owned());
+					}
 				}
 			}
 			PacketId::Hit => {

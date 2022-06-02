@@ -2,7 +2,8 @@ use std::io;
 use std::mem::size_of;
 use std::net::TcpStream;
 use std::sync::Mutex;
-use protocol::packet::creature_update::CreatureUpdate;
+use protocol::packet::chat_message::ChatMessageFromServer;
+use protocol::packet::creature_update::{CreatureId, CreatureUpdate};
 use protocol::packet::Packet;
 
 pub struct Player {
@@ -22,5 +23,12 @@ impl Player {
 		where [(); size_of::<T>()]:
 	{
 		let _ = packet.write_to_with_id(&mut self.stream.lock().unwrap() as &mut TcpStream);
+	}
+
+	pub fn notify(&self, text: String) {
+		self.send(&ChatMessageFromServer {
+			source: CreatureId(0),
+			text
+		});
 	}
 }
