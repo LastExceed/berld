@@ -183,7 +183,10 @@ fn read_packets<T: Read>(server: &Arc<Server>, source: Arc<Player>, readable: &m
 			}
 			PacketId::Hit => {
 				let hit = Hit::read_from(readable)?;
-				server.broadcast(&hit, Some(&source));
+				server.broadcast(&WorldUpdate {
+					hits: vec![hit],
+					..Default::default()
+				}, Some(&source));
 			},
 			PacketId::StatusEffect => {
 				let status_effect = StatusEffect::read_from(readable)?;
