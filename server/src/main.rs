@@ -13,9 +13,3 @@ fn main() {
 	println!("go");
 	Server::new().run();
 }
-
-//todo
-//half open connection vulnerability
-//lock scoping necessary?
-//traits for sending direction
-//rename sectordiscovery
