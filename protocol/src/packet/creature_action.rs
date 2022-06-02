@@ -1,5 +1,5 @@
 use nalgebra::Point;
-use crate::packet::{CwSerializable, Item, Packet, PacketId};
+use crate::packet::{CwSerializable, Item, Packet, PacketFromClient, PacketId};
 
 #[repr(C)]
 pub struct CreatureAction {
@@ -17,6 +17,7 @@ impl Packet for CreatureAction {
 		PacketId::CreatureAction
 	}
 }
+impl PacketFromClient for CreatureAction {}
 
 #[repr(u8)]
 pub enum CreatureActionType {

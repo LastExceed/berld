@@ -1,6 +1,6 @@
 use nalgebra::{Point, Vector3};
 use crate::packet::creature_update::CreatureId;
-use crate::packet::{CwSerializable, Packet, PacketId};
+use crate::packet::{CwSerializable, Packet, PacketFromClient, PacketId};
 
 #[repr(C)]
 pub struct Hit {
@@ -25,6 +25,7 @@ impl Packet for Hit {
 		PacketId::Hit
 	}
 }
+impl PacketFromClient for Hit {}
 
 pub enum HitType {
 	Default,

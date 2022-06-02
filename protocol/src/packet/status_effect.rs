@@ -1,4 +1,4 @@
-use crate::packet::{CwSerializable, Packet, PacketId};
+use crate::packet::{CwSerializable, Packet, PacketFromClient, PacketId};
 use crate::packet::creature_update::CreatureId;
 
 #[repr(C)]
@@ -19,6 +19,7 @@ impl Packet for StatusEffect {
 		PacketId::StatusEffect
 	}
 }
+impl PacketFromClient for StatusEffect {}
 
 #[repr(u8)]
 pub enum StatusEffectType {

@@ -1,5 +1,5 @@
 use nalgebra::Point;
-use crate::packet::{CwSerializable, Packet, PacketId};
+use crate::packet::{CwSerializable, Packet, PacketFromClient, PacketId};
 
 #[repr(C)]
 pub struct SectorDiscovery {
@@ -12,3 +12,4 @@ impl Packet for SectorDiscovery {
 		PacketId::SectorDiscovery
 	}
 }
+impl PacketFromClient for SectorDiscovery {}

@@ -1,5 +1,5 @@
 use nalgebra::{Point, Vector3};
-use crate::packet::{CwSerializable, Packet, PacketId};
+use crate::packet::{CwSerializable, Packet, PacketFromClient, PacketId};
 
 #[repr(C)]
 pub struct Projectile {
@@ -29,6 +29,7 @@ impl Packet for Projectile {
 		PacketId::Projectile
 	}
 }
+impl PacketFromClient for Projectile {}
 
 #[repr(u32)]
 pub enum ProjectileType {

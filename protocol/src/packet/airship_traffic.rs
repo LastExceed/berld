@@ -28,6 +28,7 @@ impl Packet for AirshipTraffic {
 		PacketId::AirshipTraffic
 	}
 }
+impl PacketFromClient for AirshipTraffic {}
 
 #[repr(C)]
 pub struct Airship {

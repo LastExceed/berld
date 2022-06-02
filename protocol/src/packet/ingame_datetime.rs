@@ -1,4 +1,4 @@
-use crate::packet::{CwSerializable, Packet, PacketId};
+use crate::packet::{CwSerializable, Packet, PacketFromServer, PacketId};
 
 #[repr(C)]
 pub struct IngameDateTime {
@@ -12,3 +12,4 @@ impl Packet for IngameDateTime {
 		PacketId::IngameDatetime
 	}
 }
+impl PacketFromServer for IngameDateTime {}

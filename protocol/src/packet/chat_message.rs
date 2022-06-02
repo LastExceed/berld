@@ -1,7 +1,7 @@
 use std::mem::size_of;
 use std::io::{Error, Read, Write};
 use crate::packet::creature_update::CreatureId;
-use crate::packet::{CwSerializable, Packet, PacketId};
+use crate::packet::{CwSerializable, Packet, PacketFromClient, PacketFromServer, PacketId};
 use crate::utils::{ReadExtension, WriteExtension};
 
 pub struct ChatMessageFromClient {
@@ -25,6 +25,7 @@ impl Packet for ChatMessageFromClient {
 		PacketId::ChatMessage
 	}
 }
+impl PacketFromClient for ChatMessageFromClient {}
 
 pub struct ChatMessageFromServer {
 	pub source: CreatureId,
@@ -50,6 +51,7 @@ impl Packet for ChatMessageFromServer {
 		PacketId::ChatMessage
 	}
 }
+impl PacketFromServer for ChatMessageFromServer {}
 
 
 fn read_text<T: Read>(reader: &mut T) -> Result<String, Error> {

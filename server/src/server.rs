@@ -4,7 +4,7 @@ use std::mem::size_of;
 use std::net::{Shutdown, TcpListener, TcpStream};
 use std::sync::{Arc, RwLock};
 use std::time::Duration;
-use protocol::packet::{CwSerializable, Packet, PacketId};
+use protocol::packet::{CwSerializable, PacketFromServer, PacketId};
 use protocol::packet::chat_message::{ChatMessageFromClient, ChatMessageFromServer};
 use protocol::packet::chunk_discovery::ChunkDiscovery;
 use protocol::packet::creature_action::{CreatureAction, CreatureActionType};
@@ -61,7 +61,7 @@ impl Server {
 		}
 	}
 
-	pub fn broadcast<P: Packet>(&self, packet: &P, player_to_skip: Option<&Arc<Player>>) where [(); size_of::<P>()]: {
+	pub fn broadcast<P: PacketFromServer>(&self, packet: &P, player_to_skip: Option<&Arc<Player>>) where [(); size_of::<P>()]: {
 		for player in self.players.read().unwrap().iter() {
 			if match player_to_skip {
 				Some(player_to_skip) => Arc::ptr_eq(player, player_to_skip),

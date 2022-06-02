@@ -1,4 +1,4 @@
-use crate::packet::{CwSerializable, Packet, PacketId};
+use crate::packet::{CwSerializable, Packet, PacketFromServer, PacketId};
 
 #[repr(C)]
 pub struct ServerTick {}
@@ -9,3 +9,4 @@ impl Packet for ServerTick {
 		PacketId::ServerTick
 	}
 }
+impl PacketFromServer for ServerTick {}

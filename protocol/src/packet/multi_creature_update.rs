@@ -1,4 +1,4 @@
-use crate::packet::{CwSerializable, Packet, PacketId};
+use crate::packet::{CwSerializable, Packet, PacketFromServer, PacketId};
 
 #[repr(C)]
 pub struct MultiCreatureUpdate {
@@ -11,3 +11,4 @@ impl Packet for MultiCreatureUpdate {
 		PacketId::MultiEntityUpdate
 	}
 }
+impl PacketFromServer for MultiCreatureUpdate {}

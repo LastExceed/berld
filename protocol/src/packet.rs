@@ -46,6 +46,9 @@ pub trait Packet: CwSerializable {
 	}
 }
 
+pub trait PacketFromServer: Packet {}
+pub trait PacketFromClient: Packet {}
+
 //todo: impl for Vec<T> possible?
 
 #[derive(Eq, PartialEq, Debug)]

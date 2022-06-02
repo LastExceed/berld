@@ -2,7 +2,7 @@ use std::io::{Error, Read, Write};
 use flate2::Compression;
 use flate2::read::{ZlibDecoder};
 use flate2::write::ZlibEncoder;
-use crate::packet::{CwSerializable, Packet, PacketId};
+use crate::packet::{CwSerializable, Packet, PacketFromServer, PacketId};
 use crate::packet::hit::Hit;
 use crate::packet::projectile::Projectile;
 use crate::packet::status_effect::StatusEffect;
@@ -212,3 +212,4 @@ impl Packet for WorldUpdate {
 		PacketId::WorldUpdate
 	}
 }
+impl PacketFromServer for WorldUpdate {}

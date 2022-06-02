@@ -276,6 +276,8 @@ impl Packet for CreatureUpdate {
 		PacketId::CreatureUpdate
 	}
 }
+impl PacketFromClient for CreatureUpdate {}
+impl PacketFromServer for CreatureUpdate {}
 
 #[derive(Default, Clone, Copy)]
 pub struct CreatureId(pub i64);

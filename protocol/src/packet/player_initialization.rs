@@ -1,5 +1,5 @@
 use crate::packet::creature_update::CreatureId;
-use crate::packet::{CwSerializable, Packet, PacketId};
+use crate::packet::{CwSerializable, Packet, PacketFromServer, PacketId};
 
 #[repr(C, packed(4))]
 pub struct PlayerInitialization {
@@ -24,3 +24,4 @@ impl Packet for PlayerInitialization {
 		PacketId::PlayerInitialization
 	}
 }
+impl PacketFromServer for PlayerInitialization {}

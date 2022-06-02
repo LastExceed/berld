@@ -1,4 +1,4 @@
-use crate::packet::{CwSerializable, Packet, PacketId};
+use crate::packet::{CwSerializable, Packet, PacketFromClient, PacketFromServer, PacketId};
 
 #[repr(C)]
 pub struct ProtocolVersion(pub i32);
@@ -9,3 +9,5 @@ impl Packet for ProtocolVersion {
 		PacketId::ProtocolVersion
 	}
 }
+impl PacketFromServer for ProtocolVersion {}
+impl PacketFromClient for ProtocolVersion {}

@@ -1,4 +1,4 @@
-use crate::packet::{CwSerializable, Packet, PacketId};
+use crate::packet::{CwSerializable, Packet, PacketFromServer, PacketId};
 
 #[repr(C)]
 pub struct MapSeed(pub i32);
@@ -9,3 +9,4 @@ impl Packet for MapSeed {
 		PacketId::MapSeed
 	}
 }
+impl PacketFromServer for MapSeed {}

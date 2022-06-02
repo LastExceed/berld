@@ -4,7 +4,7 @@ use std::net::TcpStream;
 use std::sync::Mutex;
 use protocol::packet::chat_message::ChatMessageFromServer;
 use protocol::packet::creature_update::{CreatureId, CreatureUpdate};
-use protocol::packet::Packet;
+use protocol::packet::PacketFromServer;
 
 pub struct Player {
 	pub creature: CreatureUpdate,
@@ -19,7 +19,7 @@ impl Player {
 		}
 	}
 
-	pub fn send<T: Packet>(&self, packet: &T)// -> Result<(), io::Error>
+	pub fn send<T: PacketFromServer>(&self, packet: &T)// -> Result<(), io::Error>
 		where [(); size_of::<T>()]:
 	{
 		let _ = packet.write_to_with_id(&mut self.stream.lock().unwrap() as &mut TcpStream);
