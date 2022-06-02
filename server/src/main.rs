@@ -5,6 +5,7 @@ use server::Server;
 mod server;
 mod creature_id_pool;
 mod player;
+mod traffic_filter;
 
 fn main() {
 	println!("go");

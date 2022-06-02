@@ -21,6 +21,7 @@ use protocol::packet::world_update::WorldUpdate;
 use protocol::utils::{ReadExtension, WriteExtension};
 use crate::creature_id_pool::CreatureIdPool;
 use crate::player::Player;
+use crate::traffic_filter::filter;
 
 pub struct Server {
 	players: RwLock<Vec<Arc<Player>>>,
@@ -135,9 +136,11 @@ fn read_packets<T: Read>(server: &Arc<Server>, source: Arc<Player>, readable: &m
 		let packet_id = readable.read_struct::<PacketId>()?;
 		match packet_id {
 			PacketId::CreatureUpdate => {
-				let creature_update = CreatureUpdate::read_from(readable)?;
+				let mut creature_update = CreatureUpdate::read_from(readable)?;
 
-				server.broadcast(&creature_update, Some(&source));
+				if filter(&mut creature_update, &source) {
+					server.broadcast(&creature_update, Some(&source));
+				}
 			},
 			PacketId::CreatureAction => {
 				let creature_action = CreatureAction::read_from(readable)?;
