@@ -40,7 +40,7 @@ impl Server {
 	}
 
 	pub fn run(self) {
-		{ self.id_pool.write().unwrap().claim(); } //reserve 0 for the server itself
+		self.id_pool.write().unwrap().claim(); //reserve 0 for the server itself
 
 		let listener = TcpListener::bind("0.0.0.0:12345").expect("unable to bind listening socket");
 
@@ -77,9 +77,9 @@ fn handle_new_connection(server: Arc<Server>, stream: &mut TcpStream) -> Result<
 		|| ProtocolVersion::read_from(stream)?.0 != 3 {
 		return Err(io::Error::from(ErrorKind::InvalidData))
 	}
-	let assigned_id = { server.id_pool.write().unwrap().claim() };
+	let assigned_id = server.id_pool.write().unwrap().claim();
 	let result = handle_new_player(&server, stream, assigned_id);
-	{ server.id_pool.write().unwrap().free(assigned_id); }
+	server.id_pool.write().unwrap().free(assigned_id);
 	result
 }
 
@@ -113,7 +113,7 @@ fn handle_new_player(server: &Arc<Server>, stream: &mut TcpStream, assigned_id: 
 	}
 
 	let player_arc = Arc::new(me);
-	{ server.players.write().unwrap().push(player_arc.clone()); };
+	server.players.write().unwrap().push(player_arc.clone());
 	server.broadcast(&player_arc.creature, None);
 
 	read_packets(server, player_arc.clone(), stream).expect_err("impossible");
