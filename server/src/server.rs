@@ -131,14 +131,6 @@ fn read_packets<T: Read>(server: &Arc<Server>, source: Arc<Player>, readable: &m
 				let creature_update = CreatureUpdate::read_from(readable)?;
 
 				server.broadcast(&creature_update, Some(&source));
-				// let doppelganger = CreatureUpdate {
-				// 	id: CreatureId(77),
-				// 	position: creature_update.position,
-				// 	health: Some(1f32),
-				// 	name: Some("brudi".to_string()),
-				// 	..Default::default()
-				// };
-				//player.send(doppelganger)?;
 			},
 			PacketId::CreatureAction => {
 				let creature_action = CreatureAction::read_from(readable)?;
