@@ -1,7 +1,5 @@
 use std::ffi::CStr;
 use std::io::{Error, ErrorKind};
-use bitvec::order::Lsb0;
-use bitvec::view::BitView;
 use flate2::Compression;
 use flate2::read::ZlibDecoder;
 use flate2::write::ZlibEncoder;
@@ -81,67 +79,65 @@ impl CwSerializable for CreatureUpdate {
 		let mut decoder = Box::new(ZlibDecoder::new(buffer.as_slice())) as Box<dyn Read>; //todo: this cant be right
 
 		let id = decoder.read_struct::<CreatureId>()?;
-
-		let bitfield_buffer = decoder.read_struct::<u64>()?;
-		let mut bitfield = bitfield_buffer.view_bits::<Lsb0>().iter();
+		let bitfield = decoder.read_struct::<u64>()?;
 
 		//todo: macro
 		let instance = Self {
 			id,
-			position             : if *bitfield.next().unwrap() { Some(decoder.read_struct()?) } else { None },
-			rotation             : if *bitfield.next().unwrap() { Some(decoder.read_struct()?) } else { None },
-			velocity             : if *bitfield.next().unwrap() { Some(decoder.read_struct()?) } else { None },
-			acceleration         : if *bitfield.next().unwrap() { Some(decoder.read_struct()?) } else { None },
-			velocity_extra       : if *bitfield.next().unwrap() { Some(decoder.read_struct()?) } else { None },
-			climb_animation_state: if *bitfield.next().unwrap() { Some(decoder.read_struct()?) } else { None },
-			flags_physics        : if *bitfield.next().unwrap() { Some(decoder.read_struct()?) } else { None },
-			affiliation          : if *bitfield.next().unwrap() { Some(decoder.read_struct()?) } else { None },
-			race                 : if *bitfield.next().unwrap() { Some(decoder.read_struct()?) } else { None },
-			animation            : if *bitfield.next().unwrap() { Some(decoder.read_struct()?) } else { None },
-			animation_time       : if *bitfield.next().unwrap() { Some(decoder.read_struct()?) } else { None },
-			combo                : if *bitfield.next().unwrap() { Some(decoder.read_struct()?) } else { None },
-			hit_time_out         : if *bitfield.next().unwrap() { Some(decoder.read_struct()?) } else { None },
-			appearance           : if *bitfield.next().unwrap() { Some(decoder.read_struct()?) } else { None },
-			flags                : if *bitfield.next().unwrap() { Some(decoder.read_struct()?) } else { None },
-			effect_time_dodge    : if *bitfield.next().unwrap() { Some(decoder.read_struct()?) } else { None },
-			effect_time_stun     : if *bitfield.next().unwrap() { Some(decoder.read_struct()?) } else { None },
-			effect_time_fear     : if *bitfield.next().unwrap() { Some(decoder.read_struct()?) } else { None },
-			effect_time_ice      : if *bitfield.next().unwrap() { Some(decoder.read_struct()?) } else { None },
-			effect_time_wind     : if *bitfield.next().unwrap() { Some(decoder.read_struct()?) } else { None },
-			show_patch_time      : if *bitfield.next().unwrap() { Some(decoder.read_struct()?) } else { None },
-			combat_class_major   : if *bitfield.next().unwrap() { Some(decoder.read_struct()?) } else { None },
-			combat_class_minor   : if *bitfield.next().unwrap() { Some(decoder.read_struct()?) } else { None },
-			mana_charge          : if *bitfield.next().unwrap() { Some(decoder.read_struct()?) } else { None },
-			unknown24            : if *bitfield.next().unwrap() { Some(decoder.read_struct()?) } else { None },
-			unknown25            : if *bitfield.next().unwrap() { Some(decoder.read_struct()?) } else { None },
-			aim_displacement     : if *bitfield.next().unwrap() { Some(decoder.read_struct()?) } else { None },
-			health               : if *bitfield.next().unwrap() { Some(decoder.read_struct()?) } else { None },
-			mana                 : if *bitfield.next().unwrap() { Some(decoder.read_struct()?) } else { None },
-			blocking_gauge       : if *bitfield.next().unwrap() { Some(decoder.read_struct()?) } else { None },
-			multipliers          : if *bitfield.next().unwrap() { Some(decoder.read_struct()?) } else { None },
-			unknown31            : if *bitfield.next().unwrap() { Some(decoder.read_struct()?) } else { None },
-			unknown32            : if *bitfield.next().unwrap() { Some(decoder.read_struct()?) } else { None },
-			level                : if *bitfield.next().unwrap() { Some(decoder.read_struct()?) } else { None },
-			experience           : if *bitfield.next().unwrap() { Some(decoder.read_struct()?) } else { None },
-			master               : if *bitfield.next().unwrap() { Some(decoder.read_struct()?) } else { None },
-			unknown36            : if *bitfield.next().unwrap() { Some(decoder.read_struct()?) } else { None },
-			power_base           : if *bitfield.next().unwrap() { Some(decoder.read_struct()?) } else { None },
-			unknown38            : if *bitfield.next().unwrap() { Some(decoder.read_struct()?) } else { None },
-			home_chunk           : if *bitfield.next().unwrap() { Some(decoder.read_struct()?) } else { None },
-			home                 : if *bitfield.next().unwrap() { Some(decoder.read_struct()?) } else { None },
-			chunk_to_reveal      : if *bitfield.next().unwrap() { Some(decoder.read_struct()?) } else { None },
-			unknown42            : if *bitfield.next().unwrap() { Some(decoder.read_struct()?) } else { None },
-			consumable           : if *bitfield.next().unwrap() { Some(decoder.read_struct()?) } else { None },
-			equipment            : if *bitfield.next().unwrap() { Some(decoder.read_struct()?) } else { None },
-			name                 : if *bitfield.next().unwrap() {
+			position             : if bitfield & (1 <<  0) > 0 { Some(decoder.read_struct()?) } else { None },
+			rotation             : if bitfield & (1 <<  1) > 0 { Some(decoder.read_struct()?) } else { None },
+			velocity             : if bitfield & (1 <<  2) > 0 { Some(decoder.read_struct()?) } else { None },
+			acceleration         : if bitfield & (1 <<  3) > 0 { Some(decoder.read_struct()?) } else { None },
+			velocity_extra       : if bitfield & (1 <<  4) > 0 { Some(decoder.read_struct()?) } else { None },
+			climb_animation_state: if bitfield & (1 <<  5) > 0 { Some(decoder.read_struct()?) } else { None },
+			flags_physics        : if bitfield & (1 <<  6) > 0 { Some(decoder.read_struct()?) } else { None },
+			affiliation          : if bitfield & (1 <<  7) > 0 { Some(decoder.read_struct()?) } else { None },
+			race                 : if bitfield & (1 <<  8) > 0 { Some(decoder.read_struct()?) } else { None },
+			animation            : if bitfield & (1 <<  9) > 0 { Some(decoder.read_struct()?) } else { None },
+			animation_time       : if bitfield & (1 << 10) > 0 { Some(decoder.read_struct()?) } else { None },
+			combo                : if bitfield & (1 << 11) > 0 { Some(decoder.read_struct()?) } else { None },
+			hit_time_out         : if bitfield & (1 << 12) > 0 { Some(decoder.read_struct()?) } else { None },
+			appearance           : if bitfield & (1 << 13) > 0 { Some(decoder.read_struct()?) } else { None },
+			flags                : if bitfield & (1 << 14) > 0 { Some(decoder.read_struct()?) } else { None },
+			effect_time_dodge    : if bitfield & (1 << 15) > 0 { Some(decoder.read_struct()?) } else { None },
+			effect_time_stun     : if bitfield & (1 << 16) > 0 { Some(decoder.read_struct()?) } else { None },
+			effect_time_fear     : if bitfield & (1 << 17) > 0 { Some(decoder.read_struct()?) } else { None },
+			effect_time_ice      : if bitfield & (1 << 18) > 0 { Some(decoder.read_struct()?) } else { None },
+			effect_time_wind     : if bitfield & (1 << 19) > 0 { Some(decoder.read_struct()?) } else { None },
+			show_patch_time      : if bitfield & (1 << 20) > 0 { Some(decoder.read_struct()?) } else { None },
+			combat_class_major   : if bitfield & (1 << 21) > 0 { Some(decoder.read_struct()?) } else { None },
+			combat_class_minor   : if bitfield & (1 << 22) > 0 { Some(decoder.read_struct()?) } else { None },
+			mana_charge          : if bitfield & (1 << 23) > 0 { Some(decoder.read_struct()?) } else { None },
+			unknown24            : if bitfield & (1 << 24) > 0 { Some(decoder.read_struct()?) } else { None },
+			unknown25            : if bitfield & (1 << 25) > 0 { Some(decoder.read_struct()?) } else { None },
+			aim_displacement     : if bitfield & (1 << 26) > 0 { Some(decoder.read_struct()?) } else { None },
+			health               : if bitfield & (1 << 27) > 0 { Some(decoder.read_struct()?) } else { None },
+			mana                 : if bitfield & (1 << 28) > 0 { Some(decoder.read_struct()?) } else { None },
+			blocking_gauge       : if bitfield & (1 << 29) > 0 { Some(decoder.read_struct()?) } else { None },
+			multipliers          : if bitfield & (1 << 30) > 0 { Some(decoder.read_struct()?) } else { None },
+			unknown31            : if bitfield & (1 << 31) > 0 { Some(decoder.read_struct()?) } else { None },
+			unknown32            : if bitfield & (1 << 32) > 0 { Some(decoder.read_struct()?) } else { None },
+			level                : if bitfield & (1 << 33) > 0 { Some(decoder.read_struct()?) } else { None },
+			experience           : if bitfield & (1 << 34) > 0 { Some(decoder.read_struct()?) } else { None },
+			master               : if bitfield & (1 << 35) > 0 { Some(decoder.read_struct()?) } else { None },
+			unknown36            : if bitfield & (1 << 36) > 0 { Some(decoder.read_struct()?) } else { None },
+			power_base           : if bitfield & (1 << 37) > 0 { Some(decoder.read_struct()?) } else { None },
+			unknown38            : if bitfield & (1 << 38) > 0 { Some(decoder.read_struct()?) } else { None },
+			home_chunk           : if bitfield & (1 << 39) > 0 { Some(decoder.read_struct()?) } else { None },
+			home                 : if bitfield & (1 << 40) > 0 { Some(decoder.read_struct()?) } else { None },
+			chunk_to_reveal      : if bitfield & (1 << 41) > 0 { Some(decoder.read_struct()?) } else { None },
+			unknown42            : if bitfield & (1 << 42) > 0 { Some(decoder.read_struct()?) } else { None },
+			consumable           : if bitfield & (1 << 43) > 0 { Some(decoder.read_struct()?) } else { None },
+			equipment            : if bitfield & (1 << 44) > 0 { Some(decoder.read_struct()?) } else { None },
+			name                 : if bitfield & (1 << 45) > 0 {
 				if let Ok(cstr) = CStr::from_bytes_until_nul(decoder.read_struct::<[u8; 16]>()?.as_slice()) {
 					Some(cstr.to_str().unwrap().to_string())
 				} else {
 					return Err(Error::from(ErrorKind::InvalidData));
 				}
 			} else { None },
-			skill_tree           : if *bitfield.next().unwrap() { Some(decoder.read_struct()?) } else { None },
-			mana_cubes           : if *bitfield.next().unwrap() { Some(decoder.read_struct()?) } else { None }
+			skill_tree           : if bitfield & (1 << 46) > 0 { Some(decoder.read_struct()?) } else { None },
+			mana_cubes           : if bitfield & (1 << 47) > 0 { Some(decoder.read_struct()?) } else { None }
 		};
 		assert!(matches!(decoder.read_to_end(&mut vec![0u8; 0]), Ok(0))); //todo: replace panic with error
 		Ok(instance)
