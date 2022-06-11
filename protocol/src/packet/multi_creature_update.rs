@@ -7,8 +7,6 @@ pub struct MultiCreatureUpdate {
 
 impl CwSerializable for MultiCreatureUpdate {}
 impl Packet for MultiCreatureUpdate {
-	fn id() -> PacketId {
-		PacketId::MultiEntityUpdate
-	}
+	const ID: PacketId = PacketId::MultiEntityUpdate;
 }
 impl PacketFromServer for MultiCreatureUpdate {}

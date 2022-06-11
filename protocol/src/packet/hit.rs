@@ -21,9 +21,7 @@ pub struct Hit {
 
 impl CwSerializable for Hit {}
 impl Packet for Hit {
-	fn id() -> PacketId {
-		PacketId::Hit
-	}
+	const ID: PacketId = PacketId::Hit;
 }
 impl PacketFromClient for Hit {}
 

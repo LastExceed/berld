@@ -13,9 +13,7 @@ pub struct CreatureAction {
 
 impl CwSerializable for CreatureAction {}
 impl Packet for CreatureAction {
-	fn id() -> PacketId {
-		PacketId::CreatureAction
-	}
+	const ID: PacketId = PacketId::CreatureAction;
 }
 impl PacketFromClient for CreatureAction {}
 

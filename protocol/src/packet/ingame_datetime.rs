@@ -8,8 +8,6 @@ pub struct IngameDateTime {
 
 impl CwSerializable for IngameDateTime {}
 impl Packet for IngameDateTime {
-	fn id() -> PacketId {
-		PacketId::IngameDatetime
-	}
+	const ID: PacketId = PacketId::IngameDatetime;
 }
 impl PacketFromServer for IngameDateTime {}

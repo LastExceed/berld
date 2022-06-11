@@ -20,8 +20,6 @@ impl Default for PlayerInitialization {
 
 impl CwSerializable for PlayerInitialization {}
 impl Packet for PlayerInitialization {
-	fn id() -> PacketId {
-		PacketId::PlayerInitialization
-	}
+	const ID: PacketId = PacketId::PlayerInitialization;
 }
 impl PacketFromServer for PlayerInitialization {}

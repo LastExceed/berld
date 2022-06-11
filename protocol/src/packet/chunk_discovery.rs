@@ -8,8 +8,6 @@ pub struct ChunkDiscovery {
 
 impl CwSerializable for ChunkDiscovery {}
 impl Packet for ChunkDiscovery {
-	fn id() -> PacketId {
-		PacketId::ChunkDiscovery
-	}
+	const ID: PacketId = PacketId::ChunkDiscovery;
 }
 impl PacketFromClient for ChunkDiscovery {}

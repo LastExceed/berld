@@ -8,8 +8,6 @@ pub struct SectorDiscovery {
 
 impl CwSerializable for SectorDiscovery {}
 impl Packet for SectorDiscovery {
-	fn id() -> PacketId {
-		PacketId::SectorDiscovery
-	}
+	const ID: PacketId = PacketId::SectorDiscovery;
 }
 impl PacketFromClient for SectorDiscovery {}

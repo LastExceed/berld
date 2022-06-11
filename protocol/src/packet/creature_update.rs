@@ -264,9 +264,7 @@ impl CwSerializable for CreatureUpdate {
 	}
 }
 impl Packet for CreatureUpdate {
-	fn id() -> PacketId {
-		PacketId::CreatureUpdate
-	}
+	const ID: PacketId = PacketId::CreatureUpdate;
 }
 impl PacketFromClient for CreatureUpdate {}
 impl PacketFromServer for CreatureUpdate {}

@@ -5,8 +5,6 @@ pub struct ServerTick {}
 
 impl CwSerializable for ServerTick {}
 impl Packet for ServerTick {
-	fn id() -> PacketId {
-		PacketId::ServerTick
-	}
+	const ID: PacketId = PacketId::ServerTick;
 }
 impl PacketFromServer for ServerTick {}

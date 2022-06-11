@@ -24,9 +24,7 @@ impl CwSerializable for AirshipTraffic {
 	}
 }
 impl Packet for AirshipTraffic {
-	fn id() -> PacketId {
-		PacketId::AirshipTraffic
-	}
+	const ID: PacketId = PacketId::AirshipTraffic;
 }
 impl PacketFromClient for AirshipTraffic {}
 

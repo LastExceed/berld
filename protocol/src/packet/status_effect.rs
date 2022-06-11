@@ -15,9 +15,7 @@ pub struct StatusEffect {
 
 impl CwSerializable for StatusEffect {}
 impl Packet for StatusEffect {
-	fn id() -> PacketId {
-		PacketId::StatusEffect
-	}
+	const ID: PacketId = PacketId::StatusEffect;
 }
 impl PacketFromClient for StatusEffect {}
 

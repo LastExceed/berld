@@ -25,9 +25,7 @@ pub struct Projectile {
 
 impl CwSerializable for Projectile {}
 impl Packet for Projectile {
-	fn id() -> PacketId {
-		PacketId::Projectile
-	}
+	const ID: PacketId = PacketId::Projectile;
 }
 impl PacketFromClient for Projectile {}
 

@@ -208,8 +208,6 @@ impl CwSerializable for WorldUpdate {
 	}
 }
 impl Packet for WorldUpdate {
-	fn id() -> PacketId {
-		PacketId::WorldUpdate
-	}
+	const ID: PacketId = PacketId::WorldUpdate;
 }
 impl PacketFromServer for WorldUpdate {}

@@ -5,8 +5,6 @@ pub struct MapSeed(pub i32);
 
 impl CwSerializable for MapSeed {}
 impl Packet for MapSeed {
-	fn id() -> PacketId {
-		PacketId::MapSeed
-	}
+	const ID: PacketId = PacketId::MapSeed;
 }
 impl PacketFromServer for MapSeed {}

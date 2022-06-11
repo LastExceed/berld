@@ -21,9 +21,7 @@ impl CwSerializable for ChatMessageFromClient {
 	}
 }
 impl Packet for ChatMessageFromClient {
-	fn id() -> PacketId {
-		PacketId::ChatMessage
-	}
+	const ID: PacketId = PacketId::ChatMessage;
 }
 impl PacketFromClient for ChatMessageFromClient {}
 
@@ -47,9 +45,7 @@ impl CwSerializable for ChatMessageFromServer {
 	}
 }
 impl Packet for ChatMessageFromServer {
-	fn id() -> PacketId {
-		PacketId::ChatMessage
-	}
+	const ID: PacketId = PacketId::ChatMessage;
 }
 impl PacketFromServer for ChatMessageFromServer {}
 

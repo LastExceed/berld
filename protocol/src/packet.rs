@@ -36,12 +36,12 @@ pub trait CwSerializable: Sized {
 }
 
 pub trait Packet: CwSerializable {
-	fn id() -> PacketId;
+	const ID: PacketId;
 
 	fn write_to_with_id<T: Write>(&self, writer: &mut T) -> Result<(), Error>
 		where [(); size_of::<Self>()]:
 	{
-		writer.write_struct(&Self::id())?;
+		writer.write_struct(&Self::ID)?;
 		self.write_to(writer)
 	}
 }
