@@ -13,5 +13,8 @@ impl CwSerializable for WorldEdit {}
 
 #[repr(u8)]
 pub enum BlockType {
-	TODO
+	Air,
+	Solid,
+	Liquid,
+	Wet
 }

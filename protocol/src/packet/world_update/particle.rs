@@ -18,5 +18,9 @@ impl CwSerializable for Particle {}
 
 #[repr(i32)]
 pub enum ParticleType {
-	TODO
+	Normal,
+	Spark,
+
+	NoSpreadNoRotation = 3,
+	NoGravity
 }

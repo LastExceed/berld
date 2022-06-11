@@ -24,5 +24,7 @@ impl CwSerializable for Mission {}
 
 #[repr(u8)]
 pub enum MissionState {
-	TODO
+	Ready,
+	InProgress,
+	Finished
 }

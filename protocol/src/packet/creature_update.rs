@@ -276,7 +276,13 @@ pub struct CreatureId(pub i64);
 
 #[repr(u32)]
 pub enum PhysicsFlag {
-	TODO
+	OnGround,
+	Swimming,
+	TouchingWall,
+
+	//#4 always true
+	PushingWall = 5,
+	PushingObject
 }
 impl From<PhysicsFlag> for u32 {
 	fn from(it: PhysicsFlag) -> Self {
@@ -609,7 +615,20 @@ pub struct Appearance {
 
 #[repr(u16)]
 pub enum AppearanceFlag {
-	TODO
+	FourLegged,
+	CanFly,
+
+
+
+
+
+
+	Immovable = 8, //found on dummies
+	BossGlow,
+
+
+	//#12 found on bosses
+	Invincible = 13, //found on dummies
 }
 impl From<AppearanceFlag> for u16 {
 	fn from(it: AppearanceFlag) -> Self {
