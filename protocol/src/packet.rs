@@ -1,7 +1,7 @@
 use std::io::{Error, Read, Write};
 use std::mem::size_of;
 use nalgebra::{Point, Vector3};
-use crate::utils::{ReadExtension, WriteExtension};
+use crate::utils::{FlagSet8, ReadExtension, WriteExtension};
 
 pub mod creature_update;
 pub mod multi_creature_update;
@@ -75,8 +75,6 @@ pub enum PacketId {
 	ServerFull
 }
 
-type Flags = u8;
-
 #[repr(C)]
 pub struct Item {
 	pub type_major: ItemTypeMajor,
@@ -88,7 +86,7 @@ pub struct Item {
 	pub minus_modifier: i16,//todo: structure alignment entails this properties' existence, name adopted from cuwo
 	pub rarity: Rarity,
 	pub material: Material,
-	pub flags: Flags,
+	pub flags: FlagSet8<ItemFlag>,
 	//pad1
 	pub level: i16,
 	//pad2
@@ -173,6 +171,16 @@ pub enum Material {
 	Wind,
 }
 
+#[repr(u8)]
+pub enum ItemFlag {
+	Adapted
+}
+
+impl From<ItemFlag> for u8 {
+	fn from(it: ItemFlag) -> Self {
+		it as Self
+	}
+}
 
 #[repr(C, align(4))]
 pub struct Spirit {

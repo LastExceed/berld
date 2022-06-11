@@ -1,14 +1,11 @@
+use std::cmp::min;
 use std::ffi::CStr;
 use std::io::{Error, ErrorKind};
 use flate2::Compression;
 use flate2::read::ZlibDecoder;
 use flate2::write::ZlibEncoder;
 use crate::packet::*;
-use crate::utils::ReadExtension;
-
-pub type PhysicsFlags = u32;
-pub type CreatureFlags = u16;
-pub type AppearanceFlags = u16;
+use crate::utils::{FlagSet16, FlagSet32, ReadExtension};
 
 #[derive(Default)]
 pub struct CreatureUpdate {
@@ -20,7 +17,7 @@ pub struct CreatureUpdate {
 	/**used by the 'retreat' ability*/
 	pub velocity_extra: Option<Vector3<f32>>,
 	pub climb_animation_state: Option<f32>,
-	pub flags_physics: Option<PhysicsFlags>,
+	pub flags_physics: Option<FlagSet32<PhysicsFlag>>,
 	pub affiliation: Option<Affiliation>,
 	pub race: Option<Race>,
 	pub animation: Option<Animation>,
@@ -28,7 +25,7 @@ pub struct CreatureUpdate {
 	pub combo: Option<i32>,
 	pub hit_time_out: Option<i32>,
 	pub appearance: Option<Appearance>,
-	pub flags: Option<CreatureFlags>,
+	pub flags: Option<FlagSet16<CreatureFlag>>,
 	pub effect_time_dodge: Option<i32>,
 	pub effect_time_stun: Option<i32>,
 	pub effect_time_fear: Option<i32>,
@@ -250,12 +247,11 @@ impl CwSerializable for CreatureUpdate {
 			if let Some(it) = &self.consumable            { encoder.write_struct(it)?; }
 			if let Some(it) = &self.equipment             { encoder.write_struct(it)?; }
 			if let Some(it) = &self.name                  {
-				//todo: there gotta be a better way to do this
-				let mut buf = it.chars().take(16).map(|c|{c as u8}).collect::<Vec<u8>>();
-				for _ in 0..(16 - buf.len()) {
-					buf.push(0);
+				let mut buffer = [0u8; 16];
+				for (index, character) in it.chars().take(16).enumerate() {
+					buffer[index] = character as u8
 				}
-				encoder.write_all(buf.as_slice())?;
+				encoder.write_all(&buffer)?;
 			}
 			if let Some(it) = &self.skill_tree            { encoder.write_struct(it)?; }
 			if let Some(it) = &self.mana_cubes            { encoder.write_struct(it)?; }
@@ -277,6 +273,16 @@ impl PacketFromServer for CreatureUpdate {}
 
 #[derive(Default, Clone, Copy)]
 pub struct CreatureId(pub i64);
+
+#[repr(u32)]
+pub enum PhysicsFlag {
+	TODO
+}
+impl From<PhysicsFlag> for u32 {
+	fn from(it: PhysicsFlag) -> Self {
+		it as Self
+	}
+}
 
 #[repr(u8)]
 pub enum Affiliation {
@@ -569,7 +575,7 @@ pub struct Appearance {
 	pub unknown: i16,
 	pub hair_color: [u8; 3],//todo: type
 	//pad1
-	pub flags: AppearanceFlags,
+	pub flags: FlagSet16<AppearanceFlag>,
 	pub creature_size: [f32; 3],//todo: type
 	pub head_model: i16,
 	pub hair_model: i16,
@@ -601,8 +607,34 @@ pub struct Appearance {
 	pub wing_offset: Point<f32, 3>
 }
 
-pub struct AppearanceFlag {
+#[repr(u16)]
+pub enum AppearanceFlag {
+	TODO
+}
+impl From<AppearanceFlag> for u16 {
+	fn from(it: AppearanceFlag) -> Self {
+		it as Self
+	}
+}
 
+#[repr(u16)]
+pub enum CreatureFlag {
+	Climbing,
+
+	Aiming = 2,
+
+	Gliding = 4,
+	FriendlyFire,
+	Sprinting,
+
+
+	Lamp = 9,
+	Sniping,
+}
+impl From<CreatureFlag> for u16 {
+	fn from(it: CreatureFlag) -> Self {
+		it as Self
+	}
 }
 
 #[repr(i8)]
