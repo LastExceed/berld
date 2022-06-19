@@ -1,20 +1,21 @@
 use std::mem::size_of;
 use std::net::TcpStream;
-use std::sync::Mutex;
+use std::sync::{Mutex, RwLock};
 use protocol::packet::chat_message::ChatMessageFromServer;
 use protocol::packet::creature_update::{CreatureId, CreatureUpdate};
 use protocol::packet::PacketFromServer;
+use crate::creature::Creature;
 
 pub struct Player {
-	pub creature: CreatureUpdate,
+	pub creature: RwLock<Creature>,
 	stream: Mutex<TcpStream>,
 }
 
 impl Player {
-	pub fn new(creature: CreatureUpdate, stream: &mut TcpStream) -> Self {
+	pub fn new(creature: Creature, stream: &mut TcpStream) -> Self {
 		Self {
 			stream: Mutex::new(stream.try_clone().unwrap()),
-			creature
+			creature: RwLock::new(creature)
 		}
 	}
 

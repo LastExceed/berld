@@ -76,6 +76,7 @@ pub enum PacketId {
 }
 
 #[repr(C)]
+#[derive(Clone)]
 pub struct Item {
 	pub type_major: ItemTypeMajor,
 	pub type_minor: u8,
@@ -95,6 +96,7 @@ pub struct Item {
 }
 
 #[repr(u8)]
+#[derive(Copy, Clone)]
 pub enum ItemTypeMajor {
 	None,
 	Food,
@@ -125,6 +127,7 @@ pub enum ItemTypeMajor {
 }
 
 #[repr(u8)]
+#[derive(Copy, Clone)]
 pub enum Rarity {
 	Normal,
 	Uncommon,
@@ -135,6 +138,7 @@ pub enum Rarity {
 }
 
 #[repr(i8)]
+#[derive(Copy, Clone)]
 pub enum Material {
 	None,
 	Iron,
@@ -172,6 +176,7 @@ pub enum Material {
 }
 
 #[repr(u8)]
+#[derive(Copy, Clone)]
 pub enum ItemFlag {
 	Adapted
 }
@@ -183,6 +188,7 @@ impl From<ItemFlag> for u8 {
 }
 
 #[repr(C, align(4))]
+#[derive(Clone)]
 pub struct Spirit {
 	pub position: Point<i8, 3>,
 	pub material: Material,

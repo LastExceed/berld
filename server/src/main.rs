@@ -8,6 +8,7 @@ mod creature_id_pool;
 mod player;
 mod traffic_filter;
 mod pvp;
+mod creature;
 
 fn main() {
 	println!("go");

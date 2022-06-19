@@ -1,8 +1,7 @@
 use protocol::packet::creature_update::CreatureUpdate;
-use crate::player::Player;
+use crate::creature::Creature;
 
-pub fn filter(creature_update: &mut CreatureUpdate, _source: &Player) -> bool {
-	// position
+pub fn filter(creature_update: &mut CreatureUpdate, previous_state: &Creature, current_state: &Creature) -> bool {
 	creature_update.rotation = None;
 	// velocity
 	// acceleration

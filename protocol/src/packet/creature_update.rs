@@ -273,6 +273,7 @@ impl PacketFromServer for CreatureUpdate {}
 pub struct CreatureId(pub i64);
 
 #[repr(u32)]
+#[derive(Copy, Clone)]
 pub enum PhysicsFlag {
 	OnGround,
 	Swimming,
@@ -289,6 +290,7 @@ impl From<PhysicsFlag> for u32 {
 }
 
 #[repr(u8)]
+#[derive(Copy, Clone)]
 pub enum Affiliation {
 	Player,
 	Enemy,
@@ -300,6 +302,7 @@ pub enum Affiliation {
 }
 
 #[repr(i32)]
+#[derive(Copy, Clone)]
 pub enum Race {
 	ElfMale,
 	ElfFemale,
@@ -460,6 +463,7 @@ pub enum Race {
 }
 
 #[repr(u8)]
+#[derive(Copy, Clone)]
 pub enum Animation {
 	Idle,
 	DualWieldM1a,
@@ -575,6 +579,7 @@ pub enum Animation {
 }
 
 #[repr(C)]
+#[derive(Clone)]
 pub struct Appearance {
 	pub unknown: i16,
 	pub hair_color: [u8; 3],//todo: type
@@ -612,6 +617,7 @@ pub struct Appearance {
 }
 
 #[repr(u16)]
+#[derive(Copy, Clone)]
 pub enum AppearanceFlag {
 	FourLegged,
 	CanFly,
@@ -635,6 +641,7 @@ impl From<AppearanceFlag> for u16 {
 }
 
 #[repr(u16)]
+#[derive(Copy, Clone)]
 pub enum CreatureFlag {
 	Climbing,
 
@@ -655,6 +662,7 @@ impl From<CreatureFlag> for u16 {
 }
 
 #[repr(i8)]
+#[derive(Copy, Clone)]
 pub enum CombatClassMajor {
 	None,
 	Warrior,
@@ -675,6 +683,7 @@ pub enum CombatClassMajor {
 }
 
 #[repr(u8)]
+#[derive(Copy, Clone)]
 pub enum CombatClassMinor {
 	Default,
 	Alternative,
@@ -682,6 +691,7 @@ pub enum CombatClassMinor {
 }
 
 #[repr(C)]
+#[derive(Clone)]
 pub struct Multipliers {
 	pub health: f32,
 	pub attack_speed: f32,
@@ -691,6 +701,7 @@ pub struct Multipliers {
 }
 
 #[repr(C)]
+#[derive(Clone)]
 pub struct Equipment {
 	pub unknown: Item,
 	pub neck: Item,
@@ -708,6 +719,7 @@ pub struct Equipment {
 }
 
 #[repr(C)]
+#[derive(Clone)]
 pub struct SkillTree {
 	pub pet_master: i32,
 	pub pet_riding: i32,

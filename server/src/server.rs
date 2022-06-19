@@ -19,6 +19,7 @@ use protocol::packet::status_effect::StatusEffect;
 use protocol::packet::world_update::pickup::Pickup;
 use protocol::packet::world_update::WorldUpdate;
 use protocol::utils::{ReadExtension, WriteExtension};
+use crate::creature::Creature;
 use crate::creature_id_pool::CreatureIdPool;
 use crate::player::Player;
 use crate::pvp::enable_pvp;
@@ -98,9 +99,10 @@ fn handle_new_player(server: &Arc<Server>, stream: &mut TcpStream, assigned_id: 
 	enable_pvp(&mut full_creature_update);
 
 	let me = Player::new(
-		full_creature_update,
+		Creature::maybe_from(&full_creature_update).ok_or_else(|| io::Error::from(ErrorKind::InvalidData))?,
 		stream,
 	);
+
 
 	me.send(&MapSeed(225));
 	me.send(&ChatMessageFromServer {
@@ -109,12 +111,12 @@ fn handle_new_player(server: &Arc<Server>, stream: &mut TcpStream, assigned_id: 
 	});
 
 	for player in server.players.read().unwrap().iter() {
-		me.send(&player.creature);
+		me.send(&player.creature.read().unwrap().to_update());
 	}
 
 	let player_arc = Arc::new(me);
 	server.players.write().unwrap().push(player_arc.clone());
-	server.broadcast(&player_arc.creature, None);
+	server.broadcast(&player_arc.creature.read().unwrap().to_update(), None);
 
 	read_packets(server, player_arc.clone(), stream).expect_err("impossible");
 
@@ -141,7 +143,13 @@ fn read_packets<T: Read>(server: &Arc<Server>, source: Arc<Player>, readable: &m
 				let mut creature_update = CreatureUpdate::read_from(readable)?;
 
 				enable_pvp(&mut creature_update);
-				if filter(&mut creature_update, &source) {
+
+				let mut character = source.creature.write().unwrap();
+				let snapshot = character.clone();
+				character.update(&creature_update);
+				//todo: demote `character` to read lock
+
+				if filter(&mut creature_update, &snapshot, &character) {
 					server.broadcast(&creature_update, Some(&source));
 				}
 			},
@@ -174,7 +182,7 @@ fn read_packets<T: Read>(server: &Arc<Server>, source: Arc<Player>, readable: &m
 				if reimburse_item {
 					source.send(&WorldUpdate {
 						pickups: vec![Pickup {
-							interactor: source.creature.id,
+							interactor: source.creature.read().unwrap().id,
 							item: creature_action.item
 						}],
 						..Default::default()
@@ -212,7 +220,7 @@ fn read_packets<T: Read>(server: &Arc<Server>, source: Arc<Player>, readable: &m
 				let chat_message = ChatMessageFromClient::read_from(readable)?;
 				server.broadcast(
 					&ChatMessageFromServer {
-						source: source.creature.id,
+						source: source.creature.read().unwrap().id,
 						text: chat_message.text
 					},
 					None
