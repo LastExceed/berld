@@ -2,8 +2,10 @@ use std::{io, thread};
 use std::io::{ErrorKind, Read};
 use std::mem::size_of;
 use std::net::{Shutdown, TcpListener, TcpStream};
-use std::sync::{Arc, RwLock};
+use std::sync::Arc;
+use parking_lot::RwLock;
 use std::time::Duration;
+use parking_lot::lock_api::RawRwLockDowngrade;
 use protocol::packet::{CwSerializable, PacketFromServer, PacketId};
 use protocol::packet::chat_message::{ChatMessageFromClient, ChatMessageFromServer};
 use protocol::packet::chunk_discovery::ChunkDiscovery;
@@ -41,7 +43,7 @@ impl Server {
 	}
 
 	pub fn run(self) {
-		self.id_pool.write().unwrap().claim(); //reserve 0 for the server itself
+		self.id_pool.write().claim(); //reserve 0 for the server itself
 
 		let listener = TcpListener::bind("0.0.0.0:12345").expect("unable to bind listening socket");
 
@@ -63,7 +65,7 @@ impl Server {
 	}
 
 	pub fn broadcast<P: PacketFromServer>(&self, packet: &P, player_to_skip: Option<&Arc<Player>>) where [(); size_of::<P>()]: {
-		for player in self.players.read().unwrap().iter() {
+		for player in self.players.read().iter() {
 			if match player_to_skip {
 				Some(player_to_skip) => Arc::ptr_eq(player, player_to_skip),
 				None => false
@@ -78,9 +80,9 @@ fn handle_new_connection(server: Arc<Server>, stream: &mut TcpStream) -> Result<
 		|| ProtocolVersion::read_from(stream)?.0 != 3 {
 		return Err(io::Error::from(ErrorKind::InvalidData))
 	}
-	let assigned_id = server.id_pool.write().unwrap().claim();
+	let assigned_id = server.id_pool.write().claim();
 	let result = handle_new_player(&server, stream, assigned_id);
-	server.id_pool.write().unwrap().free(assigned_id);
+	server.id_pool.write().free(assigned_id);
 	result
 }
 
@@ -110,18 +112,18 @@ fn handle_new_player(server: &Arc<Server>, stream: &mut TcpStream, assigned_id: 
 		text: "welcome to berld".to_string()
 	});
 
-	for player in server.players.read().unwrap().iter() {
-		me.send(&player.creature.read().unwrap().to_update());
+	for player in server.players.read().iter() {
+		me.send(&player.creature.read().to_update());
 	}
 
 	let player_arc = Arc::new(me);
-	server.players.write().unwrap().push(player_arc.clone());
-	server.broadcast(&player_arc.creature.read().unwrap().to_update(), None);
+	server.players.write().push(player_arc.clone());
+	server.broadcast(&player_arc.creature.read().to_update(), None);
 
 	read_packets(server, player_arc.clone(), stream).expect_err("impossible");
 
 	{
-		let mut players = server.players.write().unwrap();
+		let mut players = server.players.write();
 		let index = players.iter().position(|it| { Arc::ptr_eq(&player_arc, it) }).expect("player not found");
 		players.swap_remove(index);
 	};
@@ -144,10 +146,10 @@ fn read_packets<T: Read>(server: &Arc<Server>, source: Arc<Player>, readable: &m
 
 				enable_pvp(&mut creature_update);
 
-				let mut character = source.creature.write().unwrap();
+				let mut character = source.creature.write();
 				let snapshot = character.clone();
 				character.update(&creature_update);
-				//todo: demote `character` to read lock
+				unsafe { source.creature.raw().downgrade(); }//todo: not sure
 
 				if filter(&mut creature_update, &snapshot, &character) {
 					server.broadcast(&creature_update, Some(&source));
@@ -182,7 +184,7 @@ fn read_packets<T: Read>(server: &Arc<Server>, source: Arc<Player>, readable: &m
 				if reimburse_item {
 					source.send(&WorldUpdate {
 						pickups: vec![Pickup {
-							interactor: source.creature.read().unwrap().id,
+							interactor: source.creature.read().id,
 							item: creature_action.item
 						}],
 						..Default::default()
@@ -220,7 +222,7 @@ fn read_packets<T: Read>(server: &Arc<Server>, source: Arc<Player>, readable: &m
 				let chat_message = ChatMessageFromClient::read_from(readable)?;
 				server.broadcast(
 					&ChatMessageFromServer {
-						source: source.creature.read().unwrap().id,
+						source: source.creature.read().id,
 						text: chat_message.text
 					},
 					None
