@@ -463,7 +463,7 @@ pub enum Race {
 }
 
 #[repr(u8)]
-#[derive(Copy, Clone)]
+#[derive(Copy, Clone, PartialEq)]
 pub enum Animation {
 	Idle,
 	DualWieldM1a,
