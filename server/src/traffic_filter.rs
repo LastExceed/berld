@@ -83,7 +83,7 @@ pub fn filter(packet: &mut CreatureUpdate, previous: &Creature, current: &Creatu
 	packet.effect_time_dodge = packet.effect_time_dodge.filter(|value| { *value > previous.effect_time_dodge });
 	packet.effect_time_stun  = packet.effect_time_stun .filter(|value| { *value > previous.effect_time_stun  });
 	packet.effect_time_fear  = packet.effect_time_fear .filter(|value| { *value > previous.effect_time_fear  });
-	packet.effect_time_ice   = packet.effect_time_ice  .filter(|value| { *value > previous.effect_time_ice   });
+	packet.effect_time_chill = packet.effect_time_chill.filter(|value| { *value > previous.effect_time_ice   });
 	packet.effect_time_wind  = packet.effect_time_wind .filter(|value| { *value > previous.effect_time_wind  });
 
 	packet.aim_offset = packet.aim_offset.filter(|_| { current.flags.get(CreatureFlag::Aiming) });//todo: compare to last sent (2)
@@ -109,7 +109,7 @@ pub fn filter(packet: &mut CreatureUpdate, previous: &Creature, current: &Creatu
 	packet.effect_time_dodge    .is_some() ||
 	packet.effect_time_stun     .is_some() ||
 	packet.effect_time_fear     .is_some() ||
-	packet.effect_time_ice      .is_some() ||
+	packet.effect_time_chill    .is_some() ||
 	packet.effect_time_wind     .is_some() ||
 	packet.show_patch_time      .is_some() ||
 	packet.combat_class_major   .is_some() ||

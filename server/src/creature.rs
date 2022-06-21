@@ -85,7 +85,7 @@ impl Creature {
 			effect_time_dodge:     creature_update.effect_time_dodge?,
 			effect_time_stun:      creature_update.effect_time_stun?,
 			effect_time_fear:      creature_update.effect_time_fear?,
-			effect_time_ice:       creature_update.effect_time_ice?,
+			effect_time_ice:       creature_update.effect_time_chill?,
 			effect_time_wind:      creature_update.effect_time_wind?,
 			show_patch_time:       creature_update.show_patch_time?,
 			combat_class_major:    creature_update.combat_class_major?,
@@ -139,7 +139,7 @@ impl Creature {
 		if let Some(it) = packet.effect_time_dodge     { self.effect_time_dodge     = it }
 		if let Some(it) = packet.effect_time_stun      { self.effect_time_stun      = it }
 		if let Some(it) = packet.effect_time_fear      { self.effect_time_fear      = it }
-		if let Some(it) = packet.effect_time_ice       { self.effect_time_ice       = it }
+		if let Some(it) = packet.effect_time_chill     { self.effect_time_ice       = it }
 		if let Some(it) = packet.effect_time_wind      { self.effect_time_wind      = it }
 		if let Some(it) = packet.show_patch_time       { self.show_patch_time       = it }
 		if let Some(it) = packet.combat_class_major    { self.combat_class_major    = it }
@@ -192,7 +192,7 @@ impl Creature {
 			effect_time_dodge:     Some(self.effect_time_dodge),
 			effect_time_stun:      Some(self.effect_time_stun),
 			effect_time_fear:      Some(self.effect_time_fear),
-			effect_time_ice:       Some(self.effect_time_ice),
+			effect_time_chill:     Some(self.effect_time_ice),
 			effect_time_wind:      Some(self.effect_time_wind),
 			show_patch_time:       Some(self.show_patch_time),
 			combat_class_major:    Some(self.combat_class_major),

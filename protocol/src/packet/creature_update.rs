@@ -31,7 +31,7 @@ pub struct CreatureUpdate {
 	pub effect_time_dodge: Option<i32>,
 	pub effect_time_stun: Option<i32>,
 	pub effect_time_fear: Option<i32>,
-	pub effect_time_ice: Option<i32>,
+	pub effect_time_chill: Option<i32>,
 	pub effect_time_wind: Option<i32>,
 	/**unknown purpose>, name adopted from cuwo*/
 	pub show_patch_time: Option<i32>,
@@ -101,7 +101,7 @@ impl CwSerializable for CreatureUpdate {
 			effect_time_dodge    : if bitfield & (1 << 15) > 0 { Some(decoder.read_struct()?) } else { None },
 			effect_time_stun     : if bitfield & (1 << 16) > 0 { Some(decoder.read_struct()?) } else { None },
 			effect_time_fear     : if bitfield & (1 << 17) > 0 { Some(decoder.read_struct()?) } else { None },
-			effect_time_ice      : if bitfield & (1 << 18) > 0 { Some(decoder.read_struct()?) } else { None },
+			effect_time_chill    : if bitfield & (1 << 18) > 0 { Some(decoder.read_struct()?) } else { None },
 			effect_time_wind     : if bitfield & (1 << 19) > 0 { Some(decoder.read_struct()?) } else { None },
 			show_patch_time      : if bitfield & (1 << 20) > 0 { Some(decoder.read_struct()?) } else { None },
 			combat_class_major   : if bitfield & (1 << 21) > 0 { Some(decoder.read_struct()?) } else { None },
@@ -164,7 +164,7 @@ impl CwSerializable for CreatureUpdate {
 		bitfield |= (self.effect_time_dodge    .is_some() as u64) << 15;
 		bitfield |= (self.effect_time_stun     .is_some() as u64) << 16;
 		bitfield |= (self.effect_time_fear     .is_some() as u64) << 17;
-		bitfield |= (self.effect_time_ice      .is_some() as u64) << 18;
+		bitfield |= (self.effect_time_chill    .is_some() as u64) << 18;
 		bitfield |= (self.effect_time_wind     .is_some() as u64) << 19;
 		bitfield |= (self.show_patch_time      .is_some() as u64) << 20;
 		bitfield |= (self.combat_class_major   .is_some() as u64) << 21;
@@ -221,7 +221,7 @@ impl CwSerializable for CreatureUpdate {
 			if let Some(it) = &self.effect_time_dodge     { encoder.write_struct(it)?; }
 			if let Some(it) = &self.effect_time_stun      { encoder.write_struct(it)?; }
 			if let Some(it) = &self.effect_time_fear      { encoder.write_struct(it)?; }
-			if let Some(it) = &self.effect_time_ice       { encoder.write_struct(it)?; }
+			if let Some(it) = &self.effect_time_chill { encoder.write_struct(it)?; }
 			if let Some(it) = &self.effect_time_wind      { encoder.write_struct(it)?; }
 			if let Some(it) = &self.show_patch_time       { encoder.write_struct(it)?; }
 			if let Some(it) = &self.combat_class_major    { encoder.write_struct(it)?; }
