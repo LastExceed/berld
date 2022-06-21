@@ -77,7 +77,7 @@ pub fn filter(packet: &mut CreatureUpdate, previous: &Creature, current: &Creatu
 	}
 
 	packet.velocity_extra = packet.velocity_extra.filter(|value| {
-		(0..3).any(|index|{ (0f32..1f32).contains(&(value[index] / previous.velocity_extra[index])) })//todo: there gotta be a better way to do this
+		(0..3).any(|index|{ !(0f32..1f32).contains(&(value[index] / previous.velocity_extra[index])) })//todo: there gotta be a better way to do this
 	});
 
 	packet.effect_time_dodge = packet.effect_time_dodge.filter(|value| { *value > previous.effect_time_dodge });
