@@ -1,18 +1,6 @@
-use std::ops::Div;
-use protocol::packet::creature_update::{Animation, CreatureFlag, CreatureUpdate, PhysicsFlag};
+use protocol::packet::creature_update::{CreatureFlag, CreatureUpdate, PhysicsFlag};
+
 use crate::creature::Creature;
-
-const CHARGABLE_ANIMATIONS: [Animation; 7] = [
-	Animation::ShieldM2Charging,
-	Animation::CrossbowM2Charging,
-	Animation::BowM2Charging,
-	Animation::BoomerangM2Charging,
-	Animation::GreatweaponM2Charging,
-	Animation::UnarmedM2Charging,
-	Animation::DualWieldM2Charging
-];
-
-
 
 pub fn filter(packet: &mut CreatureUpdate, previous: &Creature, current: &Creature) -> bool {
 	packet.rotation = None;
@@ -98,10 +86,7 @@ pub fn filter(packet: &mut CreatureUpdate, previous: &Creature, current: &Creatu
 	packet.effect_time_ice   = packet.effect_time_ice  .filter(|value| { *value > previous.effect_time_ice   });
 	packet.effect_time_wind  = packet.effect_time_wind .filter(|value| { *value > previous.effect_time_wind  });
 
-	packet.aim_displacement = packet.aim_displacement.filter(|value| {
-		(CHARGABLE_ANIMATIONS.contains(&current.animation) || current.animation_time < 1500) &&
-			(value - previous.aim_displacement).magnitude() > 0f32 //todo: compare to last sent (2)
-	});
+	packet.aim_displacement = packet.aim_displacement.filter(|_| { current.flags.get(CreatureFlag::Aiming) });//todo: compare to last sent (2)
 
 
 
