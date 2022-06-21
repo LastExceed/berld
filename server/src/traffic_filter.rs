@@ -86,7 +86,7 @@ pub fn filter(packet: &mut CreatureUpdate, previous: &Creature, current: &Creatu
 	packet.effect_time_ice   = packet.effect_time_ice  .filter(|value| { *value > previous.effect_time_ice   });
 	packet.effect_time_wind  = packet.effect_time_wind .filter(|value| { *value > previous.effect_time_wind  });
 
-	packet.aim_displacement = packet.aim_displacement.filter(|_| { current.flags.get(CreatureFlag::Aiming) });//todo: compare to last sent (2)
+	packet.aim_offset = packet.aim_offset.filter(|_| { current.flags.get(CreatureFlag::Aiming) });//todo: compare to last sent (2)
 
 
 
@@ -117,7 +117,7 @@ pub fn filter(packet: &mut CreatureUpdate, previous: &Creature, current: &Creatu
 	packet.mana_charge          .is_some() ||
 	packet.unknown24            .is_some() ||
 	packet.unknown25            .is_some() ||
-	packet.aim_displacement     .is_some() ||
+	packet.aim_offset           .is_some() ||
 	packet.health               .is_some() ||
 	packet.mana                 .is_some() ||
 	packet.blocking_gauge       .is_some() ||

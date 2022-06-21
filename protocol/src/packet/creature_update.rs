@@ -1,9 +1,11 @@
 use std::cmp::min;
 use std::ffi::CStr;
 use std::io::{Error, ErrorKind};
+
 use flate2::Compression;
 use flate2::read::ZlibDecoder;
 use flate2::write::ZlibEncoder;
+
 use crate::packet::*;
 use crate::utils::{FlagSet16, FlagSet32, ReadExtension};
 
@@ -39,7 +41,7 @@ pub struct CreatureUpdate {
 	pub unknown24: Option<[f32; 3]>,
 	pub unknown25: Option<[f32; 3]>,
 	/**coordinates of the location this creature is aiming at>, relative to its own position*/
-	pub aim_displacement: Option<Point<f32, 3>>,
+	pub aim_offset: Option<Point<f32, 3>>,
 	pub health: Option<f32>,
 	pub mana: Option<f32>,
 	pub blocking_gauge: Option<f32>,
@@ -107,7 +109,7 @@ impl CwSerializable for CreatureUpdate {
 			mana_charge          : if bitfield & (1 << 23) > 0 { Some(decoder.read_struct()?) } else { None },
 			unknown24            : if bitfield & (1 << 24) > 0 { Some(decoder.read_struct()?) } else { None },
 			unknown25            : if bitfield & (1 << 25) > 0 { Some(decoder.read_struct()?) } else { None },
-			aim_displacement     : if bitfield & (1 << 26) > 0 { Some(decoder.read_struct()?) } else { None },
+			aim_offset           : if bitfield & (1 << 26) > 0 { Some(decoder.read_struct()?) } else { None },
 			health               : if bitfield & (1 << 27) > 0 { Some(decoder.read_struct()?) } else { None },
 			mana                 : if bitfield & (1 << 28) > 0 { Some(decoder.read_struct()?) } else { None },
 			blocking_gauge       : if bitfield & (1 << 29) > 0 { Some(decoder.read_struct()?) } else { None },
@@ -170,7 +172,7 @@ impl CwSerializable for CreatureUpdate {
 		bitfield |= (self.mana_charge          .is_some() as u64) << 23;
 		bitfield |= (self.unknown24            .is_some() as u64) << 24;
 		bitfield |= (self.unknown25            .is_some() as u64) << 25;
-		bitfield |= (self.aim_displacement     .is_some() as u64) << 26;
+		bitfield |= (self.aim_offset           .is_some() as u64) << 26;
 		bitfield |= (self.health               .is_some() as u64) << 27;
 		bitfield |= (self.mana                 .is_some() as u64) << 28;
 		bitfield |= (self.blocking_gauge       .is_some() as u64) << 29;
@@ -227,7 +229,7 @@ impl CwSerializable for CreatureUpdate {
 			if let Some(it) = &self.mana_charge           { encoder.write_struct(it)?; }
 			if let Some(it) = &self.unknown24             { encoder.write_struct(it)?; }
 			if let Some(it) = &self.unknown25             { encoder.write_struct(it)?; }
-			if let Some(it) = &self.aim_displacement      { encoder.write_struct(it)?; }
+			if let Some(it) = &self.aim_offset            { encoder.write_struct(it)?; }
 			if let Some(it) = &self.health                { encoder.write_struct(it)?; }
 			if let Some(it) = &self.mana                  { encoder.write_struct(it)?; }
 			if let Some(it) = &self.blocking_gauge        { encoder.write_struct(it)?; }

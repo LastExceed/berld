@@ -93,7 +93,7 @@ impl Creature {
 			mana_charge:           creature_update.mana_charge?,
 			unknown24:             creature_update.unknown24?,
 			unknown25:             creature_update.unknown25?,
-			aim_displacement:      creature_update.aim_displacement?,
+			aim_displacement:      creature_update.aim_offset?,
 			health:                creature_update.health?,
 			mana:                  creature_update.mana?,
 			blocking_gauge:        creature_update.blocking_gauge?,
@@ -147,7 +147,7 @@ impl Creature {
 		if let Some(it) = packet.mana_charge           { self.mana_charge           = it }
 		if let Some(it) = packet.unknown24             { self.unknown24             = it }
 		if let Some(it) = packet.unknown25             { self.unknown25             = it }
-		if let Some(it) = packet.aim_displacement      { self.aim_displacement      = it }
+		if let Some(it) = packet.aim_offset            { self.aim_displacement      = it }
 		if let Some(it) = packet.health                { self.health                = it }
 		if let Some(it) = packet.mana                  { self.mana                  = it }
 		if let Some(it) = packet.blocking_gauge        { self.blocking_gauge        = it }
@@ -200,7 +200,7 @@ impl Creature {
 			mana_charge:           Some(self.mana_charge),
 			unknown24:             Some(self.unknown24),
 			unknown25:             Some(self.unknown25),
-			aim_displacement:      Some(self.aim_displacement),
+			aim_offset:            Some(self.aim_displacement),
 			health:                Some(self.health),
 			mana:                  Some(self.mana),
 			blocking_gauge:        Some(self.blocking_gauge),
