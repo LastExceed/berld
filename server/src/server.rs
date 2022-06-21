@@ -11,11 +11,11 @@ use parking_lot::RwLock;
 use protocol::packet::{CwSerializable, Packet, PacketFromServer, PacketId};
 use protocol::packet::chat_message::{ChatMessageFromClient, ChatMessageFromServer};
 use protocol::packet::chunk_discovery::ChunkDiscovery;
+use protocol::packet::connection_acceptance::ConnectionAcceptance;
 use protocol::packet::creature_action::{CreatureAction, CreatureActionType};
 use protocol::packet::creature_update::{Affiliation, CreatureId, CreatureUpdate};
 use protocol::packet::hit::Hit;
 use protocol::packet::map_seed::MapSeed;
-use protocol::packet::player_initialization::PlayerInitialization;
 use protocol::packet::projectile::Projectile;
 use protocol::packet::protocol_version::ProtocolVersion;
 use protocol::packet::sector_discovery::SectorDiscovery;
@@ -90,7 +90,7 @@ fn handle_new_connection(server: Arc<Server>, stream: &mut TcpStream) -> Result<
 }
 
 fn handle_new_player(server: &Arc<Server>, stream: &mut TcpStream, assigned_id: CreatureId) -> Result<(), io::Error> {
-	PlayerInitialization {}.write_to_with_id(stream)?;
+	ConnectionAcceptance {}.write_to_with_id(stream)?;
 
 	//at this point the server needs to send an abnormal CreatureUpdate which
 	// A.) is not compressed (and lacks the size prefix used for compressed packets)

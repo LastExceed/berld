@@ -1,6 +1,8 @@
 use std::io::{Error, Read, Write};
 use std::mem::size_of;
+
 use nalgebra::{Point, Vector3};
+
 use crate::utils::{FlagSet8, ReadExtension, WriteExtension};
 
 pub mod creature_update;
@@ -17,9 +19,9 @@ pub mod chat_message;
 pub mod chunk_discovery;
 pub mod sector_discovery;
 pub mod map_seed;
-pub mod player_initialization;
+pub mod connection_acceptance;
 pub mod protocol_version;
-pub mod server_full;
+pub mod connection_rejection;
 
 pub trait CwSerializable: Sized {
 	fn read_from<T: Read>(reader: &mut T) -> Result<Self, Error>
