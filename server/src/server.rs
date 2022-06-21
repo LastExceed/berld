@@ -3,10 +3,12 @@ use std::io::{ErrorKind, Read};
 use std::mem::size_of;
 use std::net::{Shutdown, TcpListener, TcpStream};
 use std::sync::Arc;
-use parking_lot::RwLock;
 use std::time::Duration;
+
 use parking_lot::lock_api::RawRwLockDowngrade;
-use protocol::packet::{CwSerializable, PacketFromServer, PacketId};
+use parking_lot::RwLock;
+
+use protocol::packet::{CwSerializable, Packet, PacketFromServer, PacketId};
 use protocol::packet::chat_message::{ChatMessageFromClient, ChatMessageFromServer};
 use protocol::packet::chunk_discovery::ChunkDiscovery;
 use protocol::packet::creature_action::{CreatureAction, CreatureActionType};
@@ -21,6 +23,7 @@ use protocol::packet::status_effect::StatusEffect;
 use protocol::packet::world_update::pickup::Pickup;
 use protocol::packet::world_update::WorldUpdate;
 use protocol::utils::{ReadExtension, WriteExtension};
+
 use crate::creature::Creature;
 use crate::creature_id_pool::CreatureIdPool;
 use crate::player::Player;
@@ -87,12 +90,18 @@ fn handle_new_connection(server: Arc<Server>, stream: &mut TcpStream) -> Result<
 }
 
 fn handle_new_player(server: &Arc<Server>, stream: &mut TcpStream, assigned_id: CreatureId) -> Result<(), io::Error> {
-	stream.write_struct(&PacketId::PlayerInitialization)?;
-	let player_initialization = PlayerInitialization {
-		assigned_id,
-		..Default::default()
-	};
-	player_initialization.write_to(stream)?;
+	PlayerInitialization {}.write_to_with_id(stream)?;
+
+	//at this point the server needs to send an abnormal CreatureUpdate which
+	// A.) is not compressed (and lacks the size prefix used for compressed packets)
+	// B.) has no bitfield indicating the presence of its properties
+	// C.) falls 8 bytes short of representing a full creature
+	//unfortunately it is impossible to determine which bytes are missing exactly, as the only reference is pixxie from the vanilla server, which is almost completely zeroed
+	//the last non-zero bytes in pixxie are the equipped weapons, which are positioned correctly. from that we can deduce that the missing bytes belong to the last 3 properties
+	//it's probably a cut-off at the end resulting from an incorrectly sized buffer
+	stream.write_struct(&PacketId::CreatureUpdate)?;
+	stream.write_struct(&assigned_id)?; //luckily the only thing the alpha client does with this data is acquiring its assigned CreatureId
+	stream.write_struct(&[0u8; 0x1168])?; //so we can simply zero out everything else and not worry about the missing bytes
 
 	if stream.read_struct::<PacketId>()? != PacketId::CreatureUpdate {
 		return Err(io::Error::from(ErrorKind::InvalidData))
