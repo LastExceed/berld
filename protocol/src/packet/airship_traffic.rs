@@ -1,4 +1,5 @@
 use std::io::Error;
+
 use crate::packet::*;
 
 pub struct AirshipTraffic {
@@ -7,20 +8,11 @@ pub struct AirshipTraffic {
 
 impl CwSerializable for AirshipTraffic {
 	fn read_from<T: Read>(reader: &mut T) -> Result<Self, Error> {
-		let airship_count = reader.read_struct::<i32>()?;
-		let mut airships = Vec::with_capacity(airship_count as usize);
-		for _ in 0..airship_count {
-			airships.push(reader.read_struct::<Airship>()?);
-		};
-		Ok(Self { airships })
+		Ok(Self { airships: Vec::read_from(reader)? })
 	}
 
 	fn write_to<T: Write>(&self, writer: &mut T) -> Result<(), Error> {
-		writer.write_struct(&(self.airships.len() as i32))?;
-		for airship in &self.airships {
-			writer.write_struct(airship)?;
-		}
-		Ok(())
+		self.airships.write_to(writer)
 	}
 }
 impl Packet for AirshipTraffic {
@@ -44,6 +36,8 @@ pub struct Airship {
 	// u8 ?
 	// pad3
 }
+
+impl CwSerializable for Airship {}
 
 #[repr(i32)]
 pub enum State {

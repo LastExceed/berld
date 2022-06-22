@@ -37,6 +37,24 @@ pub trait CwSerializable: Sized {
 	}
 }
 
+impl<Element: CwSerializable> CwSerializable for Vec<Element>
+	where [(); size_of::<Element>()]:
+{
+	fn read_from<T: Read>(reader: &mut T) -> Result<Self, Error> {
+		(0..reader.read_struct::<i32>()?)
+			.map(|_| Element::read_from(reader))
+			.collect::<Result<Self, Error>>()
+	}
+
+	fn write_to<T: Write>(&self, writer: &mut T) -> Result<(), Error> {
+		writer.write_struct(&(self.len() as i32))?;
+		for element in self {
+			writer.write_struct::<Element>(element)?;
+		}
+		Ok(())
+	}
+}
+
 pub trait Packet: CwSerializable {
 	const ID: PacketId;
 
@@ -50,8 +68,6 @@ pub trait Packet: CwSerializable {
 
 pub trait PacketFromServer: Packet {}
 pub trait PacketFromClient: Packet {}
-
-//todo: impl for Vec<T> possible?
 
 #[derive(Eq, PartialEq, Debug)]
 #[repr(i32)]

@@ -1,5 +1,7 @@
 use std::io::{Error, Read, Write};
+
 use nalgebra::Point;
+
 use crate::packet::CwSerializable;
 use crate::packet::Item;
 use crate::utils::{ReadExtension, WriteExtension};
@@ -12,27 +14,14 @@ pub struct ChunkLoot {
 //todo: implementation is extremely similar to P48
 impl CwSerializable for ChunkLoot {
 	fn read_from<T: Read>(reader: &mut T) -> Result<Self, Error> {
-		let chunk = reader.read_struct::<Point<i32, 2>>()?;
-
-		let drop_count = reader.read_struct::<i32>()?;
-		let mut drops = Vec::with_capacity(drop_count as usize);
-		for _ in 0..drop_count {
-			drops.push(reader.read_struct::<Drop>()?);
-		};
-
-		let instance = Self {
-			chunk,
-			drops
-		};
-		Ok(instance)
+		Ok(Self {
+			chunk: reader.read_struct::<Point<i32, 2>>()?,
+			drops: Vec::read_from(reader)?
+		})
 	}
 	fn write_to<T: Write>(&self, writer: &mut T) -> Result<(), Error> {
 		writer.write_struct(&self.chunk)?;
-		writer.write_struct(&(self.drops.len() as i32))?;
-		for drop in &self.drops {
-			writer.write_struct(drop)?;
-		}
-		Ok(())
+		self.drops.write_to(writer)
 	}
 }
 
@@ -48,3 +37,5 @@ pub struct Drop {
 	pub unknown_b: i32,
 	//pad4
 }
+
+impl CwSerializable for Drop {}
