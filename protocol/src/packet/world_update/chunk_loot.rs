@@ -1,6 +1,6 @@
 use std::io::{Error, Read, Write};
 
-use nalgebra::Point;
+use nalgebra::{Point2, Point3};
 
 use crate::io_extensions::{ReadExtension, WriteExtension};
 use crate::packet::CwSerializable;
@@ -11,7 +11,7 @@ use crate::packet::world_update::ChunkLoot;
 impl CwSerializable for ChunkLoot {
 	fn read_from(reader: &mut impl Read) -> Result<Self, Error> {
 		Ok(Self {
-			chunk: reader.read_struct::<Point<i32, 2>>()?,
+			chunk: reader.read_struct::<Point2<i32>>()?,
 			drops: Vec::read_from(reader)?
 		})
 	}
@@ -24,7 +24,7 @@ impl CwSerializable for ChunkLoot {
 #[repr(C)]
 pub struct Drop {
 	pub item: Item,
-	pub position: Point<i64, 3>,
+	pub position: Point3<i64>,
 	pub rotation: f32,
 	pub scale: f32,
 	pub unknown_a: u8,

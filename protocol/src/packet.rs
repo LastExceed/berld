@@ -1,6 +1,6 @@
 use std::io::{Read, Write};
 
-use nalgebra::{Point, Vector3};
+use nalgebra::{Point2, Point3, Vector3};
 
 use crate::{CwSerializable, Packet, PacketFromClient, PacketFromServer};
 use crate::flagset::{FlagSet16, FlagSet32};
@@ -28,7 +28,7 @@ pub mod common;
 #[derive(Default)]
 pub struct CreatureUpdate {
 	pub id: CreatureId,
-	pub position: Option<Point<i64, 3>>,
+	pub position: Option<Point3<i64>>,
 	pub rotation: Option<[f32; 3]>,//todo: type
 	pub velocity: Option<Vector3<f32>>,
 	pub acceleration: Option<Vector3<f32>>,
@@ -57,7 +57,7 @@ pub struct CreatureUpdate {
 	pub unknown24: Option<[f32; 3]>,
 	pub unknown25: Option<[f32; 3]>,
 	/**coordinates of the location this creature is aiming at>, relative to its own position*/
-	pub aim_offset: Option<Point<f32, 3>>,
+	pub aim_offset: Option<Point3<f32>>,
 	pub health: Option<f32>,
 	pub mana: Option<f32>,
 	pub blocking_gauge: Option<f32>,
@@ -72,10 +72,10 @@ pub struct CreatureUpdate {
 	/**this is the '+#' that monsters in some dungeons have next to their [race]*/
 	pub power_base: Option<i8>,
 	pub unknown38: Option<i32>,
-	pub home_chunk: Option<Point<i32, 3>>,
-	pub home: Option<Point<i64, 3>>,
+	pub home_chunk: Option<Point3<i32>>,
+	pub home: Option<Point3<i64>>,
 	/**players within ±2 [level] of the dungeon at these coordinates see a green speech bubble above this creature's head and can get that chunk revealed on the map by talking to this creature*/
-	pub chunk_to_reveal: Option<Point<i32, 3>>,
+	pub chunk_to_reveal: Option<Point3<i32>>,
 	pub unknown42: Option<i8>,//0 3 4 for villages - 3 = dialog about pet food
 	pub consumable: Option<Item>,
 	pub equipment: Option<Equipment>,
@@ -120,7 +120,7 @@ pub struct IngameDatetime {
 #[repr(C)]
 pub struct CreatureAction {
 	pub item: Item,
-	pub chunk: Point<i32, 2>,
+	pub chunk: Point2<i32>,
 	pub item_index: i32,
 	pub unknown_a: i32,
 	pub type_: CreatureActionType
@@ -136,7 +136,7 @@ pub struct Hit {
 	//pad3
 	pub stuntime: i32,
 	//pad3
-	pub position: Point<i64, 3>,
+	pub position: Point3<i64>,
 	pub direction: Vector3<f32>,
 	pub is_yellow: bool,
 	pub type_: HitType,
@@ -159,10 +159,10 @@ pub struct StatusEffect {
 #[repr(C)]
 pub struct Projectile {
 	pub attacker: u64,
-	pub chunk: Point<i32, 2>,
+	pub chunk: Point2<i32>,
 	pub unknown_a: i32,
 	//pad4
-	pub position: Point<i64, 3>,
+	pub position: Point3<i64>,
 	pub unknown_v: [i32; 3],
 	pub velocity: Vector3<f32>,
 	pub legacy_damage: f32,
@@ -187,10 +187,10 @@ pub struct ChatMessageFromServer {
 }
 
 #[repr(C)]
-pub struct CurrentChunk(pub Point<i32, 2>);
+pub struct CurrentChunk(pub Point2<i32>);
 
 #[repr(C)]
-pub struct CurrentBiome(pub Point<i32, 2>);
+pub struct CurrentBiome(pub Point2<i32>);
 
 #[repr(C)]
 pub struct MapSeed(pub i32);

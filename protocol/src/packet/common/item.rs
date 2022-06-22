@@ -1,4 +1,4 @@
-use nalgebra::Point;
+use nalgebra::Point3;
 
 #[repr(u8)]
 #[derive(Copy, Clone)]
@@ -95,7 +95,7 @@ impl From<ItemFlag> for u8 {
 #[repr(C, align(4))]
 #[derive(Clone)]
 pub struct Spirit {
-	pub position: Point<i8, 3>,
+	pub position: Point3<i8>,
 	pub material: Material,
 	pub level: i16,
 	//pad2 //todo: struct align suggests that this could be a property, maybe seed/rarity/flags of the spirit?

@@ -1,5 +1,5 @@
 use protocol::flagset::{FlagSet16, FlagSet32};
-use protocol::nalgebra::{Point, Vector3};
+use protocol::nalgebra::{Point3, Vector3};
 use protocol::packet::common::{CreatureId, Item, Race};
 use protocol::packet::creature_update::*;
 use protocol::packet::CreatureUpdate;
@@ -7,7 +7,7 @@ use protocol::packet::CreatureUpdate;
 #[derive(Clone)]
 pub struct Creature {
 	pub id: CreatureId,
-	pub position: Point<i64, 3>,
+	pub position: Point3<i64>,
 	pub rotation: [f32; 3],//todo: type
 	pub velocity: Vector3<f32>,
 	pub acceleration: Vector3<f32>,
@@ -36,7 +36,7 @@ pub struct Creature {
 	pub unknown24: [f32; 3],
 	pub unknown25: [f32; 3],
 	/**coordinates of the location this creature is aiming at, relative to its own position*/
-	pub aim_displacement: Point<f32, 3>,
+	pub aim_displacement: Point3<f32>,
 	pub health: f32,
 	pub mana: f32,
 	pub blocking_gauge: f32,
@@ -51,10 +51,10 @@ pub struct Creature {
 	/**this is the '+#' that monsters in some dungeons have next to their [race]*/
 	pub power_base: i8,
 	pub unknown38: i32,
-	pub home_chunk: Point<i32, 3>,
-	pub home: Point<i64, 3>,
+	pub home_chunk: Point3<i32>,
+	pub home: Point3<i64>,
 	/**players within ±2 [level] of the dungeon at these coordinates see a green speech bubble above this creature's head and can get that chunk revealed on the map by talking to this creature*/
-	pub chunk_to_reveal: Point<i32, 3>,
+	pub chunk_to_reveal: Point3<i32>,
 	pub unknown42: i8,//0 3 4 for villages - 3 = dialog about pet food
 	pub consumable: Item,
 	pub equipment: Equipment,

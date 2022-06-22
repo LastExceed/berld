@@ -4,6 +4,7 @@ use std::io::{Error, ErrorKind};
 use flate2::Compression;
 use flate2::read::ZlibDecoder;
 use flate2::write::ZlibEncoder;
+use nalgebra::Point3;
 
 use crate::packet::*;
 
@@ -380,12 +381,12 @@ pub struct Appearance {
 	pub feet_rotation: f32,
 	pub wing_rotation: f32,
 	pub tail_rotation: f32,
-	pub body_offset: Point<f32, 3>,
-	pub head_offset: Point<f32, 3>,
-	pub hand_offset: Point<f32, 3>,
-	pub foot_offset: Point<f32, 3>,
-	pub tail_offset: Point<f32, 3>,
-	pub wing_offset: Point<f32, 3>
+	pub body_offset: Point3<f32>,
+	pub head_offset: Point3<f32>,
+	pub hand_offset: Point3<f32>,
+	pub foot_offset: Point3<f32>,
+	pub tail_offset: Point3<f32>,
+	pub wing_offset: Point3<f32>
 }
 
 #[repr(u16)]

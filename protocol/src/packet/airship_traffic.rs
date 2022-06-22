@@ -1,5 +1,7 @@
 use std::io::Error;
 
+use nalgebra::Point3;
+
 use crate::packet::*;
 
 impl CwSerializable for AirshipTraffic {
@@ -17,13 +19,13 @@ pub struct Airship {
 	pub id: i64,
 	pub unknown_a: i32,
 	pub unknown_b: i32,
-	pub position: Point<i64, 3>,
+	pub position: Point3<i64>,
 	pub velocity: Vector3<f32>,
 	pub rotation: f32,
-	pub station: Point<i64, 3>,
+	pub station: Point3<i64>,
 	pub path_rotation: f32,
 	//pad4
-	pub destination: Point<i64, 3>,
+	pub destination: Point3<i64>,
 	pub state: State,
 	// u8 ?
 	// pad3

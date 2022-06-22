@@ -3,7 +3,7 @@ use std::io::{Error, Read, Write};
 use flate2::Compression;
 use flate2::read::ZlibDecoder;
 use flate2::write::ZlibEncoder;
-use nalgebra::{Point, Vector3};
+use nalgebra::{Point2, Point3, Vector3};
 
 use crate::CwSerializable;
 use crate::io_extensions::{ReadExtension, WriteExtension};
@@ -81,7 +81,7 @@ impl CwSerializable for WorldUpdate {
 
 #[repr(C)]
 pub struct WorldEdit {
-	pub position: Point<i32, 3>,
+	pub position: Point3<i32>,
 	pub color: [u8; 3],//todo: type
 	pub block_type: BlockType,
 	pub padding: i32
@@ -89,7 +89,7 @@ pub struct WorldEdit {
 
 #[repr(C)]
 pub struct Particle {
-	pub position: Point<i64, 3>,
+	pub position: Point3<i64>,
 	pub velocity: Vector3<f32>,
 	pub color: [f32; 3],//todo: type
 	pub alpha: f32,
@@ -102,7 +102,7 @@ pub struct Particle {
 
 #[repr(C)]
 pub struct SoundEffect {
-	pub position: Point<f32, 3>,
+	pub position: Point3<f32>,
 	pub sound: Sound,
 	pub pitch: f32,
 	pub volume: f32
@@ -110,12 +110,12 @@ pub struct SoundEffect {
 
 #[repr(C)]
 pub struct WorldObject {
-	pub chunk: Point<i32, 2>,
+	pub chunk: Point2<i32>,
 	pub id: i32,
 	pub unknown_a: i32,
 	pub type_: WorldObjectType,
 	//pad4
-	pub position: Point<i64, 3>,
+	pub position: Point3<i64>,
 	pub orientation: i8,
 	//pad3
 	pub size: [f32; 3], //todo: type
@@ -128,12 +128,12 @@ pub struct WorldObject {
 }
 
 pub struct ChunkLoot {
-	pub chunk: Point<i32, 2>,
+	pub chunk: Point2<i32>,
 	pub drops: Vec<Drop>
 }
 
 pub struct P48 {
-	pub chunk: Point<i32, 2>,
+	pub chunk: Point2<i32>,
 	pub sub_packets: Vec<P48sub>
 }
 
@@ -161,7 +161,7 @@ pub struct Attack {
 
 #[repr(C)]
 pub struct Mission {
-	pub sector: Point<i32, 2>,
+	pub sector: Point2<i32>,
 	pub unknown_a: i32,
 	pub unknown_b: i32,
 	pub unknown_c: i32,
@@ -174,7 +174,7 @@ pub struct Mission {
 	//pad2
 	pub health_current: i32,
 	pub health_maximum: i32,
-	pub chunk: Point<i32, 2>
+	pub chunk: Point2<i32>
 }
 
 impl CwSerializable for WorldEdit {}
