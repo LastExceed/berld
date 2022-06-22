@@ -78,7 +78,8 @@ impl CwSerializable for CreatureUpdate {
 			skill_tree           : if bitfield & (1 << 46) > 0 { Some(decoder.read_struct()?) } else { None },
 			mana_cubes           : if bitfield & (1 << 47) > 0 { Some(decoder.read_struct()?) } else { None }
 		};
-		if matches!(decoder.read_to_end(&mut vec![0u8; 0]), Ok(0)) {
+
+		if !matches!(decoder.read_to_end(&mut vec![0u8; 0]), Ok(0)) {
 			return Err(Error::from(ErrorKind::InvalidData));
 		}
 		Ok(instance)
