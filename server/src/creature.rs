@@ -1,7 +1,8 @@
+use protocol::flagset::{FlagSet16, FlagSet32};
 use protocol::nalgebra::{Point, Vector3};
+use protocol::packet::common::{CreatureId, Item, Race};
 use protocol::packet::creature_update::*;
-use protocol::packet::Item;
-use protocol::utils::{FlagSet16, FlagSet32};
+use protocol::packet::CreatureUpdate;
 
 #[derive(Clone)]
 pub struct Creature {

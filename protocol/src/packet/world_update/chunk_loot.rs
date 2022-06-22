@@ -2,14 +2,10 @@ use std::io::{Error, Read, Write};
 
 use nalgebra::Point;
 
+use crate::io_extensions::{ReadExtension, WriteExtension};
 use crate::packet::CwSerializable;
 use crate::packet::Item;
-use crate::utils::{ReadExtension, WriteExtension};
-
-pub struct ChunkLoot {
-	pub chunk: Point<i32, 2>,
-	pub drops: Vec<Drop>
-}
+use crate::packet::world_update::ChunkLoot;
 
 //todo: implementation is extremely similar to P48
 impl CwSerializable for ChunkLoot {

@@ -1,5 +1,4 @@
-use std::cmp::min;
-use std::ffi::{CStr, CString};
+use std::ffi::CStr;
 use std::io::{Error, ErrorKind};
 
 use flate2::Compression;
@@ -7,66 +6,6 @@ use flate2::read::ZlibDecoder;
 use flate2::write::ZlibEncoder;
 
 use crate::packet::*;
-use crate::utils::{FlagSet16, FlagSet32, ReadExtension};
-
-#[derive(Default)]
-pub struct CreatureUpdate {
-	pub id: CreatureId,
-	pub position: Option<Point<i64, 3>>,
-	pub rotation: Option<[f32; 3]>,//todo: type
-	pub velocity: Option<Vector3<f32>>,
-	pub acceleration: Option<Vector3<f32>>,
-	/**used by the 'retreat' ability*/
-	pub velocity_extra: Option<Vector3<f32>>,
-	pub climb_animation_state: Option<f32>,
-	pub flags_physics: Option<FlagSet32<PhysicsFlag>>,
-	pub affiliation: Option<Affiliation>,
-	pub race: Option<Race>,
-	pub animation: Option<Animation>,
-	pub animation_time: Option<i32>,
-	pub combo: Option<i32>,
-	pub hit_time_out: Option<i32>,
-	pub appearance: Option<Appearance>,
-	pub flags: Option<FlagSet16<CreatureFlag>>,
-	pub effect_time_dodge: Option<i32>,
-	pub effect_time_stun: Option<i32>,
-	pub effect_time_fear: Option<i32>,
-	pub effect_time_chill: Option<i32>,
-	pub effect_time_wind: Option<i32>,
-	/**unknown purpose>, name adopted from cuwo*/
-	pub show_patch_time: Option<i32>,
-	pub combat_class_major: Option<CombatClassMajor>,
-	pub combat_class_minor: Option<CombatClassMinor>,
-	pub mana_charge: Option<f32>,
-	pub unknown24: Option<[f32; 3]>,
-	pub unknown25: Option<[f32; 3]>,
-	/**coordinates of the location this creature is aiming at>, relative to its own position*/
-	pub aim_offset: Option<Point<f32, 3>>,
-	pub health: Option<f32>,
-	pub mana: Option<f32>,
-	pub blocking_gauge: Option<f32>,
-	pub multipliers: Option<Multipliers>,
-	pub unknown31: Option<i8>,
-	pub unknown32: Option<i8>,
-	pub level: Option<i32>,
-	pub experience: Option<i32>,
-	/**for pets this is the [CreatureId] of their owner*/
-	pub master: Option<CreatureId>,
-	pub unknown36: Option<i64>,
-	/**this is the '+#' that monsters in some dungeons have next to their [race]*/
-	pub power_base: Option<i8>,
-	pub unknown38: Option<i32>,
-	pub home_chunk: Option<Point<i32, 3>>,
-	pub home: Option<Point<i64, 3>>,
-	/**players within ±2 [level] of the dungeon at these coordinates see a green speech bubble above this creature's head and can get that chunk revealed on the map by talking to this creature*/
-	pub chunk_to_reveal: Option<Point<i32, 3>>,
-	pub unknown42: Option<i8>,//0 3 4 for villages - 3 = dialog about pet food
-	pub consumable: Option<Item>,
-	pub equipment: Option<Equipment>,
-	pub name: Option<String>,
-	pub skill_tree: Option<SkillTree>,
-	pub mana_cubes: Option<i32>
-}
 
 impl CwSerializable for CreatureUpdate {
 	fn read_from(reader: &mut impl Read) -> Result<Self, Error> {
@@ -265,14 +204,6 @@ impl CwSerializable for CreatureUpdate {
 		writer.write_all(&buffer)
 	}
 }
-impl Packet for CreatureUpdate {
-	const ID: PacketId = PacketId::CreatureUpdate;
-}
-impl PacketFromClient for CreatureUpdate {}
-impl PacketFromServer for CreatureUpdate {}
-
-#[derive(Default, Clone, Copy)]
-pub struct CreatureId(pub i64);
 
 #[repr(u32)]
 #[derive(Copy, Clone)]
@@ -301,167 +232,6 @@ pub enum Affiliation {
 
 	Pet = 5,
 	Neutral
-}
-
-#[repr(i32)]
-#[derive(Copy, Clone)]
-pub enum Race {
-	ElfMale,
-	ElfFemale,
-	HumanMale,
-	HumanFemale,
-	GoblinMale,
-	GoblinFemale,
-	TerrierBull,
-	LizardmanMale,
-	LizardmanFemale,
-	DwarfMale,
-	DwarfFemale,
-	OrcMale,
-	OrcFemale,
-	FrogmanMale,
-	FrogmanFemale,
-	UndeadMale,
-	UndeadFemale,
-	Skeleton,
-	OldMan,
-	Collie,
-	ShepherdDog,
-	SkullBull,
-	Alpaca,
-	AlpacaBrown,
-	Egg,
-	Turtle,
-	Terrier,
-	TerrierScottish,
-	Wolf,
-	Panther,
-	Cat,
-	CatBrown,
-	CatWhite,
-	Pig,
-	Sheep,
-	Bunny,
-	Porcupine,
-	SlimeGreen,
-	SlimePink,
-	SlimeYellow,
-	SlimeBlue,
-	Frightener,
-	Sandhorror,
-	Wizard,
-	Bandit,
-	Witch,
-	Ogre,
-	Rockling,
-	Gnoll,
-	GnollPolar,
-	Monkey,
-	Gnobold,
-	Insectoid,
-	Hornet,
-	InsectGuard,
-	Crow,
-	Chicken,
-	Seagull,
-	Parrot,
-	Bat,
-	Fly,
-	Midge,
-	Mosquito,
-	RunnerPlain,
-	RunnerLeaf,
-	RunnerSnow,
-	RunnerDesert,
-	Peacock,
-	Frog,
-	CreaturePlant,
-	CreatureRadish,
-	Onionling,
-	OnionlingDesert,
-	Devourer,
-	Duckbill,
-	Crocodile,
-	CreatureSpike,
-	Anubis,
-	Horus,
-	Jester,
-	Spectrino,
-	Djinn,
-	Minotaur,
-	NomadMale,
-	NomadFemale,
-	Imp,
-	Spitter,
-	Mole,
-	Biter,
-	Koala,
-	Squirrel,
-	Raccoon,
-	Owl,
-	Penguin,
-	Werewolf,
-	Santa,
-	Zombie,
-	Vampire,
-	Horse,
-	Camel,
-	Cow,
-	Dragon,
-	BeetleDark,
-	BeetleFire,
-	BeetleSnout,
-	BeetleLemon,
-	Crab,
-	CrabSea,
-	Troll,
-	TrollDark,
-	Helldemon,
-	Golem,
-	GolemEmber,
-	GolemSnow,
-	Yeti,
-	Cyclops,
-	Mammoth,
-	Lich,
-	Runegiant,
-	Saurian,
-	Bush,
-	BushSnow,
-	BushSnowberry,
-	PlantCotton,
-	Scrub,
-	ScrubCobweg,
-	ScrubFire,
-	Ginseng,
-	Cactus,
-	ChristmasTree,
-	Thorntree,
-	DepositGold,
-	DepositIron,
-	DepositSilver,
-	DepositSandstone,
-	DepositEmerald,
-	DepositSapphire,
-	DepositRuby,
-	DepositDiamond,
-	DepositIcecrystal,
-	Scarecrow,
-	Aim,
-	Dummy,
-	Vase,
-	Bomb,
-	FishSapphire,
-	FishLemon,
-	Seahorse,
-	Mermaid,
-	Merman,
-	Shark,
-	Bumblebee,
-	Lanternfish,
-	Mawfish,
-	Piranha,
-	Blowfish
 }
 
 #[repr(u8)]

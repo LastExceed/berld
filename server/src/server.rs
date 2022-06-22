@@ -8,21 +8,13 @@ use std::time::Duration;
 use parking_lot::lock_api::RawRwLockDowngrade;
 use parking_lot::RwLock;
 
-use protocol::packet::{CwSerializable, Packet, PacketFromServer, PacketId};
-use protocol::packet::chat_message::{ChatMessageFromClient, ChatMessageFromServer};
-use protocol::packet::connection_acceptance::ConnectionAcceptance;
-use protocol::packet::creature_action::{CreatureAction, CreatureActionType};
-use protocol::packet::creature_update::{Affiliation, CreatureId, CreatureUpdate};
-use protocol::packet::current_biome::CurrentBiome;
-use protocol::packet::current_chunk::CurrentChunk;
-use protocol::packet::hit::Hit;
-use protocol::packet::map_seed::MapSeed;
-use protocol::packet::projectile::Projectile;
-use protocol::packet::protocol_version::ProtocolVersion;
-use protocol::packet::status_effect::StatusEffect;
-use protocol::packet::world_update::pickup::Pickup;
-use protocol::packet::world_update::WorldUpdate;
-use protocol::utils::{ReadExtension, WriteExtension};
+use protocol::{CwSerializable, Packet, PacketFromServer};
+use protocol::io_extensions::{ReadExtension, WriteExtension};
+use protocol::packet::*;
+use protocol::packet::common::{CreatureId, PacketId};
+use protocol::packet::creature_action::CreatureActionType;
+use protocol::packet::creature_update::Affiliation;
+use protocol::packet::world_update::Pickup;
 
 use crate::creature::Creature;
 use crate::creature_id_pool::CreatureIdPool;

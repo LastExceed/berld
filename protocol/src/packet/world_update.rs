@@ -3,23 +3,20 @@ use std::io::{Error, Read, Write};
 use flate2::Compression;
 use flate2::read::ZlibDecoder;
 use flate2::write::ZlibEncoder;
+use nalgebra::{Point, Vector3};
 
-use crate::packet::{CwSerializable, Packet, PacketFromServer, PacketId};
-use crate::packet::hit::Hit;
-use crate::packet::projectile::Projectile;
-use crate::packet::status_effect::StatusEffect;
-use crate::utils::{ReadExtension, WriteExtension};
+use crate::CwSerializable;
+use crate::io_extensions::{ReadExtension, WriteExtension};
+use crate::packet::common::{CreatureId, Item, Race};
+use crate::packet::WorldUpdate;
 
-use self::attack::Attack;
-use self::chunk_loot::ChunkLoot;
-use self::kill::Kill;
-use self::mission::Mission;
-use self::p48::P48;
-use self::particle::Particle;
-use self::pickup::Pickup;
-use self::sound_effect::SoundEffect;
-use self::world_edit::WorldEdit;
-use self::world_object::WorldObject;
+use self::chunk_loot::*;
+use self::mission::*;
+use self::p48::*;
+use self::particle::*;
+use self::sound_effect::*;
+use self::world_edit::*;
+use self::world_object::*;
 
 pub mod world_edit;
 pub mod particle;
@@ -27,27 +24,7 @@ pub mod sound_effect;
 pub mod world_object;
 pub mod chunk_loot;
 pub mod p48;
-pub mod pickup;
-pub mod kill;
-pub mod attack;
 pub mod mission;
-
-#[derive(Default)]
-pub struct WorldUpdate {
-	pub world_edits: Vec<WorldEdit>,
-	pub hits: Vec<Hit>,
-	pub particles: Vec<Particle>,
-	pub sound_effects: Vec<SoundEffect>,
-	pub projectiles: Vec<Projectile>,
-	pub world_objects: Vec<WorldObject>,
-	pub chunk_loots: Vec<ChunkLoot>,
-	pub p48s: Vec<P48>,
-	pub pickups: Vec<Pickup>,
-	pub kills: Vec<Kill>,
-	pub attacks: Vec<Attack>,
-	pub status_effects: Vec<StatusEffect>,
-	pub missions: Vec<Mission>
-}
 
 impl CwSerializable for WorldUpdate {
 	fn read_from(reader: &mut impl Read) -> Result<Self, Error> {
@@ -101,7 +78,110 @@ impl CwSerializable for WorldUpdate {
 		writer.write_all(&buffer)
 	}
 }
-impl Packet for WorldUpdate {
-	const ID: PacketId = PacketId::WorldUpdate;
+
+#[repr(C)]
+pub struct WorldEdit {
+	pub position: Point<i32, 3>,
+	pub color: [u8; 3],//todo: type
+	pub block_type: BlockType,
+	pub padding: i32
 }
-impl PacketFromServer for WorldUpdate {}
+
+#[repr(C)]
+pub struct Particle {
+	pub position: Point<i64, 3>,
+	pub velocity: Vector3<f32>,
+	pub color: [f32; 3],//todo: type
+	pub alpha: f32,
+	pub size: f32,
+	pub count: i32,
+	pub type_: ParticleType,
+	pub spread: f32,
+	//pad4
+}
+
+#[repr(C)]
+pub struct SoundEffect {
+	pub position: Point<f32, 3>,
+	pub sound: Sound,
+	pub pitch: f32,
+	pub volume: f32
+}
+
+#[repr(C)]
+pub struct WorldObject {
+	pub chunk: Point<i32, 2>,
+	pub id: i32,
+	pub unknown_a: i32,
+	pub type_: WorldObjectType,
+	//pad4
+	pub position: Point<i64, 3>,
+	pub orientation: i8,
+	//pad3
+	pub size: [f32; 3], //todo: type
+	pub is_closed: bool,
+	//pad3
+	pub transform_time: i32,
+	pub unknown_b: i32,
+	//pad4
+	pub interactor: i64
+}
+
+pub struct ChunkLoot {
+	pub chunk: Point<i32, 2>,
+	pub drops: Vec<Drop>
+}
+
+pub struct P48 {
+	pub chunk: Point<i32, 2>,
+	pub sub_packets: Vec<P48sub>
+}
+
+#[repr(C)]
+pub struct Pickup {
+	pub interactor: CreatureId,
+	pub item: Item
+}
+
+#[repr(C)]
+pub struct Kill {
+	pub killer: CreatureId,
+	pub victim: CreatureId,
+	pub unknown: i32,
+	pub xp: i32
+}
+
+#[repr(C)]
+pub struct Attack {
+	pub target: i64,
+	pub attacker: i64,
+	pub damage: f32,
+	//pad4
+}
+
+#[repr(C)]
+pub struct Mission {
+	pub sector: Point<i32, 2>,
+	pub unknown_a: i32,
+	pub unknown_b: i32,
+	pub unknown_c: i32,
+	pub id: i32,
+	pub kind: i32,
+	pub boss: Race,
+	pub level: i32,
+	pub unknown_d: u8,
+	pub state: MissionState,
+	//pad2
+	pub health_current: i32,
+	pub health_maximum: i32,
+	pub chunk: Point<i32, 2>
+}
+
+impl CwSerializable for WorldEdit {}
+impl CwSerializable for Particle {}
+impl CwSerializable for SoundEffect {}
+impl CwSerializable for WorldObject {}
+impl CwSerializable for Pickup {}
+impl CwSerializable for Kill {}
+impl CwSerializable for Attack {}
+impl CwSerializable for Mission {}

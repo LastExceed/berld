@@ -1,43 +1,31 @@
 use std::io::{Error, Read, Write};
 use std::mem::size_of;
 
-use crate::packet::{CwSerializable, Packet, PacketFromClient, PacketFromServer, PacketId};
-use crate::packet::creature_update::CreatureId;
-use crate::utils::{ReadExtension, WriteExtension};
+use crate::io_extensions::{ReadExtension, WriteExtension};
+use crate::packet::*;
 
-pub struct ChatMessageFromClient {
-	pub text: String
-}
 impl CwSerializable for ChatMessageFromClient {
 	fn read_from(reader: &mut impl Read) -> Result<Self, Error> {
-		let instance = Self {
-			text: read_text(reader)?
-		};
-		Ok(instance)
+		Ok(
+			Self {
+				text: read_text(reader)?
+			}
+		)
 	}
 
 	fn write_to(&self, writer: &mut impl Write) -> Result<(), Error> {
 		write_text(writer, &self.text)
 	}
 }
-impl Packet for ChatMessageFromClient {
-	const ID: PacketId = PacketId::ChatMessage;
-}
-impl PacketFromClient for ChatMessageFromClient {}
 
-
-
-pub struct ChatMessageFromServer {
-	pub source: CreatureId,
-	pub text: String
-}
 impl CwSerializable for ChatMessageFromServer {
 	fn read_from(reader: &mut impl Read) -> Result<Self, Error> {
-		let instance = Self {
-			source: reader.read_struct::<CreatureId>()?,
-			text: read_text(reader)?
-		};
-		Ok(instance)
+		Ok(
+			Self {
+				source: reader.read_struct::<CreatureId>()?,
+				text: read_text(reader)?
+			}
+		)
 	}
 
 	fn write_to(&self, writer: &mut impl Write) -> Result<(), Error> {
@@ -45,12 +33,6 @@ impl CwSerializable for ChatMessageFromServer {
 		write_text(writer, &self.text)
 	}
 }
-impl Packet for ChatMessageFromServer {
-	const ID: PacketId = PacketId::ChatMessage;
-}
-impl PacketFromServer for ChatMessageFromServer {}
-
-
 
 fn read_text(reader: &mut impl Read) -> Result<String, Error> {
 	let character_count = reader.read_struct::<i32>()? as usize;

@@ -2,10 +2,6 @@ use std::io::Error;
 
 use crate::packet::*;
 
-pub struct AirshipTraffic {
-	pub airships: Vec<Airship>
-}
-
 impl CwSerializable for AirshipTraffic {
 	fn read_from(reader: &mut impl Read) -> Result<Self, Error> {
 		Ok(Self { airships: Vec::read_from(reader)? })
@@ -15,10 +11,6 @@ impl CwSerializable for AirshipTraffic {
 		self.airships.write_to(writer)
 	}
 }
-impl Packet for AirshipTraffic {
-	const ID: PacketId = PacketId::AirshipTraffic;
-}
-impl PacketFromClient for AirshipTraffic {}
 
 #[repr(C)]
 pub struct Airship {

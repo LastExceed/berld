@@ -2,13 +2,9 @@ use std::io::{Error, Read, Write};
 
 use nalgebra::Point;
 
+use crate::io_extensions::{ReadExtension, WriteExtension};
 use crate::packet::CwSerializable;
-use crate::utils::{ReadExtension, WriteExtension};
-
-pub struct P48 {
-	pub chunk: Point<i32, 2>,
-	pub sub_packets: Vec<P48sub>
-}
+use crate::packet::world_update::P48;
 
 impl CwSerializable for P48 {
 	fn read_from(reader: &mut impl Read) -> Result<Self, Error> {

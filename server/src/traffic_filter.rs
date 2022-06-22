@@ -1,4 +1,5 @@
-use protocol::packet::creature_update::{CreatureFlag, CreatureUpdate, PhysicsFlag};
+use protocol::packet::creature_update::{CreatureFlag, PhysicsFlag};
+use protocol::packet::CreatureUpdate;
 
 use crate::creature::Creature;
 

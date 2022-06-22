@@ -1,4 +1,4 @@
-use protocol::packet::creature_update::CreatureId;
+use protocol::packet::common::CreatureId;
 
 pub struct CreatureIdPool {
 	claimed_ids: Vec<i64>

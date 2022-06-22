@@ -1,9 +1,12 @@
 use std::mem::size_of;
 use std::net::TcpStream;
+
 use parking_lot::{Mutex, RwLock};
-use protocol::packet::chat_message::ChatMessageFromServer;
-use protocol::packet::creature_update::{CreatureId};
-use protocol::packet::PacketFromServer;
+
+use protocol::packet::ChatMessageFromServer;
+use protocol::packet::common::CreatureId;
+use protocol::PacketFromServer;
+
 use crate::creature::Creature;
 
 pub struct Player {
