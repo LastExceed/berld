@@ -133,7 +133,7 @@ fn handle_new_player(server: &Arc<Server>, stream: &mut TcpStream, assigned_id: 
 
 	{
 		let mut players = server.players.write();
-		let index = players.iter().position(|it| { Arc::ptr_eq(&player_arc, it) }).expect("player not found");
+		let index = players.iter().position(|other_player| Arc::ptr_eq(&player_arc, other_player)).expect("player not found");
 		players.swap_remove(index);
 	};
 	server.broadcast(&CreatureUpdate {

@@ -45,22 +45,22 @@ pub fn filter(packet: &mut CreatureUpdate, previous: &Creature, current: &Creatu
 	//- unknown42
 
 	//x and y are always overridden by acceleration
-	let need_velocity_z = packet.velocity.map_or(false, |value| {
+	let need_velocity_z = packet.velocity.map_or(false, |velocity| {
 		if current.flags.get(CreatureFlag::Climbing) {
 			false
 		} else if current.flags_physics.get(PhysicsFlag::Swimming) {
-			value.z > 1f32 && value.z - (current.acceleration.z / 80f32 * 12f32) > 1f32 //wip
-		} else if value.z < previous.velocity.z {
+			velocity.z > 1f32 && velocity.z - (current.acceleration.z / 80f32 * 12f32) > 1f32 //wip
+		} else if velocity.z < previous.velocity.z {
 			false
 		} else if current.flags_physics.get(PhysicsFlag::OnGround) {
-			value.z > 0f32
+			velocity.z > 0f32
 		} else { //airborne
 			true
 		}
 	});
 	let glider_hovering = need_velocity_z && current.flags.get(CreatureFlag::Gliding);
-	let movement_changed = packet.acceleration.map_or(false, |value| { (value - previous.acceleration).magnitude() > 0f32 });//todo: compare to last sent (4)
-	let new_animation_started = packet.animation_time.map_or(false, |value|{value < previous.animation_time });
+	let movement_changed = packet.acceleration.map_or(false, |acceleration| acceleration.metric_distance(&previous.acceleration) > 0f32);//todo: compare to last sent (4)
+	let new_animation_started = packet.animation_time.map_or(false, |animation_time| animation_time < previous.animation_time);
 
 	if !movement_changed {
 		packet.acceleration = None;
@@ -76,17 +76,20 @@ pub fn filter(packet: &mut CreatureUpdate, previous: &Creature, current: &Creatu
 		packet.animation_time = None;
 	}
 
-	packet.velocity_extra = packet.velocity_extra.filter(|value| {
-		(0..3).any(|index|{ !(0f32..1f32).contains(&(value[index] / previous.velocity_extra[index])) })//todo: there gotta be a better way to do this
+	packet.velocity_extra = packet.velocity_extra.filter(|velocity_extra| {
+		velocity_extra
+			.iter()
+			.zip(previous.velocity_extra.iter())
+			.any(|(new, old)| !(0f32..1f32).contains(&(new / old)))//todo: there gotta be a better way to do this
 	});
 
-	packet.effect_time_dodge = packet.effect_time_dodge.filter(|value| { *value > previous.effect_time_dodge });
-	packet.effect_time_stun  = packet.effect_time_stun .filter(|value| { *value > previous.effect_time_stun  });
-	packet.effect_time_fear  = packet.effect_time_fear .filter(|value| { *value > previous.effect_time_fear  });
-	packet.effect_time_chill = packet.effect_time_chill.filter(|value| { *value > previous.effect_time_ice   });
-	packet.effect_time_wind  = packet.effect_time_wind .filter(|value| { *value > previous.effect_time_wind  });
+	packet.effect_time_dodge = packet.effect_time_dodge.filter(|value| *value > previous.effect_time_dodge);
+	packet.effect_time_stun  = packet.effect_time_stun .filter(|value| *value > previous.effect_time_stun );
+	packet.effect_time_fear  = packet.effect_time_fear .filter(|value| *value > previous.effect_time_fear );
+	packet.effect_time_chill = packet.effect_time_chill.filter(|value| *value > previous.effect_time_chill);
+	packet.effect_time_wind  = packet.effect_time_wind .filter(|value| *value > previous.effect_time_wind );
 
-	packet.aim_offset = packet.aim_offset.filter(|_| { current.flags.get(CreatureFlag::Aiming) });//todo: compare to last sent (2)
+	packet.aim_offset = packet.aim_offset.filter(|_| current.flags.get(CreatureFlag::Aiming));//todo: compare to last sent (2)
 
 
 

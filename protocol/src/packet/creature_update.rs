@@ -1,5 +1,5 @@
 use std::cmp::min;
-use std::ffi::CStr;
+use std::ffi::{CStr, CString};
 use std::io::{Error, ErrorKind};
 
 use flate2::Compression;
@@ -69,13 +69,13 @@ pub struct CreatureUpdate {
 }
 
 impl CwSerializable for CreatureUpdate {
-	fn read_from<T: Read>(reader: &mut T) -> Result<Self, Error> where T: Read {
+	fn read_from(reader: &mut impl Read) -> Result<Self, Error> {
 		//todo: can't decode from network stream directly because ???
 		let size = reader.read_struct::<i32>()?;
 		let mut buffer = vec![0u8; size as usize];
 		reader.read_exact(&mut buffer)?;
 
-		let mut decoder = Box::new(ZlibDecoder::new(buffer.as_slice())) as Box<dyn Read>; //todo: this cant be right
+		let mut decoder = ZlibDecoder::new(buffer.as_slice());
 
 		let id = decoder.read_struct::<CreatureId>()?;
 		let bitfield = decoder.read_struct::<u64>()?;
@@ -142,7 +142,7 @@ impl CwSerializable for CreatureUpdate {
 		Ok(instance)
 	}
 
-	fn write_to<T: Write>(&self, writer: &mut T) -> Result<(), Error> {
+	fn write_to(&self, writer: &mut impl Write) -> Result<(), Error> {
 		let mut bitfield = 0u64;
 
 		//todo: macro
@@ -195,9 +195,9 @@ impl CwSerializable for CreatureUpdate {
 		bitfield |= (self.skill_tree           .is_some() as u64) << 46;
 		bitfield |= (self.mana_cubes           .is_some() as u64) << 47;
 
-		let mut buffer = Vec::new();
+		let mut buffer = vec![];
 		{
-			let mut encoder = Box::new(ZlibEncoder::new(&mut buffer, Compression::default())) as Box<dyn Write>;
+			let mut encoder = ZlibEncoder::new(&mut buffer, Compression::default());
 
 			encoder.write_struct(&self.id)?;
 			encoder.write_struct(&bitfield)?;
@@ -221,7 +221,7 @@ impl CwSerializable for CreatureUpdate {
 			if let Some(it) = &self.effect_time_dodge     { encoder.write_struct(it)?; }
 			if let Some(it) = &self.effect_time_stun      { encoder.write_struct(it)?; }
 			if let Some(it) = &self.effect_time_fear      { encoder.write_struct(it)?; }
-			if let Some(it) = &self.effect_time_chill { encoder.write_struct(it)?; }
+			if let Some(it) = &self.effect_time_chill     { encoder.write_struct(it)?; }
 			if let Some(it) = &self.effect_time_wind      { encoder.write_struct(it)?; }
 			if let Some(it) = &self.show_patch_time       { encoder.write_struct(it)?; }
 			if let Some(it) = &self.combat_class_major    { encoder.write_struct(it)?; }
@@ -249,11 +249,11 @@ impl CwSerializable for CreatureUpdate {
 			if let Some(it) = &self.consumable            { encoder.write_struct(it)?; }
 			if let Some(it) = &self.equipment             { encoder.write_struct(it)?; }
 			if let Some(it) = &self.name                  {
-				let mut buffer = [0u8; 16];
-				for (index, character) in it.chars().take(16).enumerate() {
-					buffer[index] = character as u8
-				}
-				encoder.write_all(&buffer)?;
+				let bytes = it.as_bytes();
+				if bytes.len() > 16 { return Err(Error::from(ErrorKind::InvalidData)) }
+				encoder.write_all(bytes)?;
+				encoder.write_all(&vec![0u8; 16 - bytes.len()])?;
+				//todo: check what happens with non-ascii characters
 			}
 			if let Some(it) = &self.skill_tree            { encoder.write_struct(it)?; }
 			if let Some(it) = &self.mana_cubes            { encoder.write_struct(it)?; }

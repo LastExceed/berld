@@ -7,11 +7,11 @@ pub struct AirshipTraffic {
 }
 
 impl CwSerializable for AirshipTraffic {
-	fn read_from<T: Read>(reader: &mut T) -> Result<Self, Error> {
+	fn read_from(reader: &mut impl Read) -> Result<Self, Error> {
 		Ok(Self { airships: Vec::read_from(reader)? })
 	}
 
-	fn write_to<T: Write>(&self, writer: &mut T) -> Result<(), Error> {
+	fn write_to(&self, writer: &mut impl Write) -> Result<(), Error> {
 		self.airships.write_to(writer)
 	}
 }

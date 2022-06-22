@@ -24,13 +24,13 @@ pub mod protocol_version;
 pub mod connection_rejection;
 
 pub trait CwSerializable: Sized {
-	fn read_from<T: Read>(reader: &mut T) -> Result<Self, Error>
+	fn read_from(reader: &mut impl Read) -> Result<Self, Error>
 		where [(); size_of::<Self>()]:
 	{
 		reader.read_struct::<Self>()
 	}
 
-	fn write_to<T: Write>(&self, writer: &mut T) -> Result<(), Error>
+	fn write_to(&self, writer: &mut impl Write) -> Result<(), Error>
 		where [(); size_of::<Self>()]:
 	{
 		writer.write_struct(self)
@@ -40,13 +40,13 @@ pub trait CwSerializable: Sized {
 impl<Element: CwSerializable> CwSerializable for Vec<Element>
 	where [(); size_of::<Element>()]:
 {
-	fn read_from<T: Read>(reader: &mut T) -> Result<Self, Error> {
+	fn read_from(reader: &mut impl Read) -> Result<Self, Error> {
 		(0..reader.read_struct::<i32>()?)
 			.map(|_| Element::read_from(reader))
 			.collect::<Result<Self, Error>>()
 	}
 
-	fn write_to<T: Write>(&self, writer: &mut T) -> Result<(), Error> {
+	fn write_to(&self, writer: &mut impl Write) -> Result<(), Error> {
 		writer.write_struct(&(self.len() as i32))?;
 		for element in self {
 			writer.write_struct::<Element>(element)?;

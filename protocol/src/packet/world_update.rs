@@ -50,7 +50,7 @@ pub struct WorldUpdate {
 }
 
 impl CwSerializable for WorldUpdate {
-	fn read_from<T: Read>(reader: &mut T) -> Result<Self, Error> {
+	fn read_from(reader: &mut impl Read) -> Result<Self, Error> {
 		//todo: deduplicate (creature_update)
 		let mut buffer = vec![0u8; reader.read_struct::<i32>()? as usize];
 		reader.read_exact(&mut buffer)?;
@@ -75,7 +75,7 @@ impl CwSerializable for WorldUpdate {
 		})
 	}
 
-	fn write_to<T: Write>(&self, writer: &mut T) -> Result<(), Error> {
+	fn write_to(&self, writer: &mut impl Write) -> Result<(), Error> {
 		let mut buffer = vec![];
 		{
 			let mut encoder = ZlibEncoder::new(&mut buffer, Compression::default());
