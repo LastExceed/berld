@@ -16,8 +16,8 @@ pub mod hit;
 pub mod status_effect;
 pub mod projectile;
 pub mod chat_message;
-pub mod chunk_discovery;
-pub mod sector_discovery;
+pub mod current_chunk;
+pub mod current_biome;
 pub mod map_seed;
 pub mod connection_acceptance;
 pub mod protocol_version;
@@ -67,8 +67,8 @@ pub enum PacketId {
 	StatusEffect,
 	Projectile,
 	ChatMessage,
-	ChunkDiscovery,
-	SectorDiscovery,
+	CurrentChunk,
+	CurrentBiome,
 	//Unknown13,
 	//Unknown14,
 	MapSeed = 15,

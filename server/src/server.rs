@@ -10,15 +10,15 @@ use parking_lot::RwLock;
 
 use protocol::packet::{CwSerializable, Packet, PacketFromServer, PacketId};
 use protocol::packet::chat_message::{ChatMessageFromClient, ChatMessageFromServer};
-use protocol::packet::chunk_discovery::ChunkDiscovery;
 use protocol::packet::connection_acceptance::ConnectionAcceptance;
 use protocol::packet::creature_action::{CreatureAction, CreatureActionType};
 use protocol::packet::creature_update::{Affiliation, CreatureId, CreatureUpdate};
+use protocol::packet::current_biome::CurrentBiome;
+use protocol::packet::current_chunk::CurrentChunk;
 use protocol::packet::hit::Hit;
 use protocol::packet::map_seed::MapSeed;
 use protocol::packet::projectile::Projectile;
 use protocol::packet::protocol_version::ProtocolVersion;
-use protocol::packet::sector_discovery::SectorDiscovery;
 use protocol::packet::status_effect::StatusEffect;
 use protocol::packet::world_update::pickup::Pickup;
 use protocol::packet::world_update::WorldUpdate;
@@ -237,11 +237,11 @@ fn read_packets<T: Read>(server: &Arc<Server>, source: Arc<Player>, readable: &m
 					None
 				);
 			}
-			PacketId::ChunkDiscovery => {
-				let _ = ChunkDiscovery::read_from(readable)?;
+			PacketId::CurrentChunk => {
+				let _ = CurrentChunk::read_from(readable)?;
 			}
-			PacketId::SectorDiscovery => {
-				let _ = SectorDiscovery::read_from(readable)?;
+			PacketId::CurrentBiome => {
+				let _ = CurrentBiome::read_from(readable)?;
 			}
 			_ => { panic!("unexpected packet id {:?}", packet_id); }
 		}
