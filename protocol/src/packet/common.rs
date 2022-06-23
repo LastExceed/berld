@@ -28,7 +28,7 @@ pub enum PacketId {
 	ConnectionRejection
 }
 
-#[derive(Default, Clone, Copy)]
+#[derive(Default, Clone, Copy, PartialEq)]
 pub struct CreatureId(pub i64);
 
 #[repr(i32)]

@@ -66,6 +66,10 @@ pub fn on_creature_action(server: &Arc<Server>, source: &Arc<Player>, packet: Cr
 }
 
 pub fn on_hit(server: &Arc<Server>, source: &Arc<Player>, packet: Hit) -> Result<(), io::Error> {
+	if packet.target == packet.attacker && packet.damage.is_sign_negative() {
+		return Ok(()) //self-heal is already applied client-side (which is a bug)
+	}
+
 	server.broadcast(&WorldUpdate {
 		hits: vec![packet],
 		..Default::default()
