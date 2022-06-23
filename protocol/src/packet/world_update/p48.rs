@@ -2,9 +2,9 @@ use std::io::{Error, Read, Write};
 
 use nalgebra::Point2;
 
-use crate::io_extensions::{ReadExtension, WriteExtension};
 use crate::packet::CwSerializable;
 use crate::packet::world_update::P48;
+use crate::utils::io_extensions::{ReadExtension, WriteExtension};
 
 impl CwSerializable for P48 {
 	fn read_from(reader: &mut impl Read) -> Result<Self, Error> {

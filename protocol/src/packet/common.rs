@@ -1,4 +1,4 @@
-use crate::flagset::FlagSet8;
+use crate::utils::flagset::FlagSet8;
 
 use self::item::*;
 

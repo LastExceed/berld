@@ -5,10 +5,9 @@ use flate2::read::ZlibDecoder;
 use flate2::write::ZlibEncoder;
 use nalgebra::{Point2, Point3, Vector3};
 
-use crate::CwSerializable;
-use crate::io_extensions::{ReadExtension, WriteExtension};
+use crate::packet::{CwSerializable, WorldUpdate};
 use crate::packet::common::{CreatureId, Item, Race};
-use crate::packet::WorldUpdate;
+use crate::utils::io_extensions::{ReadExtension, WriteExtension};
 
 use self::chunk_loot::*;
 use self::mission::*;

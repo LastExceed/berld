@@ -1,10 +1,10 @@
-use std::io::{Read, Write};
+use std::io::{Error, Read, Write};
+use std::mem::size_of;
 
 use nalgebra::{Point2, Point3, Vector3};
 
-use crate::{CwSerializable, Packet, PacketFromClient, PacketFromServer};
-use crate::flagset::{FlagSet16, FlagSet32};
-use crate::io_extensions::{ReadExtension, WriteExtension};
+use crate::utils::flagset::{FlagSet16, FlagSet32};
+use crate::utils::io_extensions::{ReadExtension, WriteExtension};
 
 use self::airship_traffic::*;
 use self::common::*;
@@ -29,10 +29,10 @@ pub mod common;
 pub struct CreatureUpdate {
 	pub id: CreatureId,
 	pub position: Option<Point3<i64>>,
-	pub rotation: Option<[f32; 3]>,//todo: type
+	pub rotation: Option<[f32; 3]>, //todo: type
 	pub velocity: Option<Vector3<f32>>,
 	pub acceleration: Option<Vector3<f32>>,
-	/**used by the 'retreat' ability*/
+	///used by the 'retreat' ability
 	pub velocity_extra: Option<Vector3<f32>>,
 	pub climb_animation_state: Option<f32>,
 	pub flags_physics: Option<FlagSet32<PhysicsFlag>>,
@@ -49,14 +49,14 @@ pub struct CreatureUpdate {
 	pub effect_time_fear: Option<i32>,
 	pub effect_time_chill: Option<i32>,
 	pub effect_time_wind: Option<i32>,
-	/**unknown purpose, name adopted from cuwo*/
+	///unknown purpose, name adopted from cuwo
 	pub show_patch_time: Option<i32>,
 	pub combat_class_major: Option<CombatClassMajor>,
 	pub combat_class_minor: Option<CombatClassMinor>,
 	pub mana_charge: Option<f32>,
 	pub unknown24: Option<[f32; 3]>,
 	pub unknown25: Option<[f32; 3]>,
-	/**coordinates of the location this creature is aiming at>, relative to its own position*/
+	///coordinates of the location this creature is aiming at>, relative to its own position
 	pub aim_offset: Option<Point3<f32>>,
 	pub health: Option<f32>,
 	pub mana: Option<f32>,
@@ -66,17 +66,17 @@ pub struct CreatureUpdate {
 	pub unknown32: Option<i8>,
 	pub level: Option<i32>,
 	pub experience: Option<i32>,
-	/**for pets this is the [CreatureId] of their owner*/
+	///for pets this is the [id] of their owner
 	pub master: Option<CreatureId>,
 	pub unknown36: Option<i64>,
-	/**this is the '+#' that monsters in some dungeons have next to their [race]*/
+	///this is the '+#' that monsters in some dungeons have next to their [race]
 	pub power_base: Option<i8>,
 	pub unknown38: Option<i32>,
 	pub home_chunk: Option<Point3<i32>>,
 	pub home: Option<Point3<i64>>,
-	/**players within ±2 [level] of the dungeon at these coordinates see a green speech bubble above this creature's head and can get that chunk revealed on the map by talking to this creature*/
+	///players within ±2 [level] of the dungeon at these coordinates see a green speech bubble above this creature's head and can get that chunk revealed on the map by talking to this creature
 	pub chunk_to_reveal: Option<Point3<i32>>,
-	pub unknown42: Option<i8>,//0 3 4 for villages - 3 = dialog about pet food
+	pub unknown42: Option<i8>, //todo: 0 3 4 for villages - 3 = dialog about pet food
 	pub consumable: Option<Item>,
 	pub equipment: Option<Equipment>,
 	pub name: Option<String>,
@@ -85,7 +85,7 @@ pub struct CreatureUpdate {
 }
 
 #[repr(C)]
-pub struct MultiCreatureUpdate;//todo
+pub struct MultiCreatureUpdate; //todo
 
 pub struct AirshipTraffic {
 	pub airships: Vec<Airship>
@@ -204,6 +204,53 @@ pub struct ProtocolVersion(pub i32);
 #[repr(C)]
 pub struct ConnectionRejection;
 
+
+
+pub trait CwSerializable: Sized {
+	fn read_from(reader: &mut impl Read) -> Result<Self, Error>
+		where [(); size_of::<Self>()]:
+	{
+		reader.read_struct::<Self>()
+	}
+
+	fn write_to(&self, writer: &mut impl Write) -> Result<(), Error>
+		where [(); size_of::<Self>()]:
+	{
+		writer.write_struct(self)
+	}
+}
+
+impl<Element: CwSerializable> CwSerializable for Vec<Element>
+	where [(); size_of::<Element>()]:
+{
+	fn read_from(reader: &mut impl Read) -> Result<Self, Error> {
+		(0..reader.read_struct::<i32>()?)
+			.map(|_| Element::read_from(reader))
+			.collect::<Result<Self, Error>>()
+	}
+
+	fn write_to(&self, writer: &mut impl Write) -> Result<(), Error> {
+		writer.write_struct(&(self.len() as i32))?;
+		for element in self {
+			writer.write_struct::<Element>(element)?;
+		}
+		Ok(())
+	}
+}
+
+pub trait Packet: CwSerializable {
+	const ID: PacketId;
+
+	fn write_to_with_id(&self, writer: &mut impl Write) -> Result<(), Error>
+		where [(); size_of::<Self>()]:
+	{
+		writer.write_struct(&Self::ID)?;
+		self.write_to(writer)
+	}
+}
+
+pub trait PacketFromServer: Packet {}
+pub trait PacketFromClient: Packet {}
 
 //todo: macros
 impl CwSerializable for MultiCreatureUpdate {}

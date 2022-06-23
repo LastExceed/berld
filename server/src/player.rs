@@ -3,9 +3,8 @@ use std::net::TcpStream;
 
 use parking_lot::{Mutex, RwLock};
 
-use protocol::packet::ChatMessageFromServer;
+use protocol::packet::{ChatMessageFromServer, PacketFromServer};
 use protocol::packet::common::CreatureId;
-use protocol::PacketFromServer;
 
 use crate::creature::Creature;
 

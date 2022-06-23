@@ -2,10 +2,10 @@ use std::io::{Error, Read, Write};
 
 use nalgebra::{Point2, Point3};
 
-use crate::io_extensions::{ReadExtension, WriteExtension};
 use crate::packet::CwSerializable;
 use crate::packet::Item;
 use crate::packet::world_update::ChunkLoot;
+use crate::utils::io_extensions::{ReadExtension, WriteExtension};
 
 //todo: implementation is extremely similar to P48
 impl CwSerializable for ChunkLoot {

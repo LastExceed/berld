@@ -8,13 +8,12 @@ use std::time::Duration;
 use parking_lot::lock_api::RawRwLockDowngrade;
 use parking_lot::RwLock;
 
-use protocol::{CwSerializable, Packet, PacketFromServer};
-use protocol::io_extensions::{ReadExtension, WriteExtension};
 use protocol::packet::*;
 use protocol::packet::common::{CreatureId, PacketId};
 use protocol::packet::creature_action::CreatureActionType;
 use protocol::packet::creature_update::Affiliation;
 use protocol::packet::world_update::Pickup;
+use protocol::utils::io_extensions::{ReadExtension, WriteExtension};
 
 use crate::creature::Creature;
 use crate::creature_id_pool::CreatureIdPool;

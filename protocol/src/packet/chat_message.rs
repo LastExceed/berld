@@ -1,8 +1,8 @@
 use std::io::{Error, Read, Write};
 use std::mem::size_of;
 
-use crate::io_extensions::{ReadExtension, WriteExtension};
 use crate::packet::*;
+use crate::utils::io_extensions::{ReadExtension, WriteExtension};
 
 impl CwSerializable for ChatMessageFromClient {
 	fn read_from(reader: &mut impl Read) -> Result<Self, Error> {
