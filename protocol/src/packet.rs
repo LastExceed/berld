@@ -29,7 +29,7 @@ pub mod common;
 pub struct CreatureUpdate {
 	pub id: CreatureId,
 	pub position: Option<Point3<i64>>,
-	pub rotation: Option<[f32; 3]>, //todo: type
+	pub rotation: Option<EulerAngles>,
 	pub velocity: Option<Vector3<f32>>,
 	pub acceleration: Option<Vector3<f32>>,
 	///used by the 'retreat' ability

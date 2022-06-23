@@ -4,9 +4,10 @@ use flate2::Compression;
 use flate2::read::ZlibDecoder;
 use flate2::write::ZlibEncoder;
 use nalgebra::{Point2, Point3, Vector3};
+use rgb::{RGB, RGBA};
 
 use crate::packet::{CwSerializable, WorldUpdate};
-use crate::packet::common::{CreatureId, Item, Race};
+use crate::packet::common::{CreatureId, Hitbox, Item, Race};
 use crate::utils::io_extensions::{ReadExtension, WriteExtension};
 
 use self::chunk_loot::*;
@@ -81,7 +82,7 @@ impl CwSerializable for WorldUpdate {
 #[repr(C)]
 pub struct WorldEdit {
 	pub position: Point3<i32>,
-	pub color: [u8; 3],//todo: type
+	pub color: RGB<u8>,
 	pub block_type: BlockType,
 	pub padding: i32
 }
@@ -90,8 +91,7 @@ pub struct WorldEdit {
 pub struct Particle {
 	pub position: Point3<i64>,
 	pub velocity: Vector3<f32>,
-	pub color: [f32; 3],//todo: type
-	pub alpha: f32,
+	pub color: RGBA<f32>,
 	pub size: f32,
 	pub count: i32,
 	pub type_: ParticleType,
@@ -117,7 +117,7 @@ pub struct WorldObject {
 	pub position: Point3<i64>,
 	pub orientation: i8,
 	//pad3
-	pub size: [f32; 3], //todo: type
+	pub size: Hitbox,
 	pub is_closed: bool,
 	//pad3
 	pub transform_time: i32,

@@ -5,6 +5,7 @@
 #![allow(const_evaluatable_unchecked)]
 
 pub use nalgebra;
+pub use rgb;
 
 pub mod packet;
 pub mod utils;

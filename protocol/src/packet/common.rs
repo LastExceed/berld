@@ -211,3 +211,21 @@ pub struct Item {
 	pub spirits: [Spirit; 32],
 	pub spirit_counter: i32
 }
+
+#[derive(Clone)]
+pub struct Hitbox {
+	///horizontal size in west/east direction. Note: this also scales the creature visually (whether this is a bug or intended behaviour is unclear)
+	pub width: f32,
+	///horizontal size in north/south direction
+	pub depth: f32,
+	///vertical size
+	pub height: f32
+}
+
+//todo: find a crate for this
+#[derive(Clone)]
+pub struct EulerAngles {
+	pub pitch: f32,
+	pub roll: f32,
+	pub yaw: f32
+}

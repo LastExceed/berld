@@ -1,5 +1,5 @@
 use protocol::nalgebra::{Point3, Vector3};
-use protocol::packet::common::{CreatureId, Item, Race};
+use protocol::packet::common::{CreatureId, EulerAngles, Item, Race};
 use protocol::packet::creature_update::*;
 use protocol::packet::CreatureUpdate;
 use protocol::utils::flagset::{FlagSet16, FlagSet32};
@@ -8,7 +8,7 @@ use protocol::utils::flagset::{FlagSet16, FlagSet32};
 pub struct Creature {
 	pub id: CreatureId,
 	pub position: Point3<i64>,
-	pub rotation: [f32; 3],//todo: type
+	pub rotation: EulerAngles,
 	pub velocity: Vector3<f32>,
 	pub acceleration: Vector3<f32>,
 	/**used by the 'retreat' ability*/
@@ -69,7 +69,7 @@ impl Creature {
 			Some(Self {
 			id: creature_update.id,
 			position             : creature_update.position?,
-			rotation             : creature_update.rotation?,
+			rotation             : creature_update.rotation.clone()?,
 			velocity             : creature_update.velocity?,
 			acceleration         : creature_update.acceleration?,
 			velocity_extra       : creature_update.velocity_extra?,
@@ -123,7 +123,7 @@ impl Creature {
 		self.id = packet.id;
 		//todo: macro
 		if let Some(it) = packet.position              { self.position              = it }
-		if let Some(it) = packet.rotation              { self.rotation              = it }
+		if let Some(it) = packet.rotation.clone()      { self.rotation              = it }
 		if let Some(it) = packet.velocity              { self.velocity              = it }
 		if let Some(it) = packet.acceleration          { self.acceleration          = it }
 		if let Some(it) = packet.velocity_extra        { self.velocity_extra        = it }
@@ -176,7 +176,7 @@ impl Creature {
 		CreatureUpdate {
 			id: self.id,
 			position             : Some(self.position),
-			rotation             : Some(self.rotation),
+			rotation             : Some(self.rotation.clone()),
 			velocity             : Some(self.velocity),
 			acceleration         : Some(self.acceleration),
 			velocity_extra       : Some(self.velocity_extra),

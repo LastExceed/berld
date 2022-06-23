@@ -5,8 +5,10 @@ use flate2::Compression;
 use flate2::read::ZlibDecoder;
 use flate2::write::ZlibEncoder;
 use nalgebra::Point3;
+use rgb::RGB;
 
 use crate::packet::*;
+use crate::packet::common::EulerAngles;
 
 impl CwSerializable for CreatureUpdate {
 	fn read_from(reader: &mut impl Read) -> Result<Self, Error> {
@@ -358,10 +360,10 @@ pub enum Animation {
 #[derive(Clone)]
 pub struct Appearance {
 	pub unknown: i16,
-	pub hair_color: [u8; 3],//todo: type
+	pub hair_color: RGB<u8>,
 	//pad1
 	pub flags: FlagSet16<AppearanceFlag>,
-	pub creature_size: [f32; 3],//todo: type
+	pub creature_size: Hitbox,
 	pub head_model: i16,
 	pub hair_model: i16,
 	pub hand_model: i16,
@@ -380,7 +382,7 @@ pub struct Appearance {
 	pub shoulder1size: f32,
 	pub wing_size: f32,
 	pub body_rotation: f32,
-	pub hand_rotation: [f32; 3],//todo: type
+	pub hand_rotation: EulerAngles,
 	pub feet_rotation: f32,
 	pub wing_rotation: f32,
 	pub tail_rotation: f32,
