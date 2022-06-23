@@ -17,9 +17,9 @@ use protocol::utils::io_extensions::{ReadExtension, WriteExtension};
 
 use crate::creature::Creature;
 use crate::creature_id_pool::CreatureIdPool;
+use crate::packet_handlers::*;
 use crate::player::Player;
 use crate::pvp::enable_pvp;
-use crate::traffic_filter::filter;
 
 pub struct Server {
 	players: RwLock<Vec<Arc<Player>>>,
@@ -141,100 +141,15 @@ fn read_packets<T: Read>(server: &Arc<Server>, source: Arc<Player>, readable: &m
 	loop {
 		let packet_id = readable.read_struct::<PacketId>()?;
 		match packet_id {
-			PacketId::CreatureUpdate => {
-				let mut creature_update = CreatureUpdate::read_from(readable)?;
-
-				enable_pvp(&mut creature_update);
-
-				let mut character = source.creature.write();
-				let snapshot = character.clone();
-				character.update(&creature_update);
-				unsafe { source.creature.raw().downgrade(); }//todo: not sure
-
-				if filter(&mut creature_update, &snapshot, &character) {
-					server.broadcast(&creature_update, Some(&source));
-				}
-			},
-			PacketId::CreatureAction => {
-				let creature_action = CreatureAction::read_from(readable)?;
-
-				let mut reimburse_item = false;
-				match creature_action.type_ {
-					CreatureActionType::Bomb => {
-						source.notify("bombs are disabled".to_owned());
-						reimburse_item = true;
-					}
-					CreatureActionType::Talk => {
-						source.notify("quests coming soon(tm)".to_owned());
-					}
-					CreatureActionType::ObjectInteraction => {
-						source.notify("object interactions are disabled".to_owned());
-					}
-					CreatureActionType::PickUp => {
-						source.notify("ground items aren't implemented yet".to_owned());
-					}
-					CreatureActionType::Drop => {
-						source.notify("ground items aren't implemented yet".to_owned());
-						reimburse_item = true;
-					}
-					CreatureActionType::CallPet => {
-						//source.notify("pets are disabled".to_owned());
-					}
-				}
-				if reimburse_item {
-					source.send(&WorldUpdate {
-						pickups: vec![Pickup {
-							interactor: source.creature.read().id,
-							item: creature_action.item
-						}],
-						..Default::default()
-					});
-				}
-			}
-			PacketId::Hit => {
-				let hit = Hit::read_from(readable)?;
-				server.broadcast(&WorldUpdate {
-					hits: vec![hit],
-					..Default::default()
-				}, Some(&source));
-			},
-			PacketId::StatusEffect => {
-				let status_effect = StatusEffect::read_from(readable)?;
-				server.broadcast(
-					&WorldUpdate {
-						status_effects: vec![status_effect],
-						..Default::default()
-					},
-					Some(&source)
-				);
-			}
-			PacketId::Projectile => {
-				let projectile = Projectile::read_from(readable)?;
-				server.broadcast(
-					&WorldUpdate {
-						projectiles: vec![projectile],
-						..Default::default()
-					},
-					Some(&source)
-				);
-			}
-			PacketId::ChatMessage => {
-				let chat_message = ChatMessageFromClient::read_from(readable)?;
-				server.broadcast(
-					&ChatMessageFromServer {
-						source: source.creature.read().id,
-						text: chat_message.text
-					},
-					None
-				);
-			}
-			PacketId::CurrentChunk => {
-				let _ = CurrentChunk::read_from(readable)?;
-			}
-			PacketId::CurrentBiome => {
-				let _ = CurrentBiome::read_from(readable)?;
-			}
-			_ => { panic!("unexpected packet id {:?}", packet_id); }
+			PacketId::CreatureUpdate => on_creature_update(server, &source, CreatureUpdate       ::read_from(readable)?)?,
+			PacketId::CreatureAction => on_creature_action(server, &source, CreatureAction       ::read_from(readable)?)?,
+			PacketId::Hit            => on_hit            (server, &source, Hit                  ::read_from(readable)?)?,
+			PacketId::StatusEffect   => on_status_effect  (server, &source, StatusEffect         ::read_from(readable)?)?,
+			PacketId::Projectile     => on_projectile     (server, &source, Projectile           ::read_from(readable)?)?,
+			PacketId::ChatMessage    => on_chat_message   (server, &source, ChatMessageFromClient::read_from(readable)?)?,
+			PacketId::CurrentChunk   => on_current_chunk  (server, &source, CurrentChunk         ::read_from(readable)?)?,
+			PacketId::CurrentBiome   => on_current_biome  (server, &source, CurrentBiome         ::read_from(readable)?)?,
+			_ => panic!("unexpected packet id {:?}", packet_id)
 		}
 	}
 }

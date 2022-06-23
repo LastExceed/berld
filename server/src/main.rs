@@ -9,6 +9,7 @@ mod player;
 mod traffic_filter;
 mod pvp;
 mod creature;
+mod packet_handlers;
 
 fn main() {
 	println!("go");
