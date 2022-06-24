@@ -14,6 +14,7 @@ use self::hit::*;
 use self::projectile::*;
 use self::status_effect::*;
 use self::world_update::*;
+use self::world_update::ground_items::Drop;
 
 pub mod creature_update;
 pub mod airship_traffic;
@@ -102,7 +103,7 @@ pub struct WorldUpdate {
 	pub sound_effects: Vec<SoundEffect>,
 	pub projectiles: Vec<Projectile>,
 	pub world_objects: Vec<WorldObject>,
-	pub chunk_loots: Vec<ChunkLoot>,
+	pub ground_items: Vec<(Point2<i32>, Vec<Drop>)>,
 	pub p48s: Vec<P48>,
 	pub pickups: Vec<Pickup>,
 	pub kills: Vec<Kill>,

@@ -4,20 +4,16 @@ use nalgebra::{Point2, Point3};
 
 use crate::packet::CwSerializable;
 use crate::packet::Item;
-use crate::packet::world_update::ChunkLoot;
 use crate::utils::io_extensions::{ReadExtension, WriteExtension};
 
 //todo: implementation is extremely similar to P48
-impl CwSerializable for ChunkLoot {
+impl CwSerializable for (Point2<i32>, Vec<Drop>) {
 	fn read_from(reader: &mut impl Read) -> Result<Self, Error> {
-		Ok(Self {
-			chunk: reader.read_struct::<Point2<i32>>()?,
-			drops: Vec::read_from(reader)?
-		})
+		Ok((reader.read_struct::<Point2<i32>>()?, Vec::read_from(reader)?))
 	}
 	fn write_to(&self, writer: &mut impl Write) -> Result<(), Error> {
-		writer.write_struct(&self.chunk)?;
-		self.drops.write_to(writer)
+		writer.write_struct(&self.0)?;
+		self.1.write_to(writer)
 	}
 }
 

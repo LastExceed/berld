@@ -10,7 +10,7 @@ use crate::packet::{CwSerializable, WorldUpdate};
 use crate::packet::common::{CreatureId, Hitbox, Item, Race};
 use crate::utils::io_extensions::{ReadExtension, WriteExtension};
 
-use self::chunk_loot::*;
+use self::ground_items::*;
 use self::mission::*;
 use self::p48::*;
 use self::particle::*;
@@ -22,7 +22,7 @@ pub mod world_edit;
 pub mod particle;
 pub mod sound_effect;
 pub mod world_object;
-pub mod chunk_loot;
+pub mod ground_items;
 pub mod p48;
 pub mod mission;
 
@@ -42,7 +42,7 @@ impl CwSerializable for WorldUpdate {
 			sound_effects : Vec::read_from(&mut decoder)?,
 			projectiles   : Vec::read_from(&mut decoder)?,
 			world_objects : Vec::read_from(&mut decoder)?,
-			chunk_loots   : Vec::read_from(&mut decoder)?,
+			ground_items  : Vec::read_from(&mut decoder)?,
 			p48s          : Vec::read_from(&mut decoder)?,
 			pickups       : Vec::read_from(&mut decoder)?,
 			kills         : Vec::read_from(&mut decoder)?,
@@ -64,7 +64,7 @@ impl CwSerializable for WorldUpdate {
 			self.sound_effects .write_to(&mut encoder)?;
 			self.projectiles   .write_to(&mut encoder)?;
 			self.world_objects .write_to(&mut encoder)?;
-			self.chunk_loots   .write_to(&mut encoder)?;
+			self.ground_items  .write_to(&mut encoder)?;
 			self.p48s          .write_to(&mut encoder)?;
 			self.pickups       .write_to(&mut encoder)?;
 			self.kills         .write_to(&mut encoder)?;
@@ -124,11 +124,6 @@ pub struct WorldObject {
 	pub unknown_b: i32,
 	//pad4
 	pub interactor: i64
-}
-
-pub struct ChunkLoot {
-	pub chunk: Point2<i32>,
-	pub drops: Vec<Drop>
 }
 
 pub struct P48 {
