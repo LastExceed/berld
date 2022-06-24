@@ -233,7 +233,7 @@ impl<Element: CwSerializable> CwSerializable for Vec<Element>
 	fn write_to(&self, writer: &mut impl Write) -> Result<(), Error> {
 		writer.write_struct(&(self.len() as i32))?;
 		for element in self {
-			writer.write_struct::<Element>(element)?;
+			element.write_to(writer)?;
 		}
 		Ok(())
 	}
