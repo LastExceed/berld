@@ -42,7 +42,7 @@ impl CwSerializable for WorldUpdate {
 			sound_effects : Vec::read_from(&mut decoder)?,
 			projectiles   : Vec::read_from(&mut decoder)?,
 			world_objects : Vec::read_from(&mut decoder)?,
-			ground_items  : Vec::read_from(&mut decoder)?,
+			drops         : Vec::read_from(&mut decoder)?,
 			p48s          : Vec::read_from(&mut decoder)?,
 			pickups       : Vec::read_from(&mut decoder)?,
 			kills         : Vec::read_from(&mut decoder)?,
@@ -64,7 +64,7 @@ impl CwSerializable for WorldUpdate {
 			self.sound_effects .write_to(&mut encoder)?;
 			self.projectiles   .write_to(&mut encoder)?;
 			self.world_objects .write_to(&mut encoder)?;
-			self.ground_items  .write_to(&mut encoder)?;
+			self.drops         .write_to(&mut encoder)?;
 			self.p48s          .write_to(&mut encoder)?;
 			self.pickups       .write_to(&mut encoder)?;
 			self.kills         .write_to(&mut encoder)?;

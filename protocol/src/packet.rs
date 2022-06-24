@@ -103,7 +103,7 @@ pub struct WorldUpdate {
 	pub sound_effects: Vec<SoundEffect>,
 	pub projectiles: Vec<Projectile>,
 	pub world_objects: Vec<WorldObject>,
-	pub ground_items: Vec<(Point2<i32>, Vec<Drop>)>,
+	pub drops: Vec<(Point2<i32>, Vec<Drop>)>,
 	pub p48s: Vec<P48>,
 	pub pickups: Vec<Pickup>,
 	pub kills: Vec<Kill>,

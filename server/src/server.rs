@@ -90,27 +90,27 @@ impl Server {
 		chunk_items_copy[chunk_items.len() - 1].droptime = 500;
 
 		self.broadcast(&WorldUpdate {
-			ground_items: vec![(chunk, chunk_items_copy)],
+			drops: vec![(chunk, chunk_items_copy)],
 			..Default::default()
 		}, None);
 	}
 
 	pub fn remove_ground_item(&self, chunk: Point2<i32>, item_index: usize) -> Option<Item> {
 		let (remaining_chunk_drops, removed_item) = {
-			let mut ground_items_guard = self.ground_items.write();
+			let mut drops_guard = self.ground_items.write();
 
-			let Some(chunk_items) = ground_items_guard.get_mut(&chunk) else { return None };
+			let Some(chunk_drops) = drops_guard.get_mut(&chunk) else { return None };
 
-			let drop = chunk_items.swap_remove(item_index);
-			let chunk_items_owned = chunk_items.to_owned();
-			if chunk_items.is_empty() {
-				ground_items_guard.remove(&chunk);
+			let drop = chunk_drops.swap_remove(item_index);
+			let chunk_drops_owned = chunk_drops.to_owned();
+			if chunk_drops.is_empty() {
+				drops_guard.remove(&chunk);
 			}
-			(chunk_items_owned, drop.item)
+			(chunk_drops_owned, drop.item)
 		};//scope ensures the guard is dropped asap
 
 		self.broadcast(&WorldUpdate {
-			ground_items: vec![(chunk, remaining_chunk_drops)],
+			drops: vec![(chunk, remaining_chunk_drops)],
 			..Default::default()
 		}, None);
 
@@ -166,7 +166,7 @@ fn handle_new_player(server: &Arc<Server>, stream: &mut TcpStream, assigned_id: 
 	}
 
 	WorldUpdate {
-		ground_items: server.ground_items.read()
+		drops: server.ground_items.read()
 			.iter()
 			.map(|(chunk, drop_list)| (*chunk, drop_list.clone()))
 			.collect(),
