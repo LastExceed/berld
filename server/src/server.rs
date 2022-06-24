@@ -14,6 +14,7 @@ use protocol::packet::*;
 use protocol::packet::common::{CreatureId, Item, PacketId};
 use protocol::packet::creature_update::Affiliation;
 use protocol::packet::world_update::drops::Drop;
+use protocol::SIZE_ZONE;
 use protocol::utils::io_extensions::{ReadExtension, WriteExtension};
 
 use crate::creature::Creature;
@@ -72,7 +73,7 @@ impl Server {
 	}
 
 	pub fn add_drop(&self, item: Item, position: Point3<i64>, rotation: f32) {
-		let zone = position.xy().map(|scalar| (scalar / 0x1_00_00_00) as i32);
+		let zone = position.xy().map(|scalar| (scalar / SIZE_ZONE) as i32);
 
 		let drops_to_send = {
 			let mut drops_guard = self.drops.write();

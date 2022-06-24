@@ -7,6 +7,7 @@ use protocol::nalgebra::{Point3, Vector3};
 use protocol::packet::*;
 use protocol::packet::creature_action::CreatureActionType;
 use protocol::packet::world_update::Pickup;
+use protocol::SIZE_BLOCK;
 
 use crate::player::Player;
 use crate::pvp::enable_pvp;
@@ -64,7 +65,7 @@ pub fn on_creature_action(server: &Arc<Server>, source: &Arc<Player>, packet: Cr
 
 			server.add_drop(
 				packet.item,
-				creature_guard.position - Vector3::new(0, 0, 0x10000),
+				creature_guard.position - Vector3::new(0, 0, SIZE_BLOCK),
 				creature_guard.rotation.yaw
 			);
 		}
