@@ -95,6 +95,7 @@ impl Server {
 		}, None);
 	}
 
+	///returns none if a player picks up an item they dropped in single player
 	pub fn remove_ground_item(&self, chunk: Point2<i32>, item_index: usize) -> Option<Item> {
 		let (remaining_chunk_drops, removed_item) = {
 			let mut drops_guard = self.ground_items.write();
