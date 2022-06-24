@@ -10,7 +10,6 @@ use crate::packet::{CwSerializable, WorldUpdate};
 use crate::packet::common::{CreatureId, Hitbox, Item, Race};
 use crate::utils::io_extensions::{ReadExtension, WriteExtension};
 
-use self::ground_items::*;
 use self::mission::*;
 use self::p48::*;
 use self::particle::*;
@@ -22,7 +21,7 @@ pub mod world_edit;
 pub mod particle;
 pub mod sound_effect;
 pub mod world_object;
-pub mod ground_items;
+pub mod drops;
 pub mod p48;
 pub mod mission;
 

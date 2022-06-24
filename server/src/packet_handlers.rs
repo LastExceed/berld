@@ -49,7 +49,7 @@ pub fn on_creature_action(server: &Arc<Server>, source: &Arc<Player>, packet: Cr
 			source.notify("object interactions are disabled".to_owned());
 		}
 		CreatureActionType::PickUp => {
-			if let Some(item) = server.remove_ground_item(packet.zone, packet.item_index as usize) {
+			if let Some(item) = server.remove_drop(packet.zone, packet.item_index as usize) {
 				source.send(&WorldUpdate {
 					pickups: vec![Pickup {
 						interactor: source.creature.read().id,
@@ -62,7 +62,7 @@ pub fn on_creature_action(server: &Arc<Server>, source: &Arc<Player>, packet: Cr
 		CreatureActionType::Drop => {
 			let creature_guard = source.creature.read();
 
-			server.add_ground_item(
+			server.add_drop(
 				packet.item,
 				creature_guard.position - Vector3::new(0, 0, 0x10000),
 				creature_guard.rotation.yaw

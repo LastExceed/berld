@@ -13,7 +13,7 @@ use protocol::nalgebra::{Point2, Point3};
 use protocol::packet::*;
 use protocol::packet::common::{CreatureId, Item, PacketId};
 use protocol::packet::creature_update::Affiliation;
-use protocol::packet::world_update::ground_items::Drop;
+use protocol::packet::world_update::drops::Drop;
 use protocol::utils::io_extensions::{ReadExtension, WriteExtension};
 
 use crate::creature::Creature;
@@ -25,7 +25,7 @@ use crate::pvp::enable_pvp;
 pub struct Server {
 	players: RwLock<Vec<Arc<Player>>>,
 	id_pool: RwLock<CreatureIdPool>,
-	ground_items: RwLock<HashMap<Point2<i32>, Vec<Drop>>>
+	drops: RwLock<HashMap<Point2<i32>, Vec<Drop>>>
 }
 
 const TIMEOUT: Duration = Duration::from_secs(5);
@@ -35,7 +35,7 @@ impl Server {
 		Self {
 			players: RwLock::new(Vec::new()),
 			id_pool: RwLock::new(CreatureIdPool::new()),
-			ground_items: RwLock::new(HashMap::new())
+			drops: RwLock::new(HashMap::new())
 		}
 	}
 
@@ -71,12 +71,12 @@ impl Server {
 		}
 	}
 
-	pub fn add_ground_item(&self, item: Item, position: Point3<i64>, rotation: f32) {
-		let zone = position.xy().map(|value| (value / 0x1_00_00_00) as i32);
+	pub fn add_drop(&self, item: Item, position: Point3<i64>, rotation: f32) {
+		let zone = position.xy().map(|scalar| (scalar / 0x1_00_00_00) as i32);
 
-		let mut ground_items_guard = self.ground_items.write();
-		let zone_items = ground_items_guard.entry(zone).or_insert(vec![]);
-		zone_items.push(Drop {
+		let mut drops_guard = self.drops.write();
+		let zone_drops = drops_guard.entry(zone).or_insert(vec![]);
+		zone_drops.push(Drop {
 			item,
 			position,
 			rotation,
@@ -86,28 +86,29 @@ impl Server {
 			droptime: 0
 		});
 
-		let mut zone_items_copy = zone_items.clone();
-		zone_items_copy[zone_items.len() - 1].droptime = 500;
+		let mut zone_drops_copy = zone_drops.clone();
+		zone_drops_copy[zone_drops.len() - 1].droptime = 500;
 
 		self.broadcast(&WorldUpdate {
-			drops: vec![(zone, zone_items_copy)],
+			drops: vec![(zone, zone_drops_copy)],
 			..Default::default()
 		}, None);
 	}
 
 	///returns none if a player picks up an item they dropped in single player
-	pub fn remove_ground_item(&self, zone: Point2<i32>, item_index: usize) -> Option<Item> {
+	pub fn remove_drop(&self, zone: Point2<i32>, item_index: usize) -> Option<Item> {
 		let (remaining_zone_drops, removed_item) = {
-			let mut drops_guard = self.ground_items.write();
+			let mut drops_guard = self.drops.write();
 
 			let Some(zone_drops) = drops_guard.get_mut(&zone) else { return None };
 
-			let drop = zone_drops.swap_remove(item_index);
+			let removed_drop = zone_drops.swap_remove(item_index);
 			let zone_drops_owned = zone_drops.to_owned();
 			if zone_drops.is_empty() {
 				drops_guard.remove(&zone);
 			}
-			(zone_drops_owned, drop.item)
+
+			(zone_drops_owned, removed_drop.item)
 		};//scope ensures the guard is dropped asap
 
 		self.broadcast(&WorldUpdate {
@@ -167,7 +168,7 @@ fn handle_new_player(server: &Arc<Server>, stream: &mut TcpStream, assigned_id: 
 	}
 
 	WorldUpdate {
-		drops: server.ground_items.read()
+		drops: server.drops.read()
 			.iter()
 			.map(|(zone, zone_drops)| (*zone, zone_drops.clone()))
 			.collect(),

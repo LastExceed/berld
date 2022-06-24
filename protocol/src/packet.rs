@@ -14,7 +14,7 @@ use self::hit::*;
 use self::projectile::*;
 use self::status_effect::*;
 use self::world_update::*;
-use self::world_update::ground_items::Drop;
+use self::world_update::drops::Drop;
 
 pub mod creature_update;
 pub mod airship_traffic;
