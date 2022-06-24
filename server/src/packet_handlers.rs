@@ -3,6 +3,7 @@ use std::sync::Arc;
 
 use parking_lot::lock_api::RawRwLockDowngrade;
 
+use protocol::nalgebra::{Point3, Vector3};
 use protocol::packet::*;
 use protocol::packet::creature_action::CreatureActionType;
 use protocol::packet::world_update::Pickup;
@@ -28,11 +29,18 @@ pub fn on_creature_update(server: &Arc<Server>, source: &Arc<Player>, mut packet
 }
 
 pub fn on_creature_action(server: &Arc<Server>, source: &Arc<Player>, packet: CreatureAction) -> Result<(), io::Error> {
-	let mut reimburse_item = false;
 	match packet.type_ {
 		CreatureActionType::Bomb => {
 			source.notify("bombs are disabled".to_owned());
-			reimburse_item = true;
+
+			//the player consumed a bomb, so we need to reimburse it
+			source.send(&WorldUpdate {
+				pickups: vec![Pickup {
+					interactor: source.creature.read().id,
+					item: packet.item
+				}],
+				..Default::default()
+			});
 		}
 		CreatureActionType::Talk => {
 			source.notify("quests coming soon(tm)".to_owned());
@@ -41,25 +49,28 @@ pub fn on_creature_action(server: &Arc<Server>, source: &Arc<Player>, packet: Cr
 			source.notify("object interactions are disabled".to_owned());
 		}
 		CreatureActionType::PickUp => {
-			source.notify("ground items aren't implemented yet".to_owned());
+			if let Some(item) = server.remove_ground_item(packet.chunk, packet.item_index as usize) {
+				source.send(&WorldUpdate {
+					pickups: vec![Pickup {
+						interactor: source.creature.read().id,
+						item
+					}],
+					..Default::default()
+				});
+			}
 		}
 		CreatureActionType::Drop => {
-			source.notify("ground items aren't implemented yet".to_owned());
-			reimburse_item = true;
+			let creature_guard = source.creature.read();
+
+			server.add_ground_item(
+				packet.item,
+				creature_guard.position - Vector3::new(0, 0, 0x10000),
+				creature_guard.rotation.yaw
+			);
 		}
 		CreatureActionType::CallPet => {
 			//source.notify("pets are disabled".to_owned());
 		}
-	}
-
-	if reimburse_item {
-		source.send(&WorldUpdate {
-			pickups: vec![Pickup {
-				interactor: source.creature.read().id,
-				item: packet.item
-			}],
-			..Default::default()
-		});
 	}
 
 	Ok(())
@@ -70,7 +81,7 @@ pub fn on_hit(server: &Arc<Server>, source: &Arc<Player>, packet: Hit) -> Result
 		return Ok(()) //self-heal is already applied client-side (which is a bug)
 	}
 
-	server.broadcast(&WorldUpdate {
+	server.broadcast(&WorldUpdate { //todo: broadcast necessary?
 		hits: vec![packet],
 		..Default::default()
 	}, Some(source));

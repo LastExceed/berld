@@ -1,18 +1,19 @@
 use std::{io, thread};
+use std::collections::HashMap;
 use std::io::{ErrorKind, Read};
 use std::mem::size_of;
 use std::net::{Shutdown, TcpListener, TcpStream};
+use std::ops::Index;
 use std::sync::Arc;
 use std::time::Duration;
 
-use parking_lot::lock_api::RawRwLockDowngrade;
 use parking_lot::RwLock;
 
+use protocol::nalgebra::{Point2, Point3};
 use protocol::packet::*;
-use protocol::packet::common::{CreatureId, PacketId};
-use protocol::packet::creature_action::CreatureActionType;
+use protocol::packet::common::{CreatureId, Item, PacketId};
 use protocol::packet::creature_update::Affiliation;
-use protocol::packet::world_update::Pickup;
+use protocol::packet::world_update::ground_items::Drop;
 use protocol::utils::io_extensions::{ReadExtension, WriteExtension};
 
 use crate::creature::Creature;
@@ -23,7 +24,8 @@ use crate::pvp::enable_pvp;
 
 pub struct Server {
 	players: RwLock<Vec<Arc<Player>>>,
-	id_pool: RwLock<CreatureIdPool>
+	id_pool: RwLock<CreatureIdPool>,
+	ground_items: RwLock<HashMap<Point2<i32>, Vec<Drop>>>
 }
 
 const TIMEOUT: Duration = Duration::from_secs(5);
@@ -32,7 +34,8 @@ impl Server {
 	pub fn new() -> Self {
 		Self {
 			players: RwLock::new(Vec::new()),
-			id_pool: RwLock::new(CreatureIdPool::new())
+			id_pool: RwLock::new(CreatureIdPool::new()),
+			ground_items: RwLock::new(HashMap::new())
 		}
 	}
 
@@ -66,6 +69,52 @@ impl Server {
 			} { continue }
 			player.send(packet);
 		}
+	}
+
+	pub fn add_ground_item(&self, item: Item, position: Point3<i64>, rotation: f32) {
+		let chunk = position.xy().map(|value| (value / 0x1_00_00_00) as i32);
+
+		let mut ground_items_guard = self.ground_items.write();
+		let chunk_items = ground_items_guard.entry(chunk).or_insert(vec![]);
+		chunk_items.push(Drop {
+			item,
+			position,
+			rotation,
+			scale: 0.1,
+			unknown_a: 0,
+			unknown_b: 0,
+			droptime: 0
+		});
+
+		let mut chunk_items_copy = chunk_items.clone();
+		chunk_items_copy[chunk_items.len() - 1].droptime = 500;
+
+		self.broadcast(&WorldUpdate {
+			ground_items: vec![(chunk, chunk_items_copy)],
+			..Default::default()
+		}, None);
+	}
+
+	pub fn remove_ground_item(&self, chunk: Point2<i32>, item_index: usize) -> Option<Item> {
+		let (remaining_chunk_drops, removed_item) = {
+			let mut ground_items_guard = self.ground_items.write();
+
+			let Some(chunk_items) = ground_items_guard.get_mut(&chunk) else { return None };
+
+			let drop = chunk_items.swap_remove(item_index);
+			let chunk_items_owned = chunk_items.to_owned();
+			if chunk_items.is_empty() {
+				ground_items_guard.remove(&chunk);
+			}
+			(chunk_items_owned, drop.item)
+		};//scope ensures the guard is dropped asap
+
+		self.broadcast(&WorldUpdate {
+			ground_items: vec![(chunk, remaining_chunk_drops)],
+			..Default::default()
+		}, None);
+
+		Some(removed_item)
 	}
 }
 
@@ -115,6 +164,14 @@ fn handle_new_player(server: &Arc<Server>, stream: &mut TcpStream, assigned_id: 
 	for player in server.players.read().iter() {
 		me.send(&player.creature.read().to_update());
 	}
+
+	WorldUpdate {
+		ground_items: server.ground_items.read()
+			.iter()
+			.map(|(chunk, drop_list)| (*chunk, drop_list.clone()))
+			.collect(),
+		..Default::default()
+	}.write_to_with_id(stream)?;
 
 	let player_arc = Arc::new(me);
 	server.players.write().push(player_arc.clone());
