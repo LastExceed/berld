@@ -74,23 +74,27 @@ impl Server {
 	pub fn add_drop(&self, item: Item, position: Point3<i64>, rotation: f32) {
 		let zone = position.xy().map(|scalar| (scalar / 0x1_00_00_00) as i32);
 
-		let mut drops_guard = self.drops.write();
-		let zone_drops = drops_guard.entry(zone).or_insert(vec![]);
-		zone_drops.push(Drop {
-			item,
-			position,
-			rotation,
-			scale: 0.1,
-			unknown_a: 0,
-			unknown_b: 0,
-			droptime: 0
-		});
+		let drops_to_send = {
+			let mut drops_guard = self.drops.write();
+			let zone_drops = drops_guard.entry(zone).or_insert(vec![]);
+			zone_drops.push(Drop {
+				item,
+				position,
+				rotation,
+				scale: 0.1,
+				unknown_a: 0,
+				unknown_b: 0,
+				droptime: 0
+			});
 
-		let mut zone_drops_copy = zone_drops.clone();
-		zone_drops_copy[zone_drops.len() - 1].droptime = 500;
+			let mut zone_drops_copy = zone_drops.clone();
+			zone_drops_copy[zone_drops.len() - 1].droptime = 500;
+
+			zone_drops_copy
+		};//scope ensures the guard is dropped asap
 
 		self.broadcast(&WorldUpdate {
-			drops: vec![(zone, zone_drops_copy)],
+			drops: vec![(zone, drops_to_send)],
 			..Default::default()
 		}, None);
 	}
