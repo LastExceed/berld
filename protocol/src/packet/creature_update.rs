@@ -64,9 +64,9 @@ impl CwSerializable for CreatureUpdate {
 			unknown36            : if bitfield & (1 << 36) > 0 { Some(decoder.read_struct()?) } else { None },
 			power_base           : if bitfield & (1 << 37) > 0 { Some(decoder.read_struct()?) } else { None },
 			unknown38            : if bitfield & (1 << 38) > 0 { Some(decoder.read_struct()?) } else { None },
-			home_chunk           : if bitfield & (1 << 39) > 0 { Some(decoder.read_struct()?) } else { None },
+			home_zone            : if bitfield & (1 << 39) > 0 { Some(decoder.read_struct()?) } else { None },
 			home                 : if bitfield & (1 << 40) > 0 { Some(decoder.read_struct()?) } else { None },
-			chunk_to_reveal      : if bitfield & (1 << 41) > 0 { Some(decoder.read_struct()?) } else { None },
+			zone_to_reveal       : if bitfield & (1 << 41) > 0 { Some(decoder.read_struct()?) } else { None },
 			unknown42            : if bitfield & (1 << 42) > 0 { Some(decoder.read_struct()?) } else { None },
 			consumable           : if bitfield & (1 << 43) > 0 { Some(decoder.read_struct()?) } else { None },
 			equipment            : if bitfield & (1 << 44) > 0 { Some(decoder.read_struct()?) } else { None },
@@ -130,9 +130,9 @@ impl CwSerializable for CreatureUpdate {
 		bitfield |= (self.unknown36            .is_some() as u64) << 36;
 		bitfield |= (self.power_base           .is_some() as u64) << 37;
 		bitfield |= (self.unknown38            .is_some() as u64) << 38;
-		bitfield |= (self.home_chunk           .is_some() as u64) << 39;
+		bitfield |= (self.home_zone            .is_some() as u64) << 39;
 		bitfield |= (self.home                 .is_some() as u64) << 40;
-		bitfield |= (self.chunk_to_reveal      .is_some() as u64) << 41;
+		bitfield |= (self.zone_to_reveal       .is_some() as u64) << 41;
 		bitfield |= (self.unknown42            .is_some() as u64) << 42;
 		bitfield |= (self.consumable           .is_some() as u64) << 43;
 		bitfield |= (self.equipment            .is_some() as u64) << 44;
@@ -187,9 +187,9 @@ impl CwSerializable for CreatureUpdate {
 			if let Some(it) = &self.unknown36             { encoder.write_struct(it)?; }
 			if let Some(it) = &self.power_base            { encoder.write_struct(it)?; }
 			if let Some(it) = &self.unknown38             { encoder.write_struct(it)?; }
-			if let Some(it) = &self.home_chunk            { encoder.write_struct(it)?; }
+			if let Some(it) = &self.home_zone             { encoder.write_struct(it)?; }
 			if let Some(it) = &self.home                  { encoder.write_struct(it)?; }
-			if let Some(it) = &self.chunk_to_reveal       { encoder.write_struct(it)?; }
+			if let Some(it) = &self.zone_to_reveal        { encoder.write_struct(it)?; }
 			if let Some(it) = &self.unknown42             { encoder.write_struct(it)?; }
 			if let Some(it) = &self.consumable            { encoder.write_struct(it)?; }
 			if let Some(it) = &self.equipment             { encoder.write_struct(it)?; }

@@ -73,10 +73,10 @@ pub struct CreatureUpdate {
 	///this is the '+#' that monsters in some dungeons have next to their [race]
 	pub power_base: Option<i8>,
 	pub unknown38: Option<i32>,
-	pub home_chunk: Option<Point3<i32>>,
+	pub home_zone: Option<Point3<i32>>,
 	pub home: Option<Point3<i64>>,
-	///players within ±2 [level] of the dungeon at these coordinates see a green speech bubble above this creature's head and can get that chunk revealed on the map by talking to this creature
-	pub chunk_to_reveal: Option<Point3<i32>>,
+	///players within ±2 [level] of the dungeon in this zone see a green speech bubble above this creature, and can get this zone revealed on the map by talking to this creature
+	pub zone_to_reveal: Option<Point3<i32>>,
 	pub unknown42: Option<i8>, //todo: 0 3 4 for villages - 3 = dialog about pet food
 	pub consumable: Option<Item>,
 	pub equipment: Option<Equipment>,
@@ -121,7 +121,7 @@ pub struct IngameDatetime {
 #[repr(C)]
 pub struct CreatureAction {
 	pub item: Item,
-	pub chunk: Point2<i32>,
+	pub zone: Point2<i32>,
 	pub item_index: i32,
 	pub unknown_a: i32,
 	pub type_: CreatureActionType
@@ -160,7 +160,7 @@ pub struct StatusEffect {
 #[repr(C)]
 pub struct Projectile {
 	pub attacker: u64,
-	pub chunk: Point2<i32>,
+	pub zone: Point2<i32>,
 	pub unknown_a: i32,
 	//pad4
 	pub position: Point3<i64>,
@@ -188,10 +188,10 @@ pub struct ChatMessageFromServer {
 }
 
 #[repr(C)]
-pub struct CurrentChunk(pub Point2<i32>);
+pub struct ZoneDiscovery(pub Point2<i32>);
 
 #[repr(C)]
-pub struct CurrentBiome(pub Point2<i32>);
+pub struct RegionDiscovery(pub Point2<i32>);
 
 #[repr(C)]
 pub struct MapSeed(pub i32);
@@ -261,8 +261,8 @@ impl CwSerializable for CreatureAction {}
 impl CwSerializable for Hit {}
 impl CwSerializable for StatusEffect {}
 impl CwSerializable for Projectile {}
-impl CwSerializable for CurrentChunk {}
-impl CwSerializable for CurrentBiome {}
+impl CwSerializable for ZoneDiscovery {}
+impl CwSerializable for RegionDiscovery {}
 impl CwSerializable for MapSeed {}
 impl CwSerializable for ConnectionAcceptance {}
 impl CwSerializable for ProtocolVersion {}
@@ -280,8 +280,8 @@ impl Packet for StatusEffect          { const ID: PacketId = PacketId::StatusEff
 impl Packet for Projectile            { const ID: PacketId = PacketId::Projectile; }
 impl Packet for ChatMessageFromClient { const ID: PacketId = PacketId::ChatMessage; }
 impl Packet for ChatMessageFromServer { const ID: PacketId = PacketId::ChatMessage; }
-impl Packet for CurrentChunk          { const ID: PacketId = PacketId::CurrentChunk; }
-impl Packet for CurrentBiome          { const ID: PacketId = PacketId::CurrentBiome; }
+impl Packet for ZoneDiscovery         { const ID: PacketId = PacketId::ZoneDiscovery; }
+impl Packet for RegionDiscovery       { const ID: PacketId = PacketId::RegionDiscovery; }
 impl Packet for MapSeed               { const ID: PacketId = PacketId::MapSeed; }
 impl Packet for ConnectionAcceptance  { const ID: PacketId = PacketId::ConnectionAcceptance; }
 impl Packet for ProtocolVersion       { const ID: PacketId = PacketId::ProtocolVersion; }
@@ -305,6 +305,6 @@ impl PacketFromClient for Hit {}
 impl PacketFromClient for StatusEffect {}
 impl PacketFromClient for Projectile {}
 impl PacketFromClient for ChatMessageFromClient {}
-impl PacketFromClient for CurrentChunk {}
-impl PacketFromClient for CurrentBiome {}
+impl PacketFromClient for ZoneDiscovery {}
+impl PacketFromClient for RegionDiscovery {}
 impl PacketFromClient for ProtocolVersion {}

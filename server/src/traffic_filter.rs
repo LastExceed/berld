@@ -11,9 +11,9 @@ pub fn filter(packet: &mut CreatureUpdate, previous: &Creature, current: &Creatu
 	packet.mana = None;
 	packet.blocking_gauge = None;
 	packet.experience = None;
-	packet.home_chunk = None;
+	packet.home_zone = None;
 	packet.home = None;
-	packet.chunk_to_reveal = None;
+	packet.zone_to_reveal = None;
 	packet.skill_tree = None;
 	packet.mana_cubes = None;
 	//always keep:
@@ -134,9 +134,9 @@ pub fn filter(packet: &mut CreatureUpdate, previous: &Creature, current: &Creatu
 	packet.unknown36            .is_some() ||
 	packet.power_base           .is_some() ||
 	packet.unknown38            .is_some() ||
-	packet.home_chunk           .is_some() ||
+	packet.home_zone            .is_some() ||
 	packet.home                 .is_some() ||
-	packet.chunk_to_reveal      .is_some() ||
+	packet.zone_to_reveal       .is_some() ||
 	packet.unknown42            .is_some() ||
 	packet.consumable           .is_some() ||
 	packet.equipment            .is_some() ||

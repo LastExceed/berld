@@ -51,10 +51,10 @@ pub struct Creature {
 	/**this is the '+#' that monsters in some dungeons have next to their [race]*/
 	pub power_base: i8,
 	pub unknown38: i32,
-	pub home_chunk: Point3<i32>,
+	pub home_zone: Point3<i32>,
 	pub home: Point3<i64>,
-	/**players within ±2 [level] of the dungeon at these coordinates see a green speech bubble above this creature's head and can get that chunk revealed on the map by talking to this creature*/
-	pub chunk_to_reveal: Point3<i32>,
+	/**players within ±2 [level] of the dungeon in this zone see a green speech bubble above this creature, and can get this zone revealed on the map by talking to this creature*/
+	pub zone_to_reveal: Point3<i32>,
 	pub unknown42: i8,//0 3 4 for villages - 3 = dialog about pet food
 	pub consumable: Item,
 	pub equipment: Equipment,
@@ -107,9 +107,9 @@ impl Creature {
 			unknown36            : creature_update.unknown36?,
 			power_base           : creature_update.power_base?,
 			unknown38            : creature_update.unknown38?,
-			home_chunk           : creature_update.home_chunk?,
+			home_zone            : creature_update.home_zone?,
 			home                 : creature_update.home?,
-			chunk_to_reveal      : creature_update.chunk_to_reveal?,
+			zone_to_reveal       : creature_update.zone_to_reveal?,
 			unknown42            : creature_update.unknown42?,
 			consumable           : creature_update.consumable.clone()?,
 			equipment            : creature_update.equipment.clone()?,
@@ -161,9 +161,9 @@ impl Creature {
 		if let Some(it) = packet.unknown36             { self.unknown36             = it }
 		if let Some(it) = packet.power_base            { self.power_base            = it }
 		if let Some(it) = packet.unknown38             { self.unknown38             = it }
-		if let Some(it) = packet.home_chunk            { self.home_chunk            = it }
+		if let Some(it) = packet.home_zone             { self.home_zone             = it }
 		if let Some(it) = packet.home                  { self.home                  = it }
-		if let Some(it) = packet.chunk_to_reveal       { self.chunk_to_reveal       = it }
+		if let Some(it) = packet.zone_to_reveal        { self.zone_to_reveal        = it }
 		if let Some(it) = packet.unknown42             { self.unknown42             = it }
 		if let Some(it) = packet.consumable.clone()    { self.consumable            = it }
 		if let Some(it) = packet.equipment.clone()     { self.equipment             = it }
@@ -214,9 +214,9 @@ impl Creature {
 			unknown36            : Some(self.unknown36),
 			power_base           : Some(self.power_base),
 			unknown38            : Some(self.unknown38),
-			home_chunk           : Some(self.home_chunk),
+			home_zone            : Some(self.home_zone),
 			home                 : Some(self.home),
-			chunk_to_reveal      : Some(self.chunk_to_reveal.clone()),
+			zone_to_reveal       : Some(self.zone_to_reveal.clone()),
 			unknown42            : Some(self.unknown42),
 			consumable           : Some(self.consumable.clone()),
 			equipment            : Some(self.equipment.clone()),

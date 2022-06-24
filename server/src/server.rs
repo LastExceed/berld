@@ -72,11 +72,11 @@ impl Server {
 	}
 
 	pub fn add_ground_item(&self, item: Item, position: Point3<i64>, rotation: f32) {
-		let chunk = position.xy().map(|value| (value / 0x1_00_00_00) as i32);
+		let zone = position.xy().map(|value| (value / 0x1_00_00_00) as i32);
 
 		let mut ground_items_guard = self.ground_items.write();
-		let chunk_items = ground_items_guard.entry(chunk).or_insert(vec![]);
-		chunk_items.push(Drop {
+		let zone_items = ground_items_guard.entry(zone).or_insert(vec![]);
+		zone_items.push(Drop {
 			item,
 			position,
 			rotation,
@@ -86,32 +86,32 @@ impl Server {
 			droptime: 0
 		});
 
-		let mut chunk_items_copy = chunk_items.clone();
-		chunk_items_copy[chunk_items.len() - 1].droptime = 500;
+		let mut zone_items_copy = zone_items.clone();
+		zone_items_copy[zone_items.len() - 1].droptime = 500;
 
 		self.broadcast(&WorldUpdate {
-			drops: vec![(chunk, chunk_items_copy)],
+			drops: vec![(zone, zone_items_copy)],
 			..Default::default()
 		}, None);
 	}
 
 	///returns none if a player picks up an item they dropped in single player
-	pub fn remove_ground_item(&self, chunk: Point2<i32>, item_index: usize) -> Option<Item> {
-		let (remaining_chunk_drops, removed_item) = {
+	pub fn remove_ground_item(&self, zone: Point2<i32>, item_index: usize) -> Option<Item> {
+		let (remaining_zone_drops, removed_item) = {
 			let mut drops_guard = self.ground_items.write();
 
-			let Some(chunk_drops) = drops_guard.get_mut(&chunk) else { return None };
+			let Some(zone_drops) = drops_guard.get_mut(&zone) else { return None };
 
-			let drop = chunk_drops.swap_remove(item_index);
-			let chunk_drops_owned = chunk_drops.to_owned();
-			if chunk_drops.is_empty() {
-				drops_guard.remove(&chunk);
+			let drop = zone_drops.swap_remove(item_index);
+			let zone_drops_owned = zone_drops.to_owned();
+			if zone_drops.is_empty() {
+				drops_guard.remove(&zone);
 			}
-			(chunk_drops_owned, drop.item)
+			(zone_drops_owned, drop.item)
 		};//scope ensures the guard is dropped asap
 
 		self.broadcast(&WorldUpdate {
-			drops: vec![(chunk, remaining_chunk_drops)],
+			drops: vec![(zone, remaining_zone_drops)],
 			..Default::default()
 		}, None);
 
@@ -169,7 +169,7 @@ fn handle_new_player(server: &Arc<Server>, stream: &mut TcpStream, assigned_id: 
 	WorldUpdate {
 		drops: server.ground_items.read()
 			.iter()
-			.map(|(chunk, drop_list)| (*chunk, drop_list.clone()))
+			.map(|(zone, zone_drops)| (*zone, zone_drops.clone()))
 			.collect(),
 		..Default::default()
 	}.write_to_with_id(stream)?;
@@ -199,14 +199,14 @@ fn read_packets<T: Read>(server: &Arc<Server>, source: Arc<Player>, readable: &m
 	loop {
 		let packet_id = readable.read_struct::<PacketId>()?;
 		match packet_id {
-			PacketId::CreatureUpdate => on_creature_update(server, &source, CreatureUpdate       ::read_from(readable)?)?,
-			PacketId::CreatureAction => on_creature_action(server, &source, CreatureAction       ::read_from(readable)?)?,
-			PacketId::Hit            => on_hit            (server, &source, Hit                  ::read_from(readable)?)?,
-			PacketId::StatusEffect   => on_status_effect  (server, &source, StatusEffect         ::read_from(readable)?)?,
-			PacketId::Projectile     => on_projectile     (server, &source, Projectile           ::read_from(readable)?)?,
-			PacketId::ChatMessage    => on_chat_message   (server, &source, ChatMessageFromClient::read_from(readable)?)?,
-			PacketId::CurrentChunk   => on_current_chunk  (server, &source, CurrentChunk         ::read_from(readable)?)?,
-			PacketId::CurrentBiome   => on_current_biome  (server, &source, CurrentBiome         ::read_from(readable)?)?,
+			PacketId::CreatureUpdate  => on_creature_update (server, &source, CreatureUpdate       ::read_from(readable)?)?,
+			PacketId::CreatureAction  => on_creature_action (server, &source, CreatureAction       ::read_from(readable)?)?,
+			PacketId::Hit             => on_hit             (server, &source, Hit                  ::read_from(readable)?)?,
+			PacketId::StatusEffect    => on_status_effect   (server, &source, StatusEffect         ::read_from(readable)?)?,
+			PacketId::Projectile      => on_projectile      (server, &source, Projectile           ::read_from(readable)?)?,
+			PacketId::ChatMessage     => on_chat_message    (server, &source, ChatMessageFromClient::read_from(readable)?)?,
+			PacketId::ZoneDiscovery   => on_zone_discovery  (server, &source, ZoneDiscovery        ::read_from(readable)?)?,
+			PacketId::RegionDiscovery => on_region_discovery(server, &source, RegionDiscovery      ::read_from(readable)?)?,
 			_ => panic!("unexpected packet id {:?}", packet_id)
 		}
 	}

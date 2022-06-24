@@ -9,13 +9,13 @@ use crate::utils::io_extensions::{ReadExtension, WriteExtension};
 impl CwSerializable for P48 {
 	fn read_from(reader: &mut impl Read) -> Result<Self, Error> {
 		Ok(Self {
-			chunk: reader.read_struct::<Point2<i32>>()?,
+			zone: reader.read_struct::<Point2<i32>>()?,
 			sub_packets: Vec::read_from(reader)?
 		})
 	}
 
 	fn write_to(&self, writer: &mut impl Write) -> Result<(), Error> {
-		writer.write_struct(&self.chunk)?;
+		writer.write_struct(&self.zone)?;
 		self.sub_packets.write_to(writer)
 	}
 }

@@ -49,7 +49,7 @@ pub fn on_creature_action(server: &Arc<Server>, source: &Arc<Player>, packet: Cr
 			source.notify("object interactions are disabled".to_owned());
 		}
 		CreatureActionType::PickUp => {
-			if let Some(item) = server.remove_ground_item(packet.chunk, packet.item_index as usize) {
+			if let Some(item) = server.remove_ground_item(packet.zone, packet.item_index as usize) {
 				source.send(&WorldUpdate {
 					pickups: vec![Pickup {
 						interactor: source.creature.read().id,
@@ -125,10 +125,10 @@ pub fn on_chat_message(server: &Arc<Server>, source: &Arc<Player>, packet: ChatM
 	Ok(())
 }
 
-pub fn on_current_chunk(_server: &Arc<Server>, _source: &Arc<Player>, _packet: CurrentChunk) -> Result<(), io::Error> {
+pub fn on_zone_discovery(_server: &Arc<Server>, _source: &Arc<Player>, _packet: ZoneDiscovery) -> Result<(), io::Error> {
 	Ok(())
 }
 
-pub fn on_current_biome(_server: &Arc<Server>, _source: &Arc<Player>, _packet: CurrentBiome) -> Result<(), io::Error> {
+pub fn on_region_discovery(_server: &Arc<Server>, _source: &Arc<Player>, _packet: RegionDiscovery) -> Result<(), io::Error> {
 	Ok(())
 }

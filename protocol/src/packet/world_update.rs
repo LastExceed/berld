@@ -109,7 +109,7 @@ pub struct SoundEffect {
 
 #[repr(C)]
 pub struct WorldObject {
-	pub chunk: Point2<i32>,
+	pub zone: Point2<i32>,
 	pub id: i32,
 	pub unknown_a: i32,
 	pub type_: WorldObjectType,
@@ -127,7 +127,7 @@ pub struct WorldObject {
 }
 
 pub struct P48 {
-	pub chunk: Point2<i32>,
+	pub zone: Point2<i32>,
 	pub sub_packets: Vec<P48sub>
 }
 
@@ -168,7 +168,7 @@ pub struct Mission {
 	//pad2
 	pub health_current: i32,
 	pub health_maximum: i32,
-	pub chunk: Point2<i32>
+	pub zone: Point2<i32>
 }
 
 impl CwSerializable for WorldEdit {}
