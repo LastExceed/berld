@@ -253,7 +253,6 @@ pub trait Packet: CwSerializable {
 pub trait PacketFromServer: Packet {}
 pub trait PacketFromClient: Packet {}
 
-//todo: macros
 impl CwSerializable for MultiCreatureUpdate {}
 impl CwSerializable for ServerTick {}
 impl CwSerializable for IngameDatetime {}
@@ -267,6 +266,12 @@ impl CwSerializable for MapSeed {}
 impl CwSerializable for ConnectionAcceptance {}
 impl CwSerializable for ProtocolVersion {}
 impl CwSerializable for ConnectionRejection {}
+// packets with non-default trait implementations:
+// - CreatureUpdate
+// - AirshipTraffic
+// - WorldUpdate
+// - ChatMessage (both variants)
+// they can be found in their respective modules
 
 impl Packet for CreatureUpdate        { const ID: PacketId = PacketId::CreatureUpdate; }
 impl Packet for MultiCreatureUpdate   { const ID: PacketId = PacketId::MultiCreatureUpdate; }
@@ -308,3 +313,7 @@ impl PacketFromClient for ChatMessageFromClient {}
 impl PacketFromClient for ZoneDiscovery {}
 impl PacketFromClient for RegionDiscovery {}
 impl PacketFromClient for ProtocolVersion {}
+
+// this could easily be done with macros
+// but that would make things harder to comprehend
+// and doesn't provide any meaningful benefit
