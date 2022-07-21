@@ -20,6 +20,6 @@ impl CwSerializable for P48 {
 	}
 }
 
-pub struct P48sub([u8; 16]);
+pub struct P48sub(pub [u8; 16]);
 
 impl CwSerializable for P48sub {}
