@@ -66,7 +66,7 @@ pub struct Creature {
 impl Creature {
 	pub fn maybe_from(creature_update: &CreatureUpdate) -> Option<Creature> {
 		//todo: macro?
-			Some(Self {
+		Some(Self {
 			id: creature_update.id,
 			position             : creature_update.position?,
 			rotation             : creature_update.rotation.clone()?,
