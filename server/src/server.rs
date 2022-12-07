@@ -172,7 +172,8 @@ impl Server {
 		self.players.write().push(new_player_arc.clone());
 		self.broadcast(&new_player_arc.creature.read().to_update(), None);
 
-		self.read_packets(new_player_arc.clone(), stream).expect_err("impossible");
+		let _ = self.read_packets_forever(new_player_arc.clone(), stream)
+			.expect_err("impossible"); //TODO: check if error emerged from reading or writing
 
 		self.remove_player(new_player_arc);
 
@@ -199,7 +200,7 @@ impl Server {
 		}, None);
 	}
 
-	fn read_packets<T: Read>(&self, source: Arc<Player>, readable: &mut T) -> Result<(), io::Error> {
+	fn read_packets_forever<T: Read>(&self, source: Arc<Player>, readable: &mut T) -> Result<(), io::Error> {
 		loop {
 			let packet_id = readable.read_struct::<PacketId>()?;
 			match packet_id {
