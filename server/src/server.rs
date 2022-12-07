@@ -3,7 +3,6 @@ use std::collections::HashMap;
 use std::io::{ErrorKind, Read};
 use std::mem::size_of;
 use std::net::{Shutdown, TcpListener, TcpStream};
-use std::ops::Index;
 use std::sync::Arc;
 use std::time::Duration;
 
@@ -19,7 +18,6 @@ use protocol::utils::io_extensions::{ReadExtension, WriteExtension};
 
 use crate::creature::Creature;
 use crate::creature_id_pool::CreatureIdPool;
-use crate::packet_handlers::*;
 use crate::player::Player;
 use crate::pvp::enable_pvp;
 
@@ -54,7 +52,7 @@ impl Server {
 
 			let self_arc_clone = self_arc.clone();
 			thread::spawn(move || {
-				if let Err(_) = handle_new_connection(self_arc_clone, &mut stream) {
+				if let Err(_) = self_arc_clone.handle_new_connection(&mut stream) {
 					//TODO: error logging
 				}
 				stream.shutdown(Shutdown::Both).expect("TODO: panic message");
@@ -123,97 +121,97 @@ impl Server {
 
 		Some(removed_item)
 	}
-}
 
-fn handle_new_connection(server: Arc<Server>, stream: &mut TcpStream) -> Result<(), io::Error> {
-	if stream.read_struct::<PacketId>()? != PacketId::ProtocolVersion
-		|| ProtocolVersion::read_from(stream)?.0 != 3 {
-		return Err(io::Error::from(ErrorKind::InvalidData))
-	}
-	let assigned_id = server.id_pool.write().claim();
-	let result = handle_new_player(&server, stream, assigned_id);
-	server.id_pool.write().free(assigned_id);
-	result
-}
-
-fn handle_new_player(server: &Arc<Server>, stream: &mut TcpStream, assigned_id: CreatureId) -> Result<(), io::Error> {
-	ConnectionAcceptance {}.write_to_with_id(stream)?;
-
-	//at this point the server needs to send an abnormal CreatureUpdate which
-	// A.) is not compressed (and lacks the size prefix used for compressed packets)
-	// B.) has no bitfield indicating the presence of its properties
-	// C.) falls 8 bytes short of representing a full creature
-	//unfortunately it is impossible to determine which bytes are missing exactly, as the only reference is pixxie from the vanilla server, which is almost completely zeroed
-	//the last non-zero bytes in pixxie are the equipped weapons, which are positioned correctly. from that we can deduce that the missing bytes belong to the last 3 properties
-	//it's probably a cut-off at the end resulting from an incorrectly sized buffer
-	stream.write_struct(&PacketId::CreatureUpdate)?;
-	stream.write_struct(&assigned_id)?; //luckily the only thing the alpha client does with this data is acquiring its assigned CreatureId
-	stream.write_struct(&[0u8; 0x1168])?; //so we can simply zero out everything else and not worry about the missing bytes
-
-	if stream.read_struct::<PacketId>()? != PacketId::CreatureUpdate {
-		return Err(io::Error::from(ErrorKind::InvalidData))
-	}
-	let mut full_creature_update = CreatureUpdate::read_from(stream)?;
-	enable_pvp(&mut full_creature_update);
-
-	let me = Player::new(
-		Creature::maybe_from(&full_creature_update).ok_or_else(|| io::Error::from(ErrorKind::InvalidData))?,
-		stream,
-	);
-
-
-	me.send(&MapSeed(225));
-	me.send(&ChatMessageFromServer {
-		source: CreatureId(0),
-		text: "welcome to berld".to_string()
-	});
-
-	for player in server.players.read().iter() {
-		me.send(&player.creature.read().to_update());
+	fn handle_new_connection(&self, stream: &mut TcpStream) -> Result<(), io::Error> {
+		if stream.read_struct::<PacketId>()? != PacketId::ProtocolVersion
+			|| ProtocolVersion::read_from(stream)?.0 != 3 {
+			return Err(io::Error::from(ErrorKind::InvalidData))
+		}
+		let assigned_id = self.id_pool.write().claim();
+		let result = self.handle_new_player(stream, assigned_id);
+		self.id_pool.write().free(assigned_id);
+		result
 	}
 
-	WorldUpdate {
-		drops: server.drops.read()
-			.iter()
-			.map(|(zone, zone_drops)| (*zone, zone_drops.clone()))
-			.collect(),
-		..Default::default()
-	}.write_to_with_id(stream)?;
+	fn handle_new_player(&self, stream: &mut TcpStream, assigned_id: CreatureId) -> Result<(), io::Error> {
+		ConnectionAcceptance {}.write_to_with_id(stream)?;
 
-	let player_arc = Arc::new(me);
-	server.players.write().push(player_arc.clone());
-	server.broadcast(&player_arc.creature.read().to_update(), None);
+		//at this point the server needs to send an abnormal CreatureUpdate which
+		// A.) is not compressed (and lacks the size prefix used for compressed packets)
+		// B.) has no bitfield indicating the presence of its properties
+		// C.) falls 8 bytes short of representing a full creature
+		//unfortunately it is impossible to determine which bytes are missing exactly, as the only reference is pixxie from the vanilla server, which is almost completely zeroed
+		//the last non-zero bytes in pixxie are the equipped weapons, which are positioned correctly. from that we can deduce that the missing bytes belong to the last 3 properties
+		//it's probably a cut-off at the end resulting from an incorrectly sized buffer
+		stream.write_struct(&PacketId::CreatureUpdate)?;
+		stream.write_struct(&assigned_id)?; //luckily the only thing the alpha client does with this data is acquiring its assigned CreatureId
+		stream.write_struct(&[0u8; 0x1168])?; //so we can simply zero out everything else and not worry about the missing bytes
 
-	read_packets(server, player_arc.clone(), stream).expect_err("impossible");
+		if stream.read_struct::<PacketId>()? != PacketId::CreatureUpdate {
+			return Err(io::Error::from(ErrorKind::InvalidData))
+		}
+		let mut full_creature_update = CreatureUpdate::read_from(stream)?;
+		enable_pvp(&mut full_creature_update);
 
-	{
-		let mut players = server.players.write();
-		let index = players.iter().position(|other_player| Arc::ptr_eq(&player_arc, other_player)).expect("player not found");
-		players.swap_remove(index);
-	};
-	server.broadcast(&CreatureUpdate {
-		id: assigned_id,
-		health: Some(0f32),
-		affiliation: Some(Affiliation::Neutral),
-		..Default::default()
-	}, None);
+		let me = Player::new(
+			Creature::maybe_from(&full_creature_update).ok_or_else(|| io::Error::from(ErrorKind::InvalidData))?,
+			stream,
+		);
 
-	Ok(())
-}
 
-fn read_packets<T: Read>(server: &Arc<Server>, source: Arc<Player>, readable: &mut T) -> Result<(), io::Error> {
-	loop {
-		let packet_id = readable.read_struct::<PacketId>()?;
-		match packet_id {
-			PacketId::CreatureUpdate  => on_creature_update (server, &source, CreatureUpdate       ::read_from(readable)?)?,
-			PacketId::CreatureAction  => on_creature_action (server, &source, CreatureAction       ::read_from(readable)?)?,
-			PacketId::Hit             => on_hit             (server, &source, Hit                  ::read_from(readable)?)?,
-			PacketId::StatusEffect    => on_status_effect   (server, &source, StatusEffect         ::read_from(readable)?)?,
-			PacketId::Projectile      => on_projectile      (server, &source, Projectile           ::read_from(readable)?)?,
-			PacketId::ChatMessage     => on_chat_message    (server, &source, ChatMessageFromClient::read_from(readable)?)?,
-			PacketId::ZoneDiscovery   => on_zone_discovery  (server, &source, ZoneDiscovery        ::read_from(readable)?)?,
-			PacketId::RegionDiscovery => on_region_discovery(server, &source, RegionDiscovery      ::read_from(readable)?)?,
-			_ => panic!("unexpected packet id {:?}", packet_id)
+		me.send(&MapSeed(225));
+		me.send(&ChatMessageFromServer {
+			source: CreatureId(0),
+			text: "welcome to berld".to_string()
+		});
+
+		for player in self.players.read().iter() {
+			me.send(&player.creature.read().to_update());
+		}
+
+		WorldUpdate {
+			drops: self.drops.read()
+				.iter()
+				.map(|(zone, zone_drops)| (*zone, zone_drops.clone()))
+				.collect(),
+			..Default::default()
+		}.write_to_with_id(stream)?;
+
+		let player_arc = Arc::new(me);
+		self.players.write().push(player_arc.clone());
+		self.broadcast(&player_arc.creature.read().to_update(), None);
+
+		self.read_packets(player_arc.clone(), stream).expect_err("impossible");
+
+		{
+			let mut players = self.players.write();
+			let index = players.iter().position(|other_player| Arc::ptr_eq(&player_arc, other_player)).expect("player not found");
+			players.swap_remove(index);
+		};
+		self.broadcast(&CreatureUpdate {
+			id: assigned_id,
+			health: Some(0f32),
+			affiliation: Some(Affiliation::Neutral),
+			..Default::default()
+		}, None);
+
+		Ok(())
+	}
+
+	fn read_packets<T: Read>(&self, source: Arc<Player>, readable: &mut T) -> Result<(), io::Error> {
+		loop {
+			let packet_id = readable.read_struct::<PacketId>()?;
+			match packet_id {
+				PacketId::CreatureUpdate  => self.on_creature_update (&source, CreatureUpdate       ::read_from(readable)?)?,
+				PacketId::CreatureAction  => self.on_creature_action (&source, CreatureAction       ::read_from(readable)?)?,
+				PacketId::Hit             => self.on_hit             (&source, Hit                  ::read_from(readable)?)?,
+				PacketId::StatusEffect    => self.on_status_effect   (&source, StatusEffect         ::read_from(readable)?)?,
+				PacketId::Projectile      => self.on_projectile      (&source, Projectile           ::read_from(readable)?)?,
+				PacketId::ChatMessage     => self.on_chat_message    (&source, ChatMessageFromClient::read_from(readable)?)?,
+				PacketId::ZoneDiscovery   => self.on_zone_discovery  (&source, ZoneDiscovery        ::read_from(readable)?)?,
+				PacketId::RegionDiscovery => self.on_region_discovery(&source, RegionDiscovery      ::read_from(readable)?)?,
+				_ => panic!("unexpected packet id {:?}", packet_id)
+			}
 		}
 	}
 }
