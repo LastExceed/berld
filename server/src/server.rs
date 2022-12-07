@@ -174,19 +174,29 @@ impl Server {
 
 		self.read_packets(new_player_arc.clone(), stream).expect_err("impossible");
 
-		{
-			let mut players = self.players.write();
-			let index = players.iter().position(|player| Arc::ptr_eq(&new_player_arc, player)).expect("player not found");
-			players.swap_remove(index);
-		};
-		self.broadcast(&CreatureUpdate {
-			id: assigned_id,
-			health: Some(0f32),
-			affiliation: Some(Affiliation::Neutral),
-			..Default::default()
-		}, None);
+		self.remove_player(new_player_arc);
 
 		Ok(())
+	}
+
+	fn remove_player(&self, player_to_remove: Arc<Player>) {
+		{
+			let mut players = self.players.write();
+			let index = players.iter().position(|player| Arc::ptr_eq(&player_to_remove, player)).expect("player not found");
+			players.swap_remove(index);
+		};
+		self.remove_creature(&player_to_remove.creature.read().id);
+	}
+
+	fn remove_creature(&self, creature_id: &CreatureId) {
+		//this is a shortcut, as the creature technically still exists
+		//the proper way to remove a creature requires updating all remaining creatures which is expensive on bandwidth
+		self.broadcast(&CreatureUpdate {
+			id: creature_id.to_owned(),
+			health: Some(0f32), //makes the creature intangible
+			affiliation: Some(Affiliation::Neutral), //ensures it doesnt show up on the map
+			..Default::default()
+		}, None);
 	}
 
 	fn read_packets<T: Read>(&self, source: Arc<Player>, readable: &mut T) -> Result<(), io::Error> {
@@ -220,6 +230,6 @@ impl Server {
 fn send_abnormal_creature_update(stream: &mut TcpStream, assigned_id: CreatureId) -> Result<(), io::Error> {
 	stream.write_struct(&PacketId::CreatureUpdate)?;
 	stream.write_struct(&assigned_id)?; //luckily the only thing the alpha client does with this data is acquiring its assigned CreatureId
-	stream.write_all(&[0u8; 4456])?; //so we can simply zero out everything else and not worry about the missing bytes
+	stream.write_all(&[0u8; 4456]) //so we can simply zero out everything else and not worry about the missing bytes
 	//TODO: move this to protocol crate and construct this from an actual [CreatureUpdate]
 }
