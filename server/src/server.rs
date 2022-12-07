@@ -153,20 +153,20 @@ impl Server {
 		let mut full_creature_update = CreatureUpdate::read_from(stream)?;
 		enable_pvp(&mut full_creature_update);
 
-		let me = Player::new(
+		let new_player = Player::new(
 			Creature::maybe_from(&full_creature_update).ok_or_else(|| io::Error::from(ErrorKind::InvalidData))?,
 			stream,
 		);
 
 
-		me.send(&MapSeed(225));
-		me.send(&ChatMessageFromServer {
+		new_player.send(&MapSeed(225));
+		new_player.send(&ChatMessageFromServer {
 			source: CreatureId(0),
 			text: "welcome to berld".to_string()
 		});
 
-		for player in self.players.read().iter() {
-			me.send(&player.creature.read().to_update());
+		for existing_player in self.players.read().iter() {
+			new_player.send(&existing_player.creature.read().to_update());
 		}
 
 		WorldUpdate {
@@ -177,15 +177,15 @@ impl Server {
 			..Default::default()
 		}.write_to_with_id(stream)?;
 
-		let player_arc = Arc::new(me);
-		self.players.write().push(player_arc.clone());
-		self.broadcast(&player_arc.creature.read().to_update(), None);
+		let new_player_arc = Arc::new(new_player);
+		self.players.write().push(new_player_arc.clone());
+		self.broadcast(&new_player_arc.creature.read().to_update(), None);
 
-		self.read_packets(player_arc.clone(), stream).expect_err("impossible");
+		self.read_packets(new_player_arc.clone(), stream).expect_err("impossible");
 
 		{
 			let mut players = self.players.write();
-			let index = players.iter().position(|other_player| Arc::ptr_eq(&player_arc, other_player)).expect("player not found");
+			let index = players.iter().position(|player| Arc::ptr_eq(&new_player_arc, player)).expect("player not found");
 			players.swap_remove(index);
 		};
 		self.broadcast(&CreatureUpdate {
