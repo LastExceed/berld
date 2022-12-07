@@ -171,8 +171,8 @@ impl Server {
 
 		WorldUpdate {
 			drops: self.drops.read()
-				.iter()
-				.map(|(zone, zone_drops)| (*zone, zone_drops.clone()))
+				.clone()
+				.into_iter()
 				.collect(),
 			..Default::default()
 		}.write_to_with_id(stream)?;
