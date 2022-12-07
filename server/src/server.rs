@@ -1,6 +1,6 @@
 use std::{io, thread};
 use std::collections::HashMap;
-use std::io::{ErrorKind, Read};
+use std::io::{ErrorKind, Read, Write};
 use std::mem::size_of;
 use std::net::{Shutdown, TcpListener, TcpStream};
 use std::sync::Arc;
@@ -136,16 +136,7 @@ impl Server {
 	fn handle_new_player(&self, stream: &mut TcpStream, assigned_id: CreatureId) -> Result<(), io::Error> {
 		ConnectionAcceptance {}.write_to_with_id(stream)?;
 
-		//at this point the server needs to send an abnormal CreatureUpdate which
-		// A.) is not compressed (and lacks the size prefix used for compressed packets)
-		// B.) has no bitfield indicating the presence of its properties
-		// C.) falls 8 bytes short of representing a full creature
-		//unfortunately it is impossible to determine which bytes are missing exactly, as the only reference is pixxie from the vanilla server, which is almost completely zeroed
-		//the last non-zero bytes in pixxie are the equipped weapons, which are positioned correctly. from that we can deduce that the missing bytes belong to the last 3 properties
-		//it's probably a cut-off at the end resulting from an incorrectly sized buffer
-		stream.write_struct(&PacketId::CreatureUpdate)?;
-		stream.write_struct(&assigned_id)?; //luckily the only thing the alpha client does with this data is acquiring its assigned CreatureId
-		stream.write_struct(&[0u8; 0x1168])?; //so we can simply zero out everything else and not worry about the missing bytes
+		send_abnormal_creature_update(stream, assigned_id)?;
 
 		if stream.read_struct::<PacketId>()? != PacketId::CreatureUpdate {
 			return Err(io::Error::from(ErrorKind::InvalidData))
@@ -214,4 +205,21 @@ impl Server {
 			}
 		}
 	}
+}
+
+///during new player setup the server needs to send an abnormal CreatureUpdate which
+/// * is not compressed (and lacks the size prefix used for compressed packets)
+/// * has no bitfield indicating the presence of its properties
+/// * falls 8 bytes short of representing a full creature
+///
+///unfortunately it is impossible to determine which bytes are missing exactly,
+///as the only reference is pixxie from the vanilla server, which is almost completely zeroed.
+///the last non-zero bytes in pixxie are the equipped weapons, which are positioned correctly.
+///from that it can be deduced that the missing bytes belong to the last 3 properties.
+///it's probably a cut-off at the end resulting from an incorrectly sized buffer
+fn send_abnormal_creature_update(stream: &mut TcpStream, assigned_id: CreatureId) -> Result<(), io::Error> {
+	stream.write_struct(&PacketId::CreatureUpdate)?;
+	stream.write_struct(&assigned_id)?; //luckily the only thing the alpha client does with this data is acquiring its assigned CreatureId
+	stream.write_all(&[0u8; 4456])?; //so we can simply zero out everything else and not worry about the missing bytes
+	//TODO: move this to protocol crate and construct this from an actual [CreatureUpdate]
 }
