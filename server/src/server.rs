@@ -219,16 +219,16 @@ impl Server {
 	}
 }
 
-///during new player setup the server needs to send an abnormal CreatureUpdate which
+/// during new player setup the server needs to send an abnormal CreatureUpdate which:
 /// * is not compressed (and lacks the size prefix used for compressed packets)
 /// * has no bitfield indicating the presence of its properties
 /// * falls 8 bytes short of representing a full creature
 ///
-///unfortunately it is impossible to determine which bytes are missing exactly,
-///as the only reference is pixxie from the vanilla server, which is almost completely zeroed.
-///the last non-zero bytes in pixxie are the equipped weapons, which are positioned correctly.
-///from that it can be deduced that the missing bytes belong to the last 3 properties.
-///it's probably a cut-off at the end resulting from an incorrectly sized buffer
+/// unfortunately it is impossible to determine which bytes are missing exactly,
+/// as the only reference is pixxie from the vanilla server, which is almost completely zeroed.
+/// the last non-zero bytes in pixxie are the equipped weapons, which are positioned correctly.
+/// from that it can be deduced that the missing bytes belong to the last 3 properties.
+/// it's probably a cut-off at the end resulting from an incorrectly sized buffer
 fn send_abnormal_creature_update(stream: &mut TcpStream, assigned_id: CreatureId) -> Result<(), io::Error> {
 	stream.write_struct(&CreatureUpdate::ID)?;
 	stream.write_struct(&assigned_id)?; //luckily the only thing the alpha client does with this data is acquiring its assigned CreatureId
