@@ -201,7 +201,7 @@ impl Server {
 		}, None);
 	}
 
-	fn read_packets_forever<T: Read>(&self, source: &Player, readable: &mut T) -> Result<(), io::Error> {
+	fn read_packets_forever<Readable: Read>(&self, source: &Player, readable: &mut Readable) -> Result<(), io::Error> {
 		loop {
 			//todo: copypasta
 			match readable.read_struct::<packet::Id>()? {
@@ -229,9 +229,9 @@ impl Server {
 /// the last non-zero bytes in pixxie are the equipped weapons, which are positioned correctly.
 /// from that it can be deduced that the missing bytes belong to the last 3 properties.
 /// it's probably a cut-off at the end resulting from an incorrectly sized buffer
-fn write_abnormal_creature_update(stream: &mut TcpStream, assigned_id: CreatureId) -> Result<(), io::Error> {
-	stream.write_struct(&CreatureUpdate::ID)?;
-	stream.write_struct(&assigned_id)?; //luckily the only thing the alpha client does with this data is acquiring its assigned CreatureId
-	stream.write_all(&[0u8; 4456]) //so we can simply zero out everything else and not worry about the missing bytes
+fn write_abnormal_creature_update(writable: &mut impl Write, assigned_id: CreatureId) -> Result<(), io::Error> {
+	writable.write_struct(&CreatureUpdate::ID)?;
+	writable.write_struct(&assigned_id)?; //luckily the only thing the alpha client does with this data is acquiring its assigned CreatureId
+	writable.write_all(&[0u8; 4456]) //so we can simply zero out everything else and not worry about the missing bytes
 	//TODO: move this to protocol crate and construct this from an actual [CreatureUpdate]
 }

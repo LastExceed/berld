@@ -208,32 +208,32 @@ pub struct ConnectionRejection;
 
 
 pub trait CwSerializable: Sized {
-	fn read_from(reader: &mut impl Read) -> Result<Self, Error>
+	fn read_from(readable: &mut impl Read) -> Result<Self, Error>
 		where [(); size_of::<Self>()]:
 	{
-		reader.read_struct::<Self>()
+		readable.read_struct::<Self>()
 	}
 
-	fn write_to(&self, writer: &mut impl Write) -> Result<(), Error>
+	fn write_to(&self, writable: &mut impl Write) -> Result<(), Error>
 		where [(); size_of::<Self>()]:
 	{
-		writer.write_struct(self)
+		writable.write_struct(self)
 	}
 }
 
 impl<Element: CwSerializable> CwSerializable for Vec<Element>
 	where [(); size_of::<Element>()]:
 {
-	fn read_from(reader: &mut impl Read) -> Result<Self, Error> {
-		(0..reader.read_struct::<i32>()?)
-			.map(|_| Element::read_from(reader))
+	fn read_from(readable: &mut impl Read) -> Result<Self, Error> {
+		(0..readable.read_struct::<i32>()?)
+			.map(|_| Element::read_from(readable))
 			.collect::<Result<Self, Error>>()
 	}
 
-	fn write_to(&self, writer: &mut impl Write) -> Result<(), Error> {
-		writer.write_struct(&(self.len() as i32))?;
+	fn write_to(&self, writable: &mut impl Write) -> Result<(), Error> {
+		writable.write_struct(&(self.len() as i32))?;
 		for element in self {
-			element.write_to(writer)?;
+			element.write_to(writable)?;
 		}
 		Ok(())
 	}
@@ -276,11 +276,11 @@ pub struct Id(i32);
 pub trait Packet: CwSerializable {
 	const ID: Id; //dedicated type ensures this can't be used in any mathematic manner
 
-	fn write_to_with_id(&self, writer: &mut impl Write) -> Result<(), Error>
+	fn write_to_with_id(&self, writable: &mut impl Write) -> Result<(), Error>
 		where [(); size_of::<Self>()]:
 	{
-		writer.write_struct(&Self::ID)?;
-		self.write_to(writer)
+		writable.write_struct(&Self::ID)?;
+		self.write_to(writable)
 	}
 }
 

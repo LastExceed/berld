@@ -5,12 +5,12 @@ use nalgebra::Point3;
 use crate::packet::*;
 
 impl CwSerializable for AirshipTraffic {
-	fn read_from(reader: &mut impl Read) -> Result<Self, Error> {
-		Ok(Self { airships: Vec::read_from(reader)? })
+	fn read_from(readable: &mut impl Read) -> Result<Self, Error> {
+		Ok(Self { airships: Vec::read_from(readable)? })
 	}
 
-	fn write_to(&self, writer: &mut impl Write) -> Result<(), Error> {
-		self.airships.write_to(writer)
+	fn write_to(&self, writable: &mut impl Write) -> Result<(), Error> {
+		self.airships.write_to(writable)
 	}
 }
 

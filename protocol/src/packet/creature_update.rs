@@ -11,11 +11,11 @@ use crate::packet::*;
 use crate::packet::common::EulerAngles;
 
 impl CwSerializable for CreatureUpdate {
-	fn read_from(reader: &mut impl Read) -> Result<Self, Error> {
+	fn read_from(readable: &mut impl Read) -> Result<Self, Error> {
 		//todo: can't decode from network stream directly because ???
-		let size = reader.read_struct::<i32>()?;
+		let size = readable.read_struct::<i32>()?;
 		let mut buffer = vec![0u8; size as usize];
-		reader.read_exact(&mut buffer)?;
+		readable.read_exact(&mut buffer)?;
 
 		let mut decoder = ZlibDecoder::new(buffer.as_slice());
 
@@ -87,7 +87,7 @@ impl CwSerializable for CreatureUpdate {
 		Ok(instance)
 	}
 
-	fn write_to(&self, writer: &mut impl Write) -> Result<(), Error> {
+	fn write_to(&self, writable: &mut impl Write) -> Result<(), Error> {
 		let mut bitfield = 0u64;
 
 		//todo: macro
@@ -206,8 +206,8 @@ impl CwSerializable for CreatureUpdate {
 			encoder.flush()?;
 		}
 
-		writer.write_struct(&(buffer.len() as i32))?;
-		writer.write_all(&buffer)
+		writable.write_struct(&(buffer.len() as i32))?;
+		writable.write_all(&buffer)
 	}
 }
 

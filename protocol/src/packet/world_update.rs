@@ -26,10 +26,10 @@ pub mod p48;
 pub mod mission;
 
 impl CwSerializable for WorldUpdate {
-	fn read_from(reader: &mut impl Read) -> Result<Self, Error> {
+	fn read_from(readable: &mut impl Read) -> Result<Self, Error> {
 		//todo: deduplicate (creature_update)
-		let mut buffer = vec![0u8; reader.read_struct::<i32>()? as usize];
-		reader.read_exact(&mut buffer)?;
+		let mut buffer = vec![0u8; readable.read_struct::<i32>()? as usize];
+		readable.read_exact(&mut buffer)?;
 
 		let mut decoder = ZlibDecoder::new(buffer.as_slice());
 
@@ -51,7 +51,7 @@ impl CwSerializable for WorldUpdate {
 		})
 	}
 
-	fn write_to(&self, writer: &mut impl Write) -> Result<(), Error> {
+	fn write_to(&self, writable: &mut impl Write) -> Result<(), Error> {
 		let mut buffer = vec![];
 		{
 			let mut encoder = ZlibEncoder::new(&mut buffer, Compression::default());
@@ -73,8 +73,8 @@ impl CwSerializable for WorldUpdate {
 
 			encoder.flush()?;
 		}
-		writer.write_struct(&(buffer.len() as i32))?;
-		writer.write_all(&buffer)
+		writable.write_struct(&(buffer.len() as i32))?;
+		writable.write_all(&buffer)
 	}
 }
 

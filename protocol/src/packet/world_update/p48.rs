@@ -7,16 +7,16 @@ use crate::packet::world_update::P48;
 use crate::utils::io_extensions::{ReadExtension, WriteExtension};
 
 impl CwSerializable for P48 {
-	fn read_from(reader: &mut impl Read) -> Result<Self, Error> {
+	fn read_from(readable: &mut impl Read) -> Result<Self, Error> {
 		Ok(Self {
-			zone: reader.read_struct::<Point2<i32>>()?,
-			sub_packets: Vec::read_from(reader)?
+			zone: readable.read_struct::<Point2<i32>>()?,
+			sub_packets: Vec::read_from(readable)?
 		})
 	}
 
-	fn write_to(&self, writer: &mut impl Write) -> Result<(), Error> {
-		writer.write_struct(&self.zone)?;
-		self.sub_packets.write_to(writer)
+	fn write_to(&self, writable: &mut impl Write) -> Result<(), Error> {
+		writable.write_struct(&self.zone)?;
+		self.sub_packets.write_to(writable)
 	}
 }
 
