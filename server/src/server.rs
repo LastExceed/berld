@@ -8,12 +8,12 @@ use std::time::Duration;
 
 use parking_lot::RwLock;
 
+use protocol::{packet, SIZE_ZONE};
 use protocol::nalgebra::{Point2, Point3};
 use protocol::packet::*;
 use protocol::packet::common::{CreatureId, Item};
 use protocol::packet::creature_update::Affiliation;
 use protocol::packet::world_update::drops::Drop;
-use protocol::SIZE_ZONE;
 use protocol::utils::io_extensions::{ReadExtension, WriteExtension};
 
 use crate::creature::Creature;
@@ -123,7 +123,7 @@ impl Server {
 	}
 
 	fn handle_new_connection(&self, stream: &mut TcpStream) -> Result<(), io::Error> {
-		if stream.read_struct::<PacketId>()? != ProtocolVersion::ID
+		if stream.read_struct::<packet::Id>()? != ProtocolVersion::ID
 			|| ProtocolVersion::read_from(stream)?.0 != 3 {
 			return Err(io::Error::from(ErrorKind::InvalidData))
 		}
@@ -138,7 +138,7 @@ impl Server {
 
 		send_abnormal_creature_update(stream, assigned_id)?;
 
-		if stream.read_struct::<PacketId>()? != CreatureUpdate::ID {
+		if stream.read_struct::<packet::Id>()? != CreatureUpdate::ID {
 			return Err(io::Error::from(ErrorKind::InvalidData))
 		}
 		let mut full_creature_update = CreatureUpdate::read_from(stream)?;
@@ -202,7 +202,7 @@ impl Server {
 
 	fn read_packets_forever<T: Read>(&self, source: Arc<Player>, readable: &mut T) -> Result<(), io::Error> {
 		loop {
-			let packet_id = readable.read_struct::<PacketId>()?;
+			let packet_id = readable.read_struct::<packet::Id>()?;
 			match packet_id {
 				CreatureUpdate       ::ID => self.on_creature_update (&source, CreatureUpdate       ::read_from(readable)?)?,
 				CreatureAction       ::ID => self.on_creature_action (&source, CreatureAction       ::read_from(readable)?)?,
