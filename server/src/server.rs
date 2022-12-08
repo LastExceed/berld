@@ -123,7 +123,7 @@ impl Server {
 	}
 
 	fn handle_new_connection(&self, stream: &mut TcpStream) -> Result<(), io::Error> {
-		if stream.read_struct::<PacketId>()? != PacketId::ProtocolVersion
+		if stream.read_struct::<PacketId>()? != ProtocolVersion::ID
 			|| ProtocolVersion::read_from(stream)?.0 != 3 {
 			return Err(io::Error::from(ErrorKind::InvalidData))
 		}
@@ -138,7 +138,7 @@ impl Server {
 
 		send_abnormal_creature_update(stream, assigned_id)?;
 
-		if stream.read_struct::<PacketId>()? != PacketId::CreatureUpdate {
+		if stream.read_struct::<PacketId>()? != CreatureUpdate::ID {
 			return Err(io::Error::from(ErrorKind::InvalidData))
 		}
 		let mut full_creature_update = CreatureUpdate::read_from(stream)?;
@@ -204,14 +204,14 @@ impl Server {
 		loop {
 			let packet_id = readable.read_struct::<PacketId>()?;
 			match packet_id {
-				PacketId::CreatureUpdate  => self.on_creature_update (&source, CreatureUpdate       ::read_from(readable)?)?,
-				PacketId::CreatureAction  => self.on_creature_action (&source, CreatureAction       ::read_from(readable)?)?,
-				PacketId::Hit             => self.on_hit             (&source, Hit                  ::read_from(readable)?)?,
-				PacketId::StatusEffect    => self.on_status_effect   (&source, StatusEffect         ::read_from(readable)?)?,
-				PacketId::Projectile      => self.on_projectile      (&source, Projectile           ::read_from(readable)?)?,
-				PacketId::ChatMessage     => self.on_chat_message    (&source, ChatMessageFromClient::read_from(readable)?)?,
-				PacketId::ZoneDiscovery   => self.on_zone_discovery  (&source, ZoneDiscovery        ::read_from(readable)?)?,
-				PacketId::RegionDiscovery => self.on_region_discovery(&source, RegionDiscovery      ::read_from(readable)?)?,
+				CreatureUpdate       ::ID => self.on_creature_update (&source, CreatureUpdate       ::read_from(readable)?)?,
+				CreatureAction       ::ID => self.on_creature_action (&source, CreatureAction       ::read_from(readable)?)?,
+				Hit                  ::ID => self.on_hit             (&source, Hit                  ::read_from(readable)?)?,
+				StatusEffect         ::ID => self.on_status_effect   (&source, StatusEffect         ::read_from(readable)?)?,
+				Projectile           ::ID => self.on_projectile      (&source, Projectile           ::read_from(readable)?)?,
+				ChatMessageFromClient::ID => self.on_chat_message    (&source, ChatMessageFromClient::read_from(readable)?)?,
+				ZoneDiscovery        ::ID => self.on_zone_discovery  (&source, ZoneDiscovery        ::read_from(readable)?)?,
+				RegionDiscovery      ::ID => self.on_region_discovery(&source, RegionDiscovery      ::read_from(readable)?)?,
 				_ => panic!("unexpected packet id {:?}", packet_id)
 			}
 		}
@@ -229,7 +229,7 @@ impl Server {
 ///from that it can be deduced that the missing bytes belong to the last 3 properties.
 ///it's probably a cut-off at the end resulting from an incorrectly sized buffer
 fn send_abnormal_creature_update(stream: &mut TcpStream, assigned_id: CreatureId) -> Result<(), io::Error> {
-	stream.write_struct(&PacketId::CreatureUpdate)?;
+	stream.write_struct(&CreatureUpdate::ID)?;
 	stream.write_struct(&assigned_id)?; //luckily the only thing the alpha client does with this data is acquiring its assigned CreatureId
 	stream.write_all(&[0u8; 4456]) //so we can simply zero out everything else and not worry about the missing bytes
 	//TODO: move this to protocol crate and construct this from an actual [CreatureUpdate]
