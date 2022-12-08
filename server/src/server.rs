@@ -202,8 +202,7 @@ impl Server {
 
 	fn read_packets_forever<T: Read>(&self, source: Arc<Player>, readable: &mut T) -> Result<(), io::Error> {
 		loop {
-			let packet_id = readable.read_struct::<packet::Id>()?;
-			match packet_id {
+			match readable.read_struct::<packet::Id>()? {
 				CreatureUpdate       ::ID => self.on_creature_update (&source, CreatureUpdate       ::read_from(readable)?)?,
 				CreatureAction       ::ID => self.on_creature_action (&source, CreatureAction       ::read_from(readable)?)?,
 				Hit                  ::ID => self.on_hit             (&source, Hit                  ::read_from(readable)?)?,
@@ -212,7 +211,7 @@ impl Server {
 				ChatMessageFromClient::ID => self.on_chat_message    (&source, ChatMessageFromClient::read_from(readable)?)?,
 				ZoneDiscovery        ::ID => self.on_zone_discovery  (&source, ZoneDiscovery        ::read_from(readable)?)?,
 				RegionDiscovery      ::ID => self.on_region_discovery(&source, RegionDiscovery      ::read_from(readable)?)?,
-				_ => panic!("unexpected packet id {:?}", packet_id)
+				unexpected_packet_id => panic!("unexpected packet id {:?}", unexpected_packet_id)
 			}
 		}
 	}
