@@ -1,5 +1,4 @@
 use std::io;
-use std::sync::Arc;
 
 use parking_lot::lock_api::RawRwLockDowngrade;
 
@@ -15,7 +14,7 @@ use crate::Server;
 use crate::traffic_filter::filter;
 
 impl Server {
-	pub fn on_creature_update(&self, source: &Arc<Player>, mut packet: CreatureUpdate) -> Result<(), io::Error> {
+	pub fn on_creature_update(&self, source: &Player, mut packet: CreatureUpdate) -> Result<(), io::Error> {
 		enable_pvp(&mut packet);
 
 		let mut character = source.creature.write();
@@ -30,7 +29,7 @@ impl Server {
 		Ok(())
 	}
 
-	pub fn on_creature_action(&self, source: &Arc<Player>, packet: CreatureAction) -> Result<(), io::Error> {
+	pub fn on_creature_action(&self, source: &Player, packet: CreatureAction) -> Result<(), io::Error> {
 		match packet.type_ {
 			CreatureActionType::Bomb => {
 				source.notify("bombs are disabled".to_owned());
@@ -78,7 +77,7 @@ impl Server {
 		Ok(())
 	}
 
-	pub fn on_hit(&self, source: &Arc<Player>, packet: Hit) -> Result<(), io::Error> {
+	pub fn on_hit(&self, source: &Player, packet: Hit) -> Result<(), io::Error> {
 		if packet.target == packet.attacker && packet.damage.is_sign_negative() {
 			return Ok(()) //self-heal is already applied client-side (which is a bug)
 		}
@@ -91,7 +90,7 @@ impl Server {
 		Ok(())
 	}
 
-	pub fn on_status_effect(&self, source: &Arc<Player>, packet: StatusEffect) -> Result<(), io::Error> {
+	pub fn on_status_effect(&self, source: &Player, packet: StatusEffect) -> Result<(), io::Error> {
 		self.broadcast(
 			&WorldUpdate {
 				status_effects: vec![packet],
@@ -103,7 +102,7 @@ impl Server {
 		Ok(())
 	}
 
-	pub fn on_projectile(&self, source: &Arc<Player>, packet: Projectile) -> Result<(), io::Error> {
+	pub fn on_projectile(&self, source: &Player, packet: Projectile) -> Result<(), io::Error> {
 		self.broadcast(
 			&WorldUpdate {
 				projectiles: vec![packet],
@@ -115,7 +114,7 @@ impl Server {
 		Ok(())
 	}
 
-	pub fn on_chat_message(&self, source: &Arc<Player>, packet: ChatMessageFromClient) -> Result<(), io::Error> {
+	pub fn on_chat_message(&self, source: &Player, packet: ChatMessageFromClient) -> Result<(), io::Error> {
 		self.broadcast(
 			&ChatMessageFromServer {
 				source: source.creature.read().id,
@@ -127,11 +126,11 @@ impl Server {
 		Ok(())
 	}
 
-	pub fn on_zone_discovery(&self, _source: &Arc<Player>, _packet: ZoneDiscovery) -> Result<(), io::Error> {
+	pub fn on_zone_discovery(&self, _source: &Player, _packet: ZoneDiscovery) -> Result<(), io::Error> {
 		Ok(())
 	}
 
-	pub fn on_region_discovery(&self, _source: &Arc<Player>, _packet: RegionDiscovery) -> Result<(), io::Error> {
+	pub fn on_region_discovery(&self, _source: &Player, _packet: RegionDiscovery) -> Result<(), io::Error> {
 		Ok(())
 	}
 }

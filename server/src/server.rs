@@ -1,4 +1,4 @@
-use std::{io, thread};
+use std::{io, ptr, thread};
 use std::collections::HashMap;
 use std::io::{ErrorKind, Read, Write};
 use std::mem::size_of;
@@ -60,10 +60,10 @@ impl Server {
 		}
 	}
 
-	pub fn broadcast<P: PacketFromServer>(&self, packet: &P, player_to_skip: Option<&Arc<Player>>) where [(); size_of::<P>()]: {
+	pub fn broadcast<P: PacketFromServer>(&self, packet: &P, player_to_skip: Option<&Player>) where [(); size_of::<P>()]: {
 		for player in self.players.read().iter() {
 			if match player_to_skip {
-				Some(player_to_skip) => Arc::ptr_eq(player, player_to_skip),
+				Some(player_to_skip) => ptr::eq(player.as_ref(), player_to_skip),
 				None => false
 			} { continue }
 			player.send(packet);
@@ -172,18 +172,18 @@ impl Server {
 		self.players.write().push(new_player_arc.clone());
 		self.broadcast(&new_player_arc.creature.read().to_update(), None);
 
-		let _ = self.read_packets_forever(new_player_arc.clone(), stream)
+		let _ = self.read_packets_forever(&new_player_arc, stream)
 			.expect_err("impossible"); //TODO: check if error emerged from reading or writing
 
-		self.remove_player(new_player_arc);
+		self.remove_player(&new_player_arc);
 
 		Ok(())
 	}
 
-	fn remove_player(&self, player_to_remove: Arc<Player>) {
+	fn remove_player(&self, player_to_remove: &Player) {
 		{
 			let mut players = self.players.write();
-			let index = players.iter().position(|player| Arc::ptr_eq(&player_to_remove, player)).expect("player not found");
+			let index = players.iter().position(|player| ptr::eq(player_to_remove, player.as_ref())).expect("player not found");
 			players.swap_remove(index);
 		};
 		self.remove_creature(&player_to_remove.creature.read().id);
@@ -200,17 +200,17 @@ impl Server {
 		}, None);
 	}
 
-	fn read_packets_forever<T: Read>(&self, source: Arc<Player>, readable: &mut T) -> Result<(), io::Error> {
+	fn read_packets_forever<T: Read>(&self, source: &Player, readable: &mut T) -> Result<(), io::Error> {
 		loop {
 			match readable.read_struct::<packet::Id>()? {
-				CreatureUpdate       ::ID => self.on_creature_update (&source, CreatureUpdate       ::read_from(readable)?)?,
-				CreatureAction       ::ID => self.on_creature_action (&source, CreatureAction       ::read_from(readable)?)?,
-				Hit                  ::ID => self.on_hit             (&source, Hit                  ::read_from(readable)?)?,
-				StatusEffect         ::ID => self.on_status_effect   (&source, StatusEffect         ::read_from(readable)?)?,
-				Projectile           ::ID => self.on_projectile      (&source, Projectile           ::read_from(readable)?)?,
-				ChatMessageFromClient::ID => self.on_chat_message    (&source, ChatMessageFromClient::read_from(readable)?)?,
-				ZoneDiscovery        ::ID => self.on_zone_discovery  (&source, ZoneDiscovery        ::read_from(readable)?)?,
-				RegionDiscovery      ::ID => self.on_region_discovery(&source, RegionDiscovery      ::read_from(readable)?)?,
+				CreatureUpdate       ::ID => self.on_creature_update (source, CreatureUpdate       ::read_from(readable)?)?,
+				CreatureAction       ::ID => self.on_creature_action (source, CreatureAction       ::read_from(readable)?)?,
+				Hit                  ::ID => self.on_hit             (source, Hit                  ::read_from(readable)?)?,
+				StatusEffect         ::ID => self.on_status_effect   (source, StatusEffect         ::read_from(readable)?)?,
+				Projectile           ::ID => self.on_projectile      (source, Projectile           ::read_from(readable)?)?,
+				ChatMessageFromClient::ID => self.on_chat_message    (source, ChatMessageFromClient::read_from(readable)?)?,
+				ZoneDiscovery        ::ID => self.on_zone_discovery  (source, ZoneDiscovery        ::read_from(readable)?)?,
+				RegionDiscovery      ::ID => self.on_region_discovery(source, RegionDiscovery      ::read_from(readable)?)?,
 				unexpected_packet_id => panic!("unexpected packet id {:?}", unexpected_packet_id)
 			}
 		}
