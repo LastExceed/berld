@@ -10,7 +10,7 @@ use parking_lot::RwLock;
 
 use protocol::nalgebra::{Point2, Point3};
 use protocol::packet::*;
-use protocol::packet::common::{CreatureId, Item, PacketId};
+use protocol::packet::common::{CreatureId, Item};
 use protocol::packet::creature_update::Affiliation;
 use protocol::packet::world_update::drops::Drop;
 use protocol::SIZE_ZONE;

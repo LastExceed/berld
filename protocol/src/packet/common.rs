@@ -4,30 +4,6 @@ use self::item::*;
 
 pub mod item;
 
-#[derive(Eq, PartialEq, Debug)]
-#[repr(i32)]
-pub enum PacketId {
-	CreatureUpdate,
-	MultiCreatureUpdate,
-	ServerTick,
-	AirshipTraffic,
-	WorldUpdate,
-	IngameDatetime,
-	CreatureAction,
-	Hit,
-	StatusEffect,
-	Projectile,
-	ChatMessage,
-	ZoneDiscovery,
-	RegionDiscovery,
-	//Unknown13,
-	//Unknown14,
-	MapSeed = 15,
-	ConnectionAcceptance,
-	ProtocolVersion,
-	ConnectionRejection
-}
-
 #[derive(Default, Clone, Copy, PartialEq)]
 pub struct CreatureId(pub i64);
 

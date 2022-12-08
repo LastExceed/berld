@@ -268,8 +268,13 @@ bulk_impl!(CwSerializable for
 	//ChatMessageFromServer
 );
 
+#[derive(Eq, PartialEq, Debug)]
+pub struct PacketId(i32);
+//the anonymous field is intentionally kept private to prevent manual construction
+//serialization isnt affected as it uses transmute to construct this
+
 pub trait Packet: CwSerializable {
-	const ID: PacketId;
+	const ID: PacketId; //dedicated type ensures this can't be used in any mathematic manner
 
 	fn write_to_with_id(&self, writer: &mut impl Write) -> Result<(), Error>
 		where [(); size_of::<Self>()]:
@@ -280,24 +285,24 @@ pub trait Packet: CwSerializable {
 }
 
 //todo: macro
-impl Packet for CreatureUpdate        { const ID: PacketId = PacketId::CreatureUpdate; }
-impl Packet for MultiCreatureUpdate   { const ID: PacketId = PacketId::MultiCreatureUpdate; }
-impl Packet for ServerTick            { const ID: PacketId = PacketId::ServerTick; }
-impl Packet for AirshipTraffic        { const ID: PacketId = PacketId::AirshipTraffic; }
-impl Packet for WorldUpdate           { const ID: PacketId = PacketId::WorldUpdate; }
-impl Packet for IngameDatetime        { const ID: PacketId = PacketId::IngameDatetime; }
-impl Packet for CreatureAction        { const ID: PacketId = PacketId::CreatureAction; }
-impl Packet for Hit                   { const ID: PacketId = PacketId::Hit; }
-impl Packet for StatusEffect          { const ID: PacketId = PacketId::StatusEffect; }
-impl Packet for Projectile            { const ID: PacketId = PacketId::Projectile; }
-impl Packet for ChatMessageFromClient { const ID: PacketId = PacketId::ChatMessage; }
-impl Packet for ChatMessageFromServer { const ID: PacketId = PacketId::ChatMessage; }
-impl Packet for ZoneDiscovery         { const ID: PacketId = PacketId::ZoneDiscovery; }
-impl Packet for RegionDiscovery       { const ID: PacketId = PacketId::RegionDiscovery; }
-impl Packet for MapSeed               { const ID: PacketId = PacketId::MapSeed; }
-impl Packet for ConnectionAcceptance  { const ID: PacketId = PacketId::ConnectionAcceptance; }
-impl Packet for ProtocolVersion       { const ID: PacketId = PacketId::ProtocolVersion; }
-impl Packet for ConnectionRejection   { const ID: PacketId = PacketId::ConnectionRejection; }
+impl Packet for CreatureUpdate        { const ID: PacketId = PacketId(00); }
+impl Packet for MultiCreatureUpdate   { const ID: PacketId = PacketId(01); }
+impl Packet for ServerTick            { const ID: PacketId = PacketId(02); }
+impl Packet for AirshipTraffic        { const ID: PacketId = PacketId(03); }
+impl Packet for WorldUpdate           { const ID: PacketId = PacketId(04); }
+impl Packet for IngameDatetime        { const ID: PacketId = PacketId(05); }
+impl Packet for CreatureAction        { const ID: PacketId = PacketId(06); }
+impl Packet for Hit                   { const ID: PacketId = PacketId(07); }
+impl Packet for StatusEffect          { const ID: PacketId = PacketId(08); }
+impl Packet for Projectile            { const ID: PacketId = PacketId(09); }
+impl Packet for ChatMessageFromClient { const ID: PacketId = PacketId(10); }
+impl Packet for ChatMessageFromServer { const ID: PacketId = PacketId(10); }
+impl Packet for ZoneDiscovery         { const ID: PacketId = PacketId(11); }
+impl Packet for RegionDiscovery       { const ID: PacketId = PacketId(12); }
+impl Packet for MapSeed               { const ID: PacketId = PacketId(15); } //to this day 13 and 14 have never been discovered
+impl Packet for ConnectionAcceptance  { const ID: PacketId = PacketId(16); }
+impl Packet for ProtocolVersion       { const ID: PacketId = PacketId(17); }
+impl Packet for ConnectionRejection   { const ID: PacketId = PacketId(18); }
 
 //these are just for type safety to prevent sending packets in the wrong direction
 pub trait PacketFromServer: Packet {}
