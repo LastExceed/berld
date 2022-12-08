@@ -6,6 +6,7 @@ use flate2::write::ZlibEncoder;
 use nalgebra::{Point2, Point3, Vector3};
 use rgb::{RGB, RGBA};
 
+use crate::bulk_impl;
 use crate::packet::{CwSerializable, WorldUpdate};
 use crate::packet::common::{CreatureId, Hitbox, Item, Race};
 use crate::utils::io_extensions::{ReadExtension, WriteExtension};
@@ -170,11 +171,18 @@ pub struct Mission {
 	pub zone: Point2<i32>
 }
 
-impl CwSerializable for WorldEdit {}
-impl CwSerializable for Particle {}
-impl CwSerializable for SoundEffect {}
-impl CwSerializable for WorldObject {}
-impl CwSerializable for Pickup {}
-impl CwSerializable for Kill {}
-impl CwSerializable for Attack {}
-impl CwSerializable for Mission {}
+bulk_impl!(CwSerializable for
+	WorldEdit,
+	//Hit
+	Particle,
+	SoundEffect,
+	//Projectile
+	WorldObject,
+	//Drop
+	//P48
+	Pickup,
+	Kill,
+	Attack,
+	//StatusEffect
+	Mission
+);
