@@ -21,8 +21,8 @@ impl Player {
 		}
 	}
 
-	pub fn send<T: PacketFromServer>(&self, packet: &T)// -> Result<(), io::Error>
-		where [(); size_of::<T>()]:
+	pub fn send<Packet: PacketFromServer>(&self, packet: &Packet)// -> Result<(), io::Error>
+		where [(); size_of::<Packet>()]:
 	{
 		let _ = packet.write_to_with_id(&mut self.stream.lock() as &mut TcpStream);
 	}
