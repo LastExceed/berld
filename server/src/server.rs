@@ -137,7 +137,7 @@ impl Server {
 	fn handle_new_player(&self, stream: &mut TcpStream, assigned_id: CreatureId) -> Result<(), io::Error> {
 		ConnectionAcceptance {}.write_to_with_id(stream)?;
 
-		send_abnormal_creature_update(stream, assigned_id)?;
+		write_abnormal_creature_update(stream, assigned_id)?;
 
 		if stream.read_struct::<packet::Id>()? != CreatureUpdate::ID {
 			return Err(io::Error::from(ErrorKind::InvalidData))
@@ -229,7 +229,7 @@ impl Server {
 /// the last non-zero bytes in pixxie are the equipped weapons, which are positioned correctly.
 /// from that it can be deduced that the missing bytes belong to the last 3 properties.
 /// it's probably a cut-off at the end resulting from an incorrectly sized buffer
-fn send_abnormal_creature_update(stream: &mut TcpStream, assigned_id: CreatureId) -> Result<(), io::Error> {
+fn write_abnormal_creature_update(stream: &mut TcpStream, assigned_id: CreatureId) -> Result<(), io::Error> {
 	stream.write_struct(&CreatureUpdate::ID)?;
 	stream.write_struct(&assigned_id)?; //luckily the only thing the alpha client does with this data is acquiring its assigned CreatureId
 	stream.write_all(&[0u8; 4456]) //so we can simply zero out everything else and not worry about the missing bytes
