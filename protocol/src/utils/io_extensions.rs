@@ -22,5 +22,5 @@ pub trait WriteExtension: Write {
 	}
 }
 
-impl<T> ReadExtension for T where T: Read {}
-impl<T> WriteExtension for T where T: Write {}
+impl<T: Read> ReadExtension for T {}
+impl<T: Write> WriteExtension for T {}
