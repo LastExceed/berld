@@ -18,6 +18,7 @@ use protocol::utils::io_extensions::{ReadExtension, WriteExtension};
 
 use crate::creature::Creature;
 use crate::creature_id_pool::CreatureIdPool;
+use crate::packet_handlers::HandlePacket;
 use crate::player::Player;
 use crate::pvp::enable_pvp;
 
@@ -202,15 +203,16 @@ impl Server {
 
 	fn read_packets_forever<T: Read>(&self, source: &Player, readable: &mut T) -> Result<(), io::Error> {
 		loop {
+			//todo: copypasta
 			match readable.read_struct::<packet::Id>()? {
-				CreatureUpdate       ::ID => self.on_creature_update (source, CreatureUpdate       ::read_from(readable)?)?,
-				CreatureAction       ::ID => self.on_creature_action (source, CreatureAction       ::read_from(readable)?)?,
-				Hit                  ::ID => self.on_hit             (source, Hit                  ::read_from(readable)?)?,
-				StatusEffect         ::ID => self.on_status_effect   (source, StatusEffect         ::read_from(readable)?)?,
-				Projectile           ::ID => self.on_projectile      (source, Projectile           ::read_from(readable)?)?,
-				ChatMessageFromClient::ID => self.on_chat_message    (source, ChatMessageFromClient::read_from(readable)?)?,
-				ZoneDiscovery        ::ID => self.on_zone_discovery  (source, ZoneDiscovery        ::read_from(readable)?)?,
-				RegionDiscovery      ::ID => self.on_region_discovery(source, RegionDiscovery      ::read_from(readable)?)?,
+				CreatureUpdate       ::ID => self.handle_packet(source, CreatureUpdate       ::read_from(readable)?)?,
+				CreatureAction       ::ID => self.handle_packet(source, CreatureAction       ::read_from(readable)?)?,
+				Hit                  ::ID => self.handle_packet(source, Hit                  ::read_from(readable)?)?,
+				StatusEffect         ::ID => self.handle_packet(source, StatusEffect         ::read_from(readable)?)?,
+				Projectile           ::ID => self.handle_packet(source, Projectile           ::read_from(readable)?)?,
+				ChatMessageFromClient::ID => self.handle_packet(source, ChatMessageFromClient::read_from(readable)?)?,
+				ZoneDiscovery        ::ID => self.handle_packet(source, ZoneDiscovery        ::read_from(readable)?)?,
+				RegionDiscovery      ::ID => self.handle_packet(source, RegionDiscovery      ::read_from(readable)?)?,
 				unexpected_packet_id => panic!("unexpected packet id {:?}", unexpected_packet_id)
 			}
 		}

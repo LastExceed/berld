@@ -1,4 +1,5 @@
 use std::io;
+use std::io::Error;
 
 use parking_lot::lock_api::RawRwLockDowngrade;
 
@@ -13,8 +14,12 @@ use crate::pvp::enable_pvp;
 use crate::Server;
 use crate::traffic_filter::filter;
 
-impl Server {
-	pub fn on_creature_update(&self, source: &Player, mut packet: CreatureUpdate) -> Result<(), io::Error> {
+pub trait HandlePacket<T: PacketFromClient> {
+	fn handle_packet(&self, source: &Player, packet: T) -> Result<(), io::Error>;
+}
+
+impl HandlePacket<CreatureUpdate> for Server {
+	fn handle_packet(&self, source: &Player, mut packet: CreatureUpdate) -> Result<(), Error> {
 		enable_pvp(&mut packet);
 
 		let mut character = source.creature.write();
@@ -28,8 +33,10 @@ impl Server {
 
 		Ok(())
 	}
+}
 
-	pub fn on_creature_action(&self, source: &Player, packet: CreatureAction) -> Result<(), io::Error> {
+impl HandlePacket<CreatureAction> for Server {
+	fn handle_packet(&self, source: &Player, packet: CreatureAction) -> Result<(), io::Error> {
 		match packet.type_ {
 			CreatureActionType::Bomb => {
 				source.notify("bombs are disabled".to_owned());
@@ -76,10 +83,12 @@ impl Server {
 
 		Ok(())
 	}
+}
 
-	pub fn on_hit(&self, source: &Player, packet: Hit) -> Result<(), io::Error> {
+impl HandlePacket<Hit> for Server {
+	fn handle_packet(&self, source: &Player, packet: Hit) -> Result<(), io::Error> {
 		if packet.target == packet.attacker && packet.damage.is_sign_negative() {
-			return Ok(()) //self-heal is already applied client-side (which is a bug)
+			return Ok(()) //self-heal is already applied client-side (which is a bug) so we need to ignore it server-side
 		}
 
 		self.broadcast(&WorldUpdate { //todo: broadcast necessary?
@@ -89,8 +98,10 @@ impl Server {
 
 		Ok(())
 	}
+}
 
-	pub fn on_status_effect(&self, source: &Player, packet: StatusEffect) -> Result<(), io::Error> {
+impl HandlePacket<StatusEffect> for Server {
+	fn handle_packet(&self, source: &Player, packet: StatusEffect) -> Result<(), io::Error> {
 		self.broadcast(
 			&WorldUpdate {
 				status_effects: vec![packet],
@@ -101,8 +112,10 @@ impl Server {
 
 		Ok(())
 	}
+}
 
-	pub fn on_projectile(&self, source: &Player, packet: Projectile) -> Result<(), io::Error> {
+impl HandlePacket<Projectile> for Server {
+	fn handle_packet(&self, source: &Player, packet: Projectile) -> Result<(), io::Error> {
 		self.broadcast(
 			&WorldUpdate {
 				projectiles: vec![packet],
@@ -113,8 +126,10 @@ impl Server {
 
 		Ok(())
 	}
+}
 
-	pub fn on_chat_message(&self, source: &Player, packet: ChatMessageFromClient) -> Result<(), io::Error> {
+impl HandlePacket<ChatMessageFromClient> for Server {
+	fn handle_packet(&self, source: &Player, packet: ChatMessageFromClient) -> Result<(), io::Error> {
 		self.broadcast(
 			&ChatMessageFromServer {
 				source: source.creature.read().id,
@@ -125,12 +140,16 @@ impl Server {
 
 		Ok(())
 	}
+}
 
-	pub fn on_zone_discovery(&self, _source: &Player, _packet: ZoneDiscovery) -> Result<(), io::Error> {
+impl HandlePacket<ZoneDiscovery> for Server {
+	fn handle_packet(&self, _source: &Player, _packet: ZoneDiscovery) -> Result<(), io::Error> {
 		Ok(())
 	}
+}
 
-	pub fn on_region_discovery(&self, _source: &Player, _packet: RegionDiscovery) -> Result<(), io::Error> {
+impl HandlePacket<RegionDiscovery> for Server {
+	fn handle_packet(&self, _source: &Player, _packet: RegionDiscovery) -> Result<(), io::Error> {
 		Ok(())
 	}
 }
