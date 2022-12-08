@@ -3,6 +3,7 @@ use std::mem::size_of;
 
 use nalgebra::{Point2, Point3, Vector3};
 
+use crate::bulk_impl;
 use crate::utils::flagset::{FlagSet16, FlagSet32};
 use crate::utils::io_extensions::{ReadExtension, WriteExtension};
 
@@ -236,14 +237,6 @@ impl<Element: CwSerializable> CwSerializable for Vec<Element>
 			element.write_to(writable)?;
 		}
 		Ok(())
-	}
-}
-
-//ideally this would be done with a #[derive()] macro instead
-//but the boilerplate required for that is completely overkill for this use case
-macro_rules! bulk_impl {
-	($trait:ident for $($struct:ty),*) => { //todo: investigate if 'trait' can be restricted to :ty
-		$(impl $trait for $struct {})*
 	}
 }
 
