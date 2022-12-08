@@ -239,6 +239,35 @@ impl<Element: CwSerializable> CwSerializable for Vec<Element>
 	}
 }
 
+//ideally this would be done with a #[derive()] macro instead
+//but the boilerplate required for that is completely overkill for this use case
+macro_rules! bulk_impl {
+	($trait:ident for $($struct:ty),*) => { //todo: investigate if 'trait' can be restricted to :ty
+		$(impl $trait for $struct {})*
+	}
+}
+
+bulk_impl!(CwSerializable for
+	MultiCreatureUpdate,
+	ServerTick,
+	IngameDatetime,
+	CreatureAction,
+	Hit,
+	StatusEffect,
+	Projectile,
+	ZoneDiscovery,
+	RegionDiscovery,
+	MapSeed,
+	ConnectionAcceptance,
+	ProtocolVersion,
+	ConnectionRejection
+	//CreatureUpdate
+	//AirshipTraffic             //these packets have non-default trait implementations
+	//WorldUpdate                //which can be found in their respective module
+	//ChatMessageFromClient
+	//ChatMessageFromServer
+);
+
 pub trait Packet: CwSerializable {
 	const ID: PacketId;
 
@@ -250,29 +279,7 @@ pub trait Packet: CwSerializable {
 	}
 }
 
-pub trait PacketFromServer: Packet {}
-pub trait PacketFromClient: Packet {}
-
-impl CwSerializable for MultiCreatureUpdate {}
-impl CwSerializable for ServerTick {}
-impl CwSerializable for IngameDatetime {}
-impl CwSerializable for CreatureAction {}
-impl CwSerializable for Hit {}
-impl CwSerializable for StatusEffect {}
-impl CwSerializable for Projectile {}
-impl CwSerializable for ZoneDiscovery {}
-impl CwSerializable for RegionDiscovery {}
-impl CwSerializable for MapSeed {}
-impl CwSerializable for ConnectionAcceptance {}
-impl CwSerializable for ProtocolVersion {}
-impl CwSerializable for ConnectionRejection {}
-// packets with non-default trait implementations:
-// - CreatureUpdate
-// - AirshipTraffic
-// - WorldUpdate
-// - ChatMessage (both variants)
-// they can be found in their respective modules
-
+//todo: macro
 impl Packet for CreatureUpdate        { const ID: PacketId = PacketId::CreatureUpdate; }
 impl Packet for MultiCreatureUpdate   { const ID: PacketId = PacketId::MultiCreatureUpdate; }
 impl Packet for ServerTick            { const ID: PacketId = PacketId::ServerTick; }
@@ -292,28 +299,32 @@ impl Packet for ConnectionAcceptance  { const ID: PacketId = PacketId::Connectio
 impl Packet for ProtocolVersion       { const ID: PacketId = PacketId::ProtocolVersion; }
 impl Packet for ConnectionRejection   { const ID: PacketId = PacketId::ConnectionRejection; }
 
-impl PacketFromServer for CreatureUpdate {}
-impl PacketFromServer for MultiCreatureUpdate {}
-impl PacketFromServer for ServerTick {}
-impl PacketFromServer for AirshipTraffic {}
-impl PacketFromServer for WorldUpdate {}
-impl PacketFromServer for IngameDatetime {}
-impl PacketFromServer for ChatMessageFromServer {}
-impl PacketFromServer for MapSeed {}
-impl PacketFromServer for ConnectionAcceptance {}
-impl PacketFromServer for ProtocolVersion {}
-impl PacketFromServer for ConnectionRejection {}
+//these are just for type safety to prevent sending packets in the wrong direction
+pub trait PacketFromServer: Packet {}
+pub trait PacketFromClient: Packet {}
 
-impl PacketFromClient for CreatureUpdate {}
-impl PacketFromClient for CreatureAction {}
-impl PacketFromClient for Hit {}
-impl PacketFromClient for StatusEffect {}
-impl PacketFromClient for Projectile {}
-impl PacketFromClient for ChatMessageFromClient {}
-impl PacketFromClient for ZoneDiscovery {}
-impl PacketFromClient for RegionDiscovery {}
-impl PacketFromClient for ProtocolVersion {}
+bulk_impl!(PacketFromServer for
+	CreatureUpdate,
+	MultiCreatureUpdate,
+	ServerTick,
+	AirshipTraffic,
+	WorldUpdate,
+	IngameDatetime,
+	ChatMessageFromServer,
+	MapSeed,
+	ConnectionAcceptance,
+	ProtocolVersion,
+	ConnectionRejection
+);
 
-// this could easily be done with macros
-// but that would make things harder to comprehend
-// and doesn't provide any meaningful benefit
+bulk_impl!(PacketFromClient for
+	CreatureUpdate,
+	CreatureAction,
+	Hit,
+	StatusEffect,
+	Projectile,
+	ChatMessageFromClient,
+	ZoneDiscovery,
+	RegionDiscovery,
+	ProtocolVersion
+);
