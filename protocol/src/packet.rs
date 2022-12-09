@@ -253,10 +253,10 @@ impl Packet for ProtocolVersion       { const ID: Id = Id(17); }
 impl Packet for ConnectionRejection   { const ID: Id = Id(18); }
 
 //these are just for type safety to prevent sending packets in the wrong direction
-pub trait PacketFromServer: Packet {}
-pub trait PacketFromClient: Packet {}
+pub trait FromServer: Packet {}
+pub trait FromClient: Packet {}
 
-bulk_impl!(PacketFromServer for
+bulk_impl!(FromServer for
 	CreatureUpdate,
 	MultiCreatureUpdate,
 	ServerTick,
@@ -270,7 +270,7 @@ bulk_impl!(PacketFromServer for
 	ConnectionRejection
 );
 
-bulk_impl!(PacketFromClient for
+bulk_impl!(FromClient for
 	CreatureUpdate,
 	CreatureAction,
 	Hit,

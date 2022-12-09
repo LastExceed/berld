@@ -61,7 +61,7 @@ impl Server {
 		}
 	}
 
-	pub fn broadcast<P: PacketFromServer>(&self, packet: &P, player_to_skip: Option<&Player>) where [(); size_of::<P>()]: {
+	pub fn broadcast<Packet: FromServer>(&self, packet: &Packet, player_to_skip: Option<&Player>) where [(); size_of::<Packet>()]: {
 		for player in self.players.read().iter() {
 			if match player_to_skip {
 				Some(player_to_skip) => ptr::eq(player.as_ref(), player_to_skip),

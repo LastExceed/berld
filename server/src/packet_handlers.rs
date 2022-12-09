@@ -14,7 +14,7 @@ use crate::pvp::enable_pvp;
 use crate::Server;
 use crate::traffic_filter::filter;
 
-pub trait HandlePacket<Packet: PacketFromClient> {
+pub trait HandlePacket<Packet: FromClient> {
 	fn handle_packet(&self, source: &Player, packet: Packet) -> Result<(), io::Error>;
 }
 

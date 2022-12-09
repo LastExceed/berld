@@ -3,7 +3,7 @@ use std::net::TcpStream;
 
 use parking_lot::{Mutex, RwLock};
 
-use protocol::packet::{ChatMessageFromServer, PacketFromServer};
+use protocol::packet::{ChatMessageFromServer, FromServer};
 use protocol::packet::common::CreatureId;
 
 use crate::creature::Creature;
@@ -21,7 +21,7 @@ impl Player {
 		}
 	}
 
-	pub fn send<Packet: PacketFromServer>(&self, packet: &Packet)// -> Result<(), io::Error>
+	pub fn send<Packet: FromServer>(&self, packet: &Packet)// -> Result<(), io::Error>
 		where [(); size_of::<Packet>()]:
 	{
 		let _ = packet.write_to_with_id(&mut self.stream.lock() as &mut TcpStream);
