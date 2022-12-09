@@ -8,7 +8,7 @@ use std::time::Duration;
 
 use parking_lot::RwLock;
 
-use protocol::{packet, SIZE_ZONE};
+use protocol::{CwSerializable, packet, Packet, SIZE_ZONE};
 use protocol::nalgebra::{Point2, Point3};
 use protocol::packet::*;
 use protocol::packet::common::{CreatureId, Item};

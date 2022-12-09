@@ -1,9 +1,8 @@
-use std::io::{Error, Read, Write};
-use std::mem::size_of;
+use std::io::{Read, Write};
 
 use nalgebra::{Point2, Point3, Vector3};
 
-use crate::bulk_impl;
+use crate::{bulk_impl, CwSerializable, Packet};
 use crate::utils::flagset::{FlagSet16, FlagSet32};
 use crate::utils::io_extensions::{ReadExtension, WriteExtension};
 
@@ -207,39 +206,6 @@ pub struct ProtocolVersion(pub i32);
 pub struct ConnectionRejection;
 
 
-
-pub trait CwSerializable: Sized {
-	fn read_from(readable: &mut impl Read) -> Result<Self, Error>
-		where [(); size_of::<Self>()]:
-	{
-		readable.read_struct::<Self>()
-	}
-
-	fn write_to(&self, writable: &mut impl Write) -> Result<(), Error>
-		where [(); size_of::<Self>()]:
-	{
-		writable.write_struct(self)
-	}
-}
-
-impl<Element: CwSerializable> CwSerializable for Vec<Element>
-	where [(); size_of::<Element>()]:
-{
-	fn read_from(readable: &mut impl Read) -> Result<Self, Error> {
-		(0..readable.read_struct::<i32>()?)
-			.map(|_| Element::read_from(readable))
-			.collect::<Result<Self, Error>>()
-	}
-
-	fn write_to(&self, writable: &mut impl Write) -> Result<(), Error> {
-		writable.write_struct(&(self.len() as i32))?;
-		for element in self {
-			element.write_to(writable)?;
-		}
-		Ok(())
-	}
-}
-
 bulk_impl!(CwSerializable for
 	MultiCreatureUpdate,
 	ServerTick,
@@ -265,17 +231,6 @@ bulk_impl!(CwSerializable for
 pub struct Id(i32);
 //the anonymous field is intentionally kept private to prevent manual construction
 //serialization isnt affected as it uses transmute to construct this
-
-pub trait Packet: CwSerializable {
-	const ID: Id; //dedicated type ensures this can't be used in any mathematic manner
-
-	fn write_to_with_id(&self, writable: &mut impl Write) -> Result<(), Error>
-		where [(); size_of::<Self>()]:
-	{
-		writable.write_struct(&Self::ID)?;
-		self.write_to(writable)
-	}
-}
 
 //todo: macro
 impl Packet for CreatureUpdate        { const ID: Id = Id(00); }
