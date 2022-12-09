@@ -4,7 +4,8 @@
 #![feature(cstr_from_bytes_until_nul)]
 #![allow(const_evaluatable_unchecked)]
 
-use std::io::{Error, Read, Write};
+use std::io;
+use std::io::{Read, Write};
 use std::mem::size_of;
 
 pub use nalgebra;
@@ -25,13 +26,13 @@ pub const SIZE_UNIVERSE: i64 = SIZE_WORLD * 256;
 //const SIZE_MULTIVERSE: i64 = SIZE_UNIVERSE * 65536; //overflows; it's basically u64::MAX + 1
 
 pub trait CwSerializable: Sized {
-	fn read_from(readable: &mut impl Read) -> Result<Self, Error>
+	fn read_from(readable: &mut impl Read) -> Result<Self, io::Error>
 		where [(); size_of::<Self>()]:
 	{
 		readable.read_struct::<Self>()
 	}
 
-	fn write_to(&self, writable: &mut impl Write) -> Result<(), Error>
+	fn write_to(&self, writable: &mut impl Write) -> Result<(), io::Error>
 		where [(); size_of::<Self>()]:
 	{
 		writable.write_struct(self)
@@ -41,13 +42,13 @@ pub trait CwSerializable: Sized {
 impl<Element: CwSerializable> CwSerializable for Vec<Element>
 	where [(); size_of::<Element>()]:
 {
-	fn read_from(readable: &mut impl Read) -> Result<Self, Error> {
+	fn read_from(readable: &mut impl Read) -> Result<Self, io::Error> {
 		(0..readable.read_struct::<i32>()?)
 			.map(|_| Element::read_from(readable))
-			.collect::<Result<Self, Error>>()
+			.collect::<Result<Self, io::Error>>()
 	}
 
-	fn write_to(&self, writable: &mut impl Write) -> Result<(), Error> {
+	fn write_to(&self, writable: &mut impl Write) -> Result<(), io::Error> {
 		writable.write_struct(&(self.len() as i32))?;
 		for element in self {
 			element.write_to(writable)?;
@@ -59,7 +60,7 @@ impl<Element: CwSerializable> CwSerializable for Vec<Element>
 pub trait Packet: CwSerializable {
 	const ID: packet::Id; //dedicated type ensures this can't be used in any mathematic manner
 
-	fn write_to_with_id(&self, writable: &mut impl Write) -> Result<(), Error>
+	fn write_to_with_id(&self, writable: &mut impl Write) -> Result<(), io::Error>
 		where [(); size_of::<Self>()]:
 	{
 		writable.write_struct(&Self::ID)?;
