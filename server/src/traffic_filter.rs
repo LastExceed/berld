@@ -1,21 +1,22 @@
-use protocol::packet::creature_update::{CreatureFlag, PhysicsFlag};
+use protocol::packet::creature_update::{Animation, CreatureFlag, PhysicsFlag};
 use protocol::packet::CreatureUpdate;
+use protocol::SIZE_BLOCK;
 
 use crate::creature::Creature;
 
 pub fn filter(packet: &mut CreatureUpdate, previous: &Creature, current: &Creature) -> bool {
-	packet.rotation = None;
+	packet.rotation              = None;
 	packet.climb_animation_state = None;
-	packet.flags_physics = None;
-	packet.hit_time_out = None;
-	packet.mana = None;
-	packet.blocking_gauge = None;
-	packet.experience = None;
-	packet.home_zone = None;
-	packet.home = None;
-	packet.zone_to_reveal = None;
-	packet.skill_tree = None;
-	packet.mana_cubes = None;
+	packet.flags_physics         = None;
+	packet.hit_time_out          = None;
+	packet.mana                  = None;
+	packet.blocking_gauge        = None;
+	packet.experience            = None;
+	packet.home_zone             = None;
+	packet.home                  = None;
+	packet.zone_to_reveal        = None;
+	packet.skill_tree            = None;
+	packet.mana_cubes            = None;
 	//always keep:
 	//- affiliation
 	//- race
