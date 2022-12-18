@@ -65,6 +65,8 @@ pub fn filter(packet: &mut CreatureUpdate, previous: &Creature, current: &Creatu
 	let movement_changed = packet.acceleration.map_or(false, |acceleration| acceleration.metric_distance(&previous.acceleration) > 0f32);//todo: compare to last sent (4)
 	let teleported = packet.position.map_or(false, |position| distance::<f64, 3>(&position.cast(), &previous.position.cast()) > SIZE_BLOCK as f64 * 4.0);
 	let new_animation_started = packet.animation_time.map_or(false, |animation_time| animation_time < previous.animation_time);
+	let dodge_started = packet.effect_time_dodge.map_or(false, |effect_time_dodge| effect_time_dodge > previous.effect_time_dodge);
+	let intercepting = current.animation == Animation::Intercept;
 
 	if !movement_changed {
 		packet.acceleration = None;
@@ -72,7 +74,7 @@ pub fn filter(packet: &mut CreatureUpdate, previous: &Creature, current: &Creatu
 			packet.position = None;
 		}
 	}
-	if !need_velocity_z {
+	if !need_velocity_z && !dodge_started && !intercepting {
 		packet.velocity = None;
 	}
 
