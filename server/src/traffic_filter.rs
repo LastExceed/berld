@@ -1,3 +1,4 @@
+use protocol::nalgebra::distance;
 use protocol::packet::creature_update::{Animation, CreatureFlag, PhysicsFlag};
 use protocol::packet::CreatureUpdate;
 use protocol::SIZE_BLOCK;
@@ -62,11 +63,12 @@ pub fn filter(packet: &mut CreatureUpdate, previous: &Creature, current: &Creatu
 	});
 	let glider_hovering = need_velocity_z && current.flags.get(CreatureFlag::Gliding);
 	let movement_changed = packet.acceleration.map_or(false, |acceleration| acceleration.metric_distance(&previous.acceleration) > 0f32);//todo: compare to last sent (4)
+	let teleported = packet.position.map_or(false, |position| distance::<f64, 3>(&position.cast(), &previous.position.cast()) > SIZE_BLOCK as f64 * 4.0);
 	let new_animation_started = packet.animation_time.map_or(false, |animation_time| animation_time < previous.animation_time);
 
 	if !movement_changed {
 		packet.acceleration = None;
-		if !glider_hovering {
+		if !glider_hovering && !teleported {
 			packet.position = None;
 		}
 	}
