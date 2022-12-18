@@ -95,6 +95,14 @@ pub fn filter(packet: &mut CreatureUpdate, previous: &Creature, current: &Creatu
 	packet.effect_time_chill = packet.effect_time_chill.filter(|value| *value > previous.effect_time_chill);
 	packet.effect_time_wind  = packet.effect_time_wind .filter(|value| *value > previous.effect_time_wind );
 
+	//there is a bug in the game where starting a new animation for a foreign dodging creature doesn't cancel their dodge roll
+	//this normally stays unnoticed as the creature will eventually report the end of their dodge roll on their own,
+	//and the next report of to their animation time then starts the animation.
+	//but since we filter out all timer updates that that just reflect the natural passage of time, we now need to cancel the dodge manually
+	if new_animation_started && previous.effect_time_dodge != 0 {
+		packet.effect_time_dodge = Some(0);
+	}
+
 	packet.aim_offset = packet.aim_offset.filter(|_| current.flags.get(CreatureFlag::Aiming));//todo: compare to last sent (2)
 
 
