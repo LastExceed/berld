@@ -1,5 +1,5 @@
 use std::io;
-use std::io::Error;
+use std::io::ErrorKind;
 
 use parking_lot::lock_api::RawRwLockDowngrade;
 
@@ -9,9 +9,9 @@ use protocol::packet::creature_action::CreatureActionType;
 use protocol::packet::world_update::Pickup;
 use protocol::SIZE_BLOCK;
 
+use crate::{anti_cheat, Server};
 use crate::player::Player;
 use crate::pvp::enable_pvp;
-use crate::Server;
 use crate::traffic_filter::filter;
 
 pub trait HandlePacket<Packet: FromClient> {
@@ -19,13 +19,17 @@ pub trait HandlePacket<Packet: FromClient> {
 }
 
 impl HandlePacket<CreatureUpdate> for Server {
-	fn handle_packet(&self, source: &Player, mut packet: CreatureUpdate) -> Result<(), Error> {
+	fn handle_packet(&self, source: &Player, mut packet: CreatureUpdate) -> Result<(), io::Error> {
 		enable_pvp(&mut packet);
 
 		let mut character = source.creature.write();
 		let snapshot = character.clone();
 		character.update(&packet);
 		unsafe { source.creature.raw().downgrade(); }//todo: not sure
+
+		if let Err(message) = anti_cheat::inspect_creature_update(&packet, &snapshot, &character) {
+			return Err(ErrorKind::InvalidInput.into())
+		}
 
 		if filter(&mut packet, &snapshot, &character) {
 			self.broadcast(&packet, Some(source));

@@ -10,6 +10,7 @@ mod traffic_filter;
 mod pvp;
 mod creature;
 mod packet_handlers;
+mod anti_cheat;
 
 fn main() {
 	println!("go");
