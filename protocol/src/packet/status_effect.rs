@@ -1,4 +1,5 @@
 #[repr(u8)]
+#[derive(Clone, PartialEq, Eq, Copy)]
 pub enum StatusEffectType {
 
 	Bulwalk = 1,

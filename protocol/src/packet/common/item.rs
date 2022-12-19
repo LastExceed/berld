@@ -1,8 +1,9 @@
 use nalgebra::Point3;
 
 #[repr(u8)]
-#[derive(Copy, Clone)]
+#[derive(Clone, PartialEq, Eq, Copy, Default)]
 pub enum ItemTypeMajor {
+	#[default]
 	None,
 	Food,
 	Formula,
@@ -32,8 +33,9 @@ pub enum ItemTypeMajor {
 }
 
 #[repr(u8)]
-#[derive(Copy, Clone)]
+#[derive(Clone, PartialEq, Eq, Copy, Default)]
 pub enum Rarity {
+	#[default]
 	Normal,
 	Uncommon,
 	Rare,
@@ -43,8 +45,9 @@ pub enum Rarity {
 }
 
 #[repr(i8)]
-#[derive(Copy, Clone)]
+#[derive(Clone, PartialEq, Eq, Copy, Default)]
 pub enum Material {
+	#[default]
 	None,
 	Iron,
 	Wood,
@@ -81,7 +84,7 @@ pub enum Material {
 }
 
 #[repr(u8)]
-#[derive(Copy, Clone)]
+#[derive(Clone, PartialEq, Eq, Copy)]
 pub enum ItemFlag {
 	Adapted
 }
@@ -93,7 +96,7 @@ impl From<ItemFlag> for u8 {
 }
 
 #[repr(C, align(4))]
-#[derive(Clone)]
+#[derive(Clone, PartialEq, Eq, Default)]
 pub struct Spirit {
 	pub position: Point3<i8>,
 	pub material: Material,
