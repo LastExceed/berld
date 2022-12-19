@@ -156,7 +156,7 @@ fn inspect_animation(animation: &Animation, former_state: &Creature, updated_sta
 			CombatClassMajor::Warrior => vec![Smash, Cyclone],
 			CombatClassMajor::Ranger  => vec![Kick],
 			CombatClassMajor::Mage    => match updated_state.combat_class_minor {
-				CombatClassMinor::Default     => vec![Teleport, FireExplosioni16],
+				CombatClassMinor::Default     => vec![Teleport, FireExplosionShort],
 				CombatClassMinor::Alternative => vec![Teleport, HealingStream],
 				_ => unreachable!("invalid CombatClassMinor")
 			}
@@ -191,7 +191,7 @@ fn inspect_animation_time(animation_time: &i32, former_state: &Creature, updated
 		animation_time.ensure_at_most(10_000, "animation time")?;
 	};
 
-	if *animation_time < former_state.animation_time && updated_state.animation == FireExplosioni16 {
+	if *animation_time < former_state.animation_time && updated_state.animation == FireExplosionShort {
 		//todo: detect fire spam
 	}
 

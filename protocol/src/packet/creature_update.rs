@@ -331,7 +331,7 @@ pub enum Animation {
 	Unknown085, //nothing
 	Cyclone,
 	FireExplosionLong,
-	FireExplosioni16,
+	FireExplosionShort,
 	Lava,
 	Splash,
 	EarthQuake,
