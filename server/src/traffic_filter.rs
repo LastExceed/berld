@@ -5,7 +5,7 @@ use protocol::SIZE_BLOCK;
 
 use crate::creature::Creature;
 
-pub fn filter(packet: &mut CreatureUpdate, previous: &Creature, current: &Creature) -> bool {
+pub fn filter(packet: &mut CreatureUpdate, former_state: &Creature, updated_state: &Creature) -> bool {
 	packet.rotation              = None;
 	packet.climb_animation_state = None;
 	packet.flags_physics         = None;
@@ -49,24 +49,24 @@ pub fn filter(packet: &mut CreatureUpdate, previous: &Creature, current: &Creatu
 
 	//x and y are always overridden by acceleration
 	let need_velocity_z = packet.velocity.map_or(false, |velocity| {
-		if current.flags.get(CreatureFlag::Climbing) {
+		if updated_state.flags.get(CreatureFlag::Climbing) {
 			false
-		} else if current.flags_physics.get(PhysicsFlag::Swimming) {
-			velocity.z > 1f32 && velocity.z - (current.acceleration.z / 80f32 * 12f32) > 1f32 //wip
-		} else if velocity.z < previous.velocity.z {
+		} else if updated_state.flags_physics.get(PhysicsFlag::Swimming) {
+			velocity.z > 1f32 && velocity.z - (updated_state.acceleration.z / 80f32 * 12f32) > 1f32 //wip
+		} else if velocity.z < former_state.velocity.z {
 			false
-		} else if current.flags_physics.get(PhysicsFlag::OnGround) {
+		} else if updated_state.flags_physics.get(PhysicsFlag::OnGround) {
 			velocity.z > 0f32
 		} else { //airborne
 			true
 		}
 	});
-	let glider_hovering = need_velocity_z && current.flags.get(CreatureFlag::Gliding);
-	let movement_changed = packet.acceleration.map_or(false, |acceleration| acceleration.metric_distance(&previous.acceleration) > 0f32);//todo: compare to last sent (4)
-	let teleported = packet.position.map_or(false, |position| distance::<f64, 3>(&position.cast(), &previous.position.cast()) > SIZE_BLOCK as f64 * 4.0);
-	let new_animation_started = packet.animation_time.map_or(false, |animation_time| animation_time < previous.animation_time);
-	let dodge_started = packet.effect_time_dodge.map_or(false, |effect_time_dodge| effect_time_dodge > previous.effect_time_dodge);
-	let intercepting = current.animation == Animation::Intercept;
+	let glider_hovering = need_velocity_z && updated_state.flags.get(CreatureFlag::Gliding);
+	let movement_changed = packet.acceleration.map_or(false, |acceleration| acceleration.metric_distance(&former_state.acceleration) > 0f32);//todo: compare to last sent (4)
+	let teleported = packet.position.map_or(false, |position| distance::<f64, 3>(&position.cast(), &former_state.position.cast()) > SIZE_BLOCK as f64 * 4.0);
+	let new_animation_started = packet.animation_time.map_or(false, |animation_time| animation_time < former_state.animation_time);
+	let dodge_started = packet.effect_time_dodge.map_or(false, |effect_time_dodge| effect_time_dodge > former_state.effect_time_dodge);
+	let intercepting = updated_state.animation == Animation::Intercept;
 
 	if !movement_changed {
 		packet.acceleration = None;
@@ -85,25 +85,25 @@ pub fn filter(packet: &mut CreatureUpdate, previous: &Creature, current: &Creatu
 	packet.velocity_extra = packet.velocity_extra.filter(|velocity_extra| {
 		velocity_extra
 			.iter()
-			.zip(previous.velocity_extra.iter())
+			.zip(former_state.velocity_extra.iter())
 			.any(|(new, old)| !(0f32..1f32).contains(&(new / old)))//todo: there gotta be a better way to do this
 	});
 
-	packet.effect_time_dodge = packet.effect_time_dodge.filter(|value| *value > previous.effect_time_dodge);
-	packet.effect_time_stun  = packet.effect_time_stun .filter(|value| *value > previous.effect_time_stun );
-	packet.effect_time_fear  = packet.effect_time_fear .filter(|value| *value > previous.effect_time_fear );
-	packet.effect_time_chill = packet.effect_time_chill.filter(|value| *value > previous.effect_time_chill);
-	packet.effect_time_wind  = packet.effect_time_wind .filter(|value| *value > previous.effect_time_wind );
+	packet.effect_time_dodge = packet.effect_time_dodge.filter(|value| *value > former_state.effect_time_dodge);
+	packet.effect_time_stun  = packet.effect_time_stun .filter(|value| *value > former_state.effect_time_stun );
+	packet.effect_time_fear  = packet.effect_time_fear .filter(|value| *value > former_state.effect_time_fear );
+	packet.effect_time_chill = packet.effect_time_chill.filter(|value| *value > former_state.effect_time_chill);
+	packet.effect_time_wind  = packet.effect_time_wind .filter(|value| *value > former_state.effect_time_wind );
 
 	//there is a bug in the game where starting a new animation for a foreign dodging creature doesn't cancel their dodge roll
 	//this normally stays unnoticed as the creature will eventually report the end of their dodge roll on their own,
 	//and the next report of to their animation time then starts the animation.
 	//but since we filter out all timer updates that that just reflect the natural passage of time, we now need to cancel the dodge manually
-	if new_animation_started && previous.effect_time_dodge != 0 {
+	if new_animation_started && former_state.effect_time_dodge != 0 {
 		packet.effect_time_dodge = Some(0);
 	}
 
-	packet.aim_offset = packet.aim_offset.filter(|_| current.flags.get(CreatureFlag::Aiming));//todo: compare to last sent (2)
+	packet.aim_offset = packet.aim_offset.filter(|_| updated_state.flags.get(CreatureFlag::Aiming));//todo: compare to last sent (2)
 
 
 
