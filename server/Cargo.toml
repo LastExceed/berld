@@ -9,3 +9,4 @@ edition = "2021"
 protocol = { path = "../protocol" }
 parking_lot = "0.12.1"
 boolinator = "2.4.0"
+colour = "0.6.0"

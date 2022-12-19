@@ -6,6 +6,7 @@ use std::net::{Shutdown, TcpListener, TcpStream};
 use std::sync::Arc;
 use std::time::Duration;
 
+use colour::white_ln;
 use parking_lot::RwLock;
 
 use protocol::{CwSerializable, packet, Packet, SIZE_ZONE};
@@ -173,10 +174,14 @@ impl Server {
 		self.players.write().push(new_player_arc.clone());
 		self.broadcast(&new_player_arc.creature.read().to_update(), None);
 
+		self.announce(format!("[+] {}", new_player_arc.creature.read().name));
+
 		let _ = self.read_packets_forever(&new_player_arc, stream)
 			.expect_err("impossible"); //TODO: check if error emerged from reading or writing
 
 		self.remove_player(&new_player_arc);
+
+		self.announce(format!("[-] {}", new_player_arc.creature.read().name));
 
 		Ok(())
 	}
@@ -216,6 +221,14 @@ impl Server {
 				unexpected_packet_id => panic!("unexpected packet id {:?}", unexpected_packet_id)
 			}
 		}
+	}
+
+	fn announce(&self, text: String) {
+		white_ln!("{}", text);
+		self.broadcast(&ChatMessageFromServer {
+			source: CreatureId(0),
+			text
+		}, None);
 	}
 }
 
