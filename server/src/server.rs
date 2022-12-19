@@ -18,7 +18,7 @@ use protocol::utils::io_extensions::{ReadExtension, WriteExtension};
 
 use crate::creature::Creature;
 use crate::creature_id_pool::CreatureIdPool;
-use crate::packet_handlers::HandlePacket;
+use crate::handle_packet::HandlePacket;
 use crate::player::Player;
 use crate::pvp::enable_pvp;
 

@@ -9,7 +9,7 @@ mod player;
 mod traffic_filter;
 mod pvp;
 mod creature;
-mod packet_handlers;
+mod handle_packet;
 mod anti_cheat;
 
 fn main() {
