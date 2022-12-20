@@ -88,19 +88,18 @@ fn inspect_velocity(velocity: &Vector3<f32>, former_state: &Creature, updated_st
 	Ok(())
 }
 fn inspect_acceleration(acceleration: &Vector3<f32>, former_state: &Creature, updated_state: &Creature) -> Result<(), &'static str> {
-	//todo
-//	val actualXY = sqrt(it.x.pow(2) + it.y.pow(2))
-//	if (!current.flags[CreatureFlag.Gliding]) {
-//		actualXY.expectIn(0f..=accelLimitXY, "acceleration.XY")
-//	}
-//	if (current.flagsPhysics[PhysicsFlag.Swimming]) {
-//		it.z.expectIn(-80f..=80f, "acceleration.Z")
-//	} else if (current.flags[CreatureFlag.Climbing]) {
-//		it.z.expectIn(setOf(0f, -16f, 16f), "acceleration.Z")
-//	} else {
-//		it.z.expect(0f, "acceleration.Z")
-//	}
-	Ok(())
+	let limit_xy = Vector3::<f32>::new(80.0, 80.0, 0.0).magnitude() + 0.00001; //113,1370849898476; //todo: would epsilon suffice?
+	let actual_xy = acceleration.xy().magnitude();
+	if !updated_state.flags.get(CreatureFlag::Gliding) {
+		actual_xy.ensure_within(&(0.0..=limit_xy), "acceleration.horizontal")?;
+	}
+	if updated_state.flags_physics.get(PhysicsFlag::Swimming) {
+		acceleration.z.ensure_within(&(-80.0..=80.0), "acceleration.vertical")
+	} else if updated_state.flags.get(CreatureFlag::Climbing) {
+		acceleration.z.ensure_one_of(&[-16.0, 0.0, 16.0], "acceleration.vertical")
+	} else {
+		acceleration.z.ensure_exact(&0.0, "acceleration.vertical")
+	}
 }
 fn inspect_velocity_extra(velocity_extra: &Vector3<f32>, former_state: &Creature, updated_state: &Creature) -> Result<(), &'static str> {
 	let (max_xy, max_z): (f32, f32) =
