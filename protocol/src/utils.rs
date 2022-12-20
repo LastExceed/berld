@@ -44,6 +44,7 @@ impl<Element: CwSerializable> CwSerializable for Vec<Element>
 	}
 }
 
+//todo: move to creature_update ?
 #[derive(Clone, PartialEq, Eq, Copy)]
 pub struct CombatClass {
 	pub major: CombatClassMajor,

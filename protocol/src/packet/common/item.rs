@@ -1,5 +1,7 @@
 use nalgebra::Point3;
 
+pub mod type_;
+
 #[repr(u8)]
 #[derive(Clone, PartialEq, Eq, Copy, Default)]
 pub enum TypeMajor {
@@ -105,4 +107,11 @@ pub struct Spirit {
 	pub material: Material,
 	pub level: i16,
 	//pad2 //todo: struct align suggests that this could be a property, maybe seed/rarity/flags of the spirit?
+}
+
+//todo: consider moving this to utils (currently here so inner value of TypeMinor can stay private)
+#[derive(Clone, PartialEq, Eq, Copy)]
+pub struct ItemType {
+	pub major: TypeMajor,
+	pub minor: TypeMinor
 }
