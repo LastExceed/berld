@@ -1,4 +1,4 @@
-use std::ops::Range;
+use std::ops::RangeBounds;
 
 use boolinator::Boolinator;
 
@@ -73,14 +73,14 @@ fn inspect_position(position: &Point3<i64>, former_state: &Creature, updated_sta
 fn inspect_rotation(rotation: &EulerAngles, former_state: &Creature, updated_state: &Creature) -> Result<(), &'static str> {
 	//usually 0, except
 	//- rounding errors
-	//- 60f..0 when swimming (or shortly afterwards)
+	//- 60f..=0 when swimming (or shortly afterwards)
 	//- 20f when teleporting
 	rotation.pitch
 		.is_finite()
 		.ok_or("rotation.yaw wasn't finite")?;
 	rotation.roll
-		.ensure_within(&(-90f32..90f32), "rotation.roll")?;
-	rotation.yaw//normally -180..180, but over-/underflows while attacking
+		.ensure_within(&(-90f32..=90f32), "rotation.roll")?;
+	rotation.yaw//normally -180..=180, but over-/underflows while attacking
 		.is_finite()
 		.ok_or("rotation.yaw wasn't finite")
 }
@@ -91,10 +91,10 @@ fn inspect_acceleration(acceleration: &Vector3<f32>, former_state: &Creature, up
 	//todo
 //	val actualXY = sqrt(it.x.pow(2) + it.y.pow(2))
 //	if (!current.flags[CreatureFlag.Gliding]) {
-//		actualXY.expectIn(0f..accelLimitXY, "acceleration.XY")
+//		actualXY.expectIn(0f..=accelLimitXY, "acceleration.XY")
 //	}
 //	if (current.flagsPhysics[PhysicsFlag.Swimming]) {
-//		it.z.expectIn(-80f..80f, "acceleration.Z")
+//		it.z.expectIn(-80f..=80f, "acceleration.Z")
 //	} else if (current.flags[CreatureFlag.Climbing]) {
 //		it.z.expectIn(setOf(0f, -16f, 16f), "acceleration.Z")
 //	} else {
@@ -113,11 +113,11 @@ fn inspect_velocity_extra(velocity_extra: &Vector3<f32>, former_state: &Creature
 		.magnitude()
 		.ensure_at_most(max_xy, "retreat_horizontal_speed")?;
 	velocity_extra.z
-		.ensure_within(&(0.0..max_z), "")
+		.ensure_within(&(0.0..=max_z), "")
 }
 fn inspect_climb_animation_state(climb_animation_state: &f32, former_state: &Creature, updated_state: &Creature) -> Result<(), &'static str> {
 	climb_animation_state
-		.ensure_within(&(-10.0..45.0), "climb_animation_state")
+		.ensure_within(&(-10.0..=45.0), "climb_animation_state")
 }
 fn inspect_flags_physics(flags_physics: &FlagSet32<PhysicsFlag>, former_state: &Creature, updated_state: &Creature) -> Result<(), &'static str> {
 
@@ -232,7 +232,7 @@ fn inspect_flags(flags: &FlagSet16<CreatureFlag>, former_state: &Creature, updat
 	Ok(())
 }
 fn inspect_effect_time_dodge(effect_time_dodge: &i32, former_state: &Creature, updated_state: &Creature) -> Result<(), &'static str> {
-	effect_time_dodge.ensure_within(&(0..600), "effect_time_dodge")
+	effect_time_dodge.ensure_within(&(0..=600), "effect_time_dodge")
 }
 fn inspect_effect_time_stun(effect_time_stun: &i32, former_state: &Creature, updated_state: &Creature) -> Result<(), &'static str> {
 	//todo: ensure positive when increased
@@ -245,7 +245,7 @@ fn inspect_effect_time_chill(effect_time_chill: &i32, former_state: &Creature, u
 	effect_time_chill.ensure_not_negative("effect_time_chill")
 }
 fn inspect_effect_time_wind(effect_time_wind: &i32, former_state: &Creature, updated_state: &Creature) -> Result<(), &'static str> {
-	effect_time_wind.ensure_within(&(0..5000), "effect_time_wind")
+	effect_time_wind.ensure_within(&(0..=5000), "effect_time_wind")
 }
 fn inspect_show_patch_time(show_patch_time: &i32, former_state: &Creature, updated_state: &Creature) -> Result<(), &'static str> {
 	Ok(())
@@ -275,7 +275,7 @@ fn inspect_health(health: &f32, former_state: &Creature, updated_state: &Creatur
 	Ok(())
 }
 fn inspect_mana(mana: &f32, former_state: &Creature, updated_state: &Creature) -> Result<(), &'static str> {
-	mana.ensure_within(&(0.0..1.0), "mana")
+	mana.ensure_within(&(0.0..=1.0), "mana")
 	//todo: mana can only increase via:
 	//- m1
 	//- ninja dodge
@@ -299,7 +299,7 @@ fn inspect_blocking_gauge(blocking_gauge: &f32, former_state: &Creature, updated
 		1.0
 	};
 
-	blocking_gauge.ensure_within(&(0.0..max), "blocking_gauge") //todo: negative gauge glitch?
+	blocking_gauge.ensure_within(&(0.0..=max), "blocking_gauge") //todo: negative gauge glitch?
 }
 fn inspect_multipliers(multipliers: &Multipliers, former_state: &Creature, updated_state: &Creature) -> Result<(), &'static str> {
 	//eex
@@ -312,11 +312,11 @@ fn inspect_unknown32(unknown32: &i8, former_state: &Creature, updated_state: &Cr
 	Ok(())
 }
 fn inspect_level(level: &i32, former_state: &Creature, updated_state: &Creature) -> Result<(), &'static str> {
-	level.ensure_within(&(1..500), "level")
+	level.ensure_within(&(1..=500), "level")
 }
 fn inspect_experience(experience: &i32, former_state: &Creature, updated_state: &Creature) -> Result<(), &'static str> {
 	let max = 9999;//todo: calc max xp based on lvl
-	experience.ensure_within(&(0..max), "experience")
+	experience.ensure_within(&(0..=max), "experience")
 }
 fn inspect_master(master: &CreatureId, former_state: &Creature, updated_state: &Creature) -> Result<(), &'static str> {
 	//eex
@@ -354,7 +354,7 @@ fn inspect_consumable(consumable: &Item, former_state: &Creature, updated_state:
 //	val powerAllowed = Utils.computePower(current.level)
 //	val powerActual = Utils.computePower(it.level.toInt())
 //
-//	powerActual.expectIn(1..powerAllowed, "consumable.level")
+//	powerActual.expectIn(1..=powerAllowed, "consumable.level")
 //	it.spiritCounter.expect(0, "consumable.spiritCounter")
 	Ok(())
 }
@@ -408,10 +408,10 @@ fn inspect_equipment(equipment: &Equipment, former_state: &Creature, updated_sta
 //
 //		val powerAllowed = Utils.computePower(current.level)
 //		val powerActual = Utils.computePower(item.level.toInt())
-//		powerActual.expectIn(1..powerAllowed, "$prefix.level")
+//		powerActual.expectIn(1..=powerAllowed, "$prefix.level")
 //
 //		val spiritLimit = 32//if (item.typeMajor == Item.Type.Major.Weapon) getWeaponHandCount(item.typeMinor) * 16 else 0
-//		item.spiritCounter.expectIn(0..spiritLimit, "$prefix.spiritCounter")
+//		item.spiritCounter.expectIn(0..=spiritLimit, "$prefix.spiritCounter")
 //
 //		val allowedSpiritMaterials = setOf(
 //			Item.Material.Fire,
@@ -422,7 +422,7 @@ fn inspect_equipment(equipment: &Equipment, former_state: &Creature, updated_sta
 //			)
 //		item.spirits.take(item.spiritCounter).forEachIndexed { index, spirit ->
 //			spirit.material.expectIn(allowedSpiritMaterials, "$prefix.spirit#$index.material")
-//			spirit.level.toInt().expectIn(1..item.level, "$prefix.spirit#$index.level")
+//			spirit.level.toInt().expectIn(1..=item.level, "$prefix.spirit#$index.level")
 //		}
 //	}
 //	val r = if (it.rightWeapon == Item.void) 0 else getWeaponHandCount(it.rightWeapon.typeMinor)
@@ -436,7 +436,7 @@ fn inspect_equipment(equipment: &Equipment, former_state: &Creature, updated_sta
 	Ok(())
 }
 fn inspect_name(name: &String, former_state: &Creature, updated_state: &Creature) -> Result<(), &'static str> {
-	name.as_bytes().len().ensure_within(&(1..15), "name.length")
+	name.as_bytes().len().ensure_within(&(1..=15), "name.length")
 	//todo: limit characters to what the default font can display
 }
 fn inspect_skill_tree(skill_tree: &SkillTree, former_state: &Creature, updated_state: &Creature) -> Result<(), &'static str> {
@@ -479,7 +479,7 @@ trait EnsureAtMost: PartialOrd + Sized {
 impl<T: PartialOrd> EnsureAtMost for T {}
 
 trait EnsureWithin: PartialOrd + Sized {
-	fn ensure_within<'a>(&self, range: &Range<Self>, property_name: &'a str) -> Result<(), &'a str> {
+	fn ensure_within<'a>(&self, range: &impl RangeBounds<Self>, property_name: &'a str) -> Result<(), &'a str> {
 		range
 			.contains(&self)
 			.ok_or(property_name)//format!("{} was {} instead of {}", property_name, self, container).as_str()
