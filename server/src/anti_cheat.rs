@@ -117,7 +117,7 @@ fn inspect_velocity_extra(velocity_extra: &Vector3<f32>, former_state: &Creature
 }
 fn inspect_climb_animation_state(climb_animation_state: &f32, former_state: &Creature, updated_state: &Creature) -> Result<(), &'static str> {
 	climb_animation_state
-		.ensure_within(&(0.0..45.0), "climb_animation_state")
+		.ensure_within(&(-10.0..45.0), "climb_animation_state")
 }
 fn inspect_flags_physics(flags_physics: &FlagSet32<PhysicsFlag>, former_state: &Creature, updated_state: &Creature) -> Result<(), &'static str> {
 
