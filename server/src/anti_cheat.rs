@@ -3,7 +3,7 @@ use std::ops::RangeBounds;
 use boolinator::Boolinator;
 
 use protocol::nalgebra::{Point3, Vector3};
-use protocol::packet::common::{CreatureId, EulerAngles, Item, Race};
+use protocol::packet::common::{CreatureId, EulerAngles, Hitbox, Item, Race};
 use protocol::packet::common::Race::*;
 use protocol::packet::creature_update::{Affiliation, Animation, Appearance, CombatClassMajor, CombatClassMinor, CreatureFlag, Equipment, Multipliers, PhysicsFlag, SkillTree};
 use protocol::packet::creature_update::Animation::*;
@@ -223,9 +223,273 @@ fn inspect_hit_time_out(hit_time_out: &i32, former_state: &Creature, updated_sta
 //	}
 }
 fn inspect_appearance(appearance: &Appearance, former_state: &Creature, updated_state: &Creature) -> Result<(), &'static str> {
-	//appearance.flags //todo: all false
-	//eex
-	Ok(())
+	appearance.flags.ensure_exact(&core::default::Default::default(), "appearance.flags")?;
+
+	appearance.tail_model.ensure_exact(&-1, "asdf")?;
+	appearance.shoulder2model.ensure_exact(&-1, "asdf")?;
+	appearance.wing_model.ensure_exact(&-1, "asdf")?;
+
+	appearance.hand_size.ensure_exact(&1.0, "appearance.hand_size")?;
+	appearance.foot_size.ensure_exact(&0.98, "appearance.footSize")?;
+	appearance.tail_size.ensure_exact(&0.8, "appearance.tailSize")?;
+	appearance.shoulder2size.ensure_exact(&1.0, "appearance.shoulder1Size")?;
+	appearance.wing_size.ensure_exact(&1.0, "appearance.wingSize")?;
+
+	appearance.body_offset.ensure_exact(&Point3::new(0.0, 0.0, -5.0), "appearance.bodyOffset")?;
+	appearance.head_offset.ensure_exact(
+		&if updated_state.race == OrcFemale {
+			Point3::new(0.0, 1.5, 4.0)
+		} else {
+			Point3::new(0.0, 0.5, 5.0)
+		},
+		"appearance.headOffset"
+	)?;
+	appearance.hand_offset.ensure_exact(&Point3::new(6.0, 0.0,  0.0), "appearance.handOffset")?;
+	appearance.foot_offset.ensure_exact(&Point3::new(3.0, 1.0,-10.5), "appearance.footOffset")?;
+	appearance.tail_offset.ensure_exact(&Point3::new(0.0,-8.0,  2.0), "appearance.tailOffset")?;
+	appearance.wing_offset.ensure_exact(&Point3::new(0.0, 0.0,  0.0), "appearance.wingOffset")?;
+
+	appearance.body_rotation.ensure_exact(&0.0, "appearance.bodyRotation")?;
+	appearance.hand_rotation.ensure_exact(&core::default::Default::default(), "appearance.handRotation")?;
+	appearance.feet_rotation.ensure_exact(&0.0, "appearance.feetRotation")?;
+	appearance.wing_rotation.ensure_exact(&0.0, "appearance.wingRotation")?;
+	appearance.tail_rotation.ensure_exact(&0.0, "appearance.tail_rotation")?;
+
+	//todo: move all this to protocol crate
+	let hitbox_small = Hitbox {
+		width: 0.80,
+		depth: 0.80,
+		height: 1.80
+	};
+	let hitbox_medium = Hitbox {
+		width: 0.96000004,
+		depth: 0.96000004,
+		height: 2.16
+	};
+	let hitbox_large = Hitbox {
+		width: 1.04,
+		depth: 1.04,
+		height: 2.34
+	};
+
+	let (
+		allowed_creature_size,
+		allowed_head_model,
+		allowed_hair_model,
+		allowed_hand_model,
+		allowed_foot_model,
+		allowed_body_model,
+		allowed_head_size,
+		allowed_body_size,
+		allowed_shoulder1size,
+		allowed_weapon_size
+	) = match updated_state.race {
+		ElfMale => (
+			hitbox_medium,
+			1236..1239,
+			1280..1289,
+			430..430,
+			432,
+			1,
+			1.01,
+			1.00,
+			1.00,
+			0.95
+		),
+		ElfFemale => (
+			hitbox_medium,
+			1240..1245,
+			1290..1299,
+			430..430,
+			432,
+			0,
+			1.01,
+			1.00,
+			1.00,
+			0.95
+		),
+		HumanMale => (
+			hitbox_medium,
+			1246..1251,
+			1252..1266,
+			430..431,
+			432,
+			1,
+			1.01,
+			1.00,
+			1.00,
+			0.95
+		),
+		HumanFemale => (
+			hitbox_medium,
+			1267..1272,
+			1273..1279,
+			430..431,
+			432,
+			1,
+			1.01,
+			1.00,
+			1.00,
+			0.95
+		),
+		GoblinMale => (
+			hitbox_small,
+			75..79,
+			80..85,
+			97..97,
+			432,
+			0,
+			1.01,
+			1.00,
+			1.00,
+			1.20
+		),
+		GoblinFemale => (
+			hitbox_small,
+			86..90,
+			91..96,
+			97..97,
+			432,
+			0,
+			1.01,
+			1.00,
+			1.00,
+			1.20
+		),
+		LizardmanMale => (
+			hitbox_medium,
+			98..99,
+			100..105,
+			111..111,
+			113,
+			112,
+			1.01,
+			1.00,
+			1.00,
+			0.95
+		),
+		LizardmanFemale => (
+			hitbox_medium,
+			106..111,
+			100..105,
+			111..111,
+			113,
+			112,
+			1.01,
+			1.00,
+			1.00,
+			0.95
+		),
+		DwarfMale => (
+			hitbox_small,
+			282..286,
+			287..289,
+			430..431,
+			432,
+			300,
+			0.90,
+			1.00,
+			1.00,
+			1.20
+		),
+		DwarfFemale => (
+			hitbox_small,
+			290..294,
+			295..299,
+			430..431,
+			432,
+			301,
+			0.90,
+			1.00,
+			1.00,
+			1.20
+		),
+		OrcMale => (
+			hitbox_large,
+			1300..1304,
+			1310..1319,
+			302..302,
+			432,
+			0,
+			0.90,
+			1.00,
+			1.20,
+			0.95
+		),
+		OrcFemale => (
+			hitbox_large,
+			1305..1309,
+			1320..1323,
+			302..302,
+			432,
+			0,
+			0.80,
+			0.95,
+			1.10,
+			0.95
+		),
+		FrogmanMale => (
+			hitbox_medium,
+			1324..1328,
+			1329..1333,
+			1342..1342,
+			432,
+			1,
+			1.01,
+			1.00,
+			1.00,
+			0.95
+		),
+		FrogmanFemale => (
+			hitbox_medium,
+			1334..1337,
+			1338..1341,
+			1342..1342,
+			432,
+			1,
+			1.01,
+			1.00,
+			1.00,
+			0.95
+		),
+		UndeadMale => (
+			hitbox_medium,
+			303..308,
+			309..314,
+			327..327,
+			432,
+			0,
+			0.90,
+			1.00,
+			1.00,
+			0.95
+		),
+		UndeadFemale => (
+			hitbox_medium,
+			315..320,
+			321..326,
+			327..327,
+			432,
+			0,
+			0.90,
+			1.00,
+			1.00,
+			0.95
+		),
+		_ => unreachable!("race has already been ensured to be one of the above at this point")
+	};
+
+	appearance.creature_size.ensure_exact (&allowed_creature_size, "appearance.creature.Size")?;
+	appearance.head_model   .ensure_within(&allowed_head_model   , "appearance.headModel")?;
+	appearance.hair_model   .ensure_within(&allowed_hair_model   , "appearance.hairModel")?;
+	appearance.hand_model   .ensure_within(&allowed_hand_model   , "appearance.handModel")?;
+	appearance.foot_model   .ensure_exact (&allowed_foot_model   , "appearance.footModel")?;
+	appearance.body_model   .ensure_exact (&allowed_body_model   , "appearance.bodyModel")?;
+	appearance.head_size    .ensure_exact (&allowed_head_size    , "appearance.headSize")?;
+	appearance.body_size    .ensure_exact (&allowed_body_size    , "appearance.bodySize")?;
+	appearance.shoulder1size.ensure_exact (&allowed_shoulder1size, "appearance.shoulder2Size")?;
+	appearance.weapon_size  .ensure_exact (&allowed_weapon_size  , "appearance.weaponSize")
+
 }
 fn inspect_flags(flags: &FlagSet16<CreatureFlag>, former_state: &Creature, updated_state: &Creature) -> Result<(), &'static str> {
 	Ok(())
