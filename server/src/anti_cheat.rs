@@ -126,7 +126,7 @@ fn inspect_flags_physics(flags_physics: &FlagSet32<PhysicsFlag>, former_state: &
 }
 fn inspect_affiliation(affiliation: &Affiliation, former_state: &Creature, updated_state: &Creature) -> Result<(), &'static str> {
 	affiliation
-	 	.ensure_one_of([Affiliation::Player].as_slice(), "affiliation")//eex
+	 	.ensure_exact(&Affiliation::Player, "affiliation")
 }
 fn inspect_race(race: &Race, former_state: &Creature, updated_state: &Creature) -> Result<(), &'static str> {
 	const PLAYABLE_RACES: [Race; 16] = [
@@ -320,15 +320,15 @@ fn inspect_experience(experience: &i32, former_state: &Creature, updated_state: 
 	experience.ensure_within(&(0..=max), "experience")
 }
 fn inspect_master(master: &CreatureId, former_state: &Creature, updated_state: &Creature) -> Result<(), &'static str> {
-	//eex
-	Ok(())
+	master
+		.ensure_exact(&CreatureId(0), "master")
 }
 fn inspect_unknown36(unknown36: &i64, former_state: &Creature, updated_state: &Creature) -> Result<(), &'static str> {
 	Ok(())
 }
 fn inspect_power_base(power_base: &i8, former_state: &Creature, updated_state: &Creature) -> Result<(), &'static str> {
-	//eex
-	Ok(())
+	power_base
+		.ensure_exact(&0, "power_base")
 }
 fn inspect_unknown38(unknown38: &i32, former_state: &Creature, updated_state: &Creature) -> Result<(), &'static str> {
 	Ok(())
@@ -463,6 +463,8 @@ fn inspect_mana_cubes(mana_cubes: &i32, former_state: &Creature, updated_state: 
 	mana_cubes.ensure_not_negative("mana_cubes")
 }
 
+
+
 trait EnsureNotNegative {
 	fn ensure_not_negative<'a>(&self, property_name: &'a str) -> Result<(), &'a str>;
 }
@@ -495,6 +497,11 @@ trait EnsureOneOf: PartialEq + Sized {
 		range
 			.contains(self)
 			.ok_or(property_name)//format!("{} was {} instead of {}", property_name, self, container).as_str()
+	}
+
+	fn ensure_exact<'a>(&self, expected: &Self, property_name: &'a str) -> Result<(), &'a str> {
+		(self == expected)
+			.ok_or(property_name)
 	}
 }
 impl<T: PartialEq> EnsureOneOf for T {}
