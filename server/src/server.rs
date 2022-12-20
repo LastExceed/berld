@@ -24,7 +24,7 @@ use crate::player::Player;
 use crate::pvp::enable_pvp;
 
 pub struct Server {
-	players: RwLock<Vec<Arc<Player>>>,
+	pub players: RwLock<Vec<Arc<Player>>>,
 	id_pool: RwLock<CreatureIdPool>,
 	drops: RwLock<HashMap<Point2<i32>, Vec<Drop>>>
 }
