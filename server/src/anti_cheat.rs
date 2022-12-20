@@ -566,8 +566,11 @@ fn inspect_blocking_gauge(blocking_gauge: &f32, former_state: &Creature, updated
 	blocking_gauge.ensure_within(&(0.0..=max), "blocking_gauge") //todo: negative gauge glitch?
 }
 fn inspect_multipliers(multipliers: &Multipliers, former_state: &Creature, updated_state: &Creature) -> Result<(), &'static str> {
-	//eex
-	Ok(())
+	multipliers.health      .ensure_exact(&100.0, "multipliers.health")?;
+	multipliers.attack_speed.ensure_exact(&  1.0, "multipliers.attack_speed")?;
+	multipliers.damage      .ensure_exact(&  1.0, "multipliers.damage")?;
+	multipliers.resi        .ensure_exact(&  1.0, "multipliers.resi")?;
+	multipliers.armor       .ensure_exact(&  1.0, "multipliers.armor")
 }
 fn inspect_unknown31(unknown31: &i8, former_state: &Creature, updated_state: &Creature) -> Result<(), &'static str> {
 	Ok(())
