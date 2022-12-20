@@ -17,7 +17,7 @@ impl HandlePacket<CreatureAction> for Server {
 				source.notify("bombs are disabled".to_owned());
 
 				//the player consumed a bomb, so we need to reimburse it
-				source.send(&WorldUpdate {
+				source.send_ignoring(&WorldUpdate {
 					pickups: vec![Pickup {
 						interactor: source.creature.read().id,
 						item: packet.item
@@ -33,7 +33,7 @@ impl HandlePacket<CreatureAction> for Server {
 			}
 			CreatureActionType::PickUp => {
 				if let Some(item) = self.remove_drop(packet.zone, packet.item_index as usize) {
-					source.send(&WorldUpdate {
+					source.send_ignoring(&WorldUpdate {
 						pickups: vec![Pickup {
 							interactor: source.creature.read().id,
 							item

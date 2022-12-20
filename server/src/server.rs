@@ -68,7 +68,8 @@ impl Server {
 				Some(player_to_skip) => ptr::eq(player.as_ref(), player_to_skip),
 				None => false
 			} { continue }
-			player.send(packet);
+
+			player.send_ignoring(packet);
 		}
 	}
 
@@ -152,14 +153,14 @@ impl Server {
 		);
 
 
-		new_player.send(&MapSeed(225));
+		new_player.send(&MapSeed(225))?;
 		new_player.send(&ChatMessageFromServer {
 			source: CreatureId(0),
 			text: "welcome to berld".to_string()
-		});
+		})?;
 
 		for existing_player in self.players.read().iter() {
-			new_player.send(&existing_player.creature.read().to_update());
+			new_player.send(&existing_player.creature.read().to_update())?;
 		}
 
 		WorldUpdate {
