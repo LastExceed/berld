@@ -171,11 +171,11 @@ pub enum Race {
 #[repr(C)]
 #[derive(Clone, PartialEq, Eq)]
 pub struct Item {
-	pub type_major: ItemTypeMajor,
+	pub type_major: TypeMajor,
 	pub type_minor: TypeMinor,
 	//pad 2
 	pub seed: i32,
-	pub recipe: ItemTypeMajor,
+	pub recipe: TypeMajor,
 	//pad 1
 	pub minus_modifier: i16,//todo: structure alignment entails this properties' existence, name adopted from cuwo
 	pub rarity: Rarity,

@@ -2,7 +2,7 @@ use nalgebra::Point3;
 
 #[repr(u8)]
 #[derive(Clone, PartialEq, Eq, Copy, Default)]
-pub enum ItemTypeMajor {
+pub enum TypeMajor {
 	#[default]
 	None,
 	Food,
