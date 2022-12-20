@@ -10,6 +10,7 @@ use protocol::packet::creature_update::Animation::*;
 use protocol::packet::creature_update::CombatClassMajor::*;
 use protocol::packet::creature_update::CombatClassMinor::*;
 use protocol::packet::CreatureUpdate;
+use protocol::utils::CombatClass;
 use protocol::utils::flagset::{FlagSet16, FlagSet32};
 
 use crate::creature::Creature;
@@ -550,20 +551,28 @@ fn inspect_mana(mana: &f32, former_state: &Creature, updated_state: &Creature) -
 	//- intercept (1 frame to 1.0, then back to 0.0)
 }
 fn inspect_blocking_gauge(blocking_gauge: &f32, former_state: &Creature, updated_state: &Creature) -> Result<(), &'static str> {
-	const BLOCKING_ANIMATIONS: [Animation; 4] = [
-		ShieldM2Charging,
-		DualWieldM2Charging,
-		GreatweaponM2Charging,
-		UnarmedM2Charging //todo: can non-warriors block?
-	];
+	let blocking_via_shield =
+		updated_state.animation == ShieldM2Charging;
 
-	let max = if updated_state.animation.present_in(&BLOCKING_ANIMATIONS) {
-		former_state.blocking_gauge
-	} else {
-		1.0
-	};
+	let blocking_via_guardians_passive =
+		(updated_state.combat_class() == CombatClass::GUARDIAN) &&
+			updated_state.animation
+				.present_in(&[
+					DualWieldM2Charging,
+					GreatweaponM2Charging,
+					UnarmedM2Charging
+				]);
 
-	blocking_gauge.ensure_within(&(0.0..=max), "blocking_gauge") //todo: negative gauge glitch?
+	let blocking = blocking_via_shield || blocking_via_guardians_passive;
+
+	let allowed_gauge =
+		if blocking {
+			0.0..=former_state.blocking_gauge
+		} else {
+			former_state.blocking_gauge..=1.0
+		};
+
+	blocking_gauge.ensure_within(&allowed_gauge, "blocking_gauge") //todo: negative gauge glitch?
 }
 fn inspect_multipliers(multipliers: &Multipliers, former_state: &Creature, updated_state: &Creature) -> Result<(), &'static str> {
 	multipliers.health      .ensure_exact(&100.0, "multipliers.health")?;
