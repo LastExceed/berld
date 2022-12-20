@@ -172,7 +172,7 @@ pub enum Race {
 #[derive(Clone, PartialEq, Eq)]
 pub struct Item {
 	pub type_major: ItemTypeMajor,
-	pub type_minor: u8,
+	pub type_minor: TypeMinor,
 	//pad 2
 	pub seed: i32,
 	pub recipe: ItemTypeMajor,

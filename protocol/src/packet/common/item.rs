@@ -32,6 +32,9 @@ pub enum ItemTypeMajor {
 	ManaCube
 }
 
+#[derive(Clone, PartialEq, Eq, Copy, Default)]
+pub struct TypeMinor(u8);
+
 #[repr(u8)]
 #[derive(Clone, PartialEq, Eq, Copy, Default)]
 pub enum Rarity {
