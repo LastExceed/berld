@@ -7,7 +7,7 @@ use crate::creature::Creature;
 
 pub fn filter(packet: &mut CreatureUpdate, former_state: &Creature, updated_state: &Creature) -> bool {
 	packet.rotation              = None;
-	packet.climb_animation_state = None;
+	packet.head_tilt             = None;
 	packet.flags_physics         = None;
 	packet.hit_time_out          = None;
 	packet.mana                  = None;
@@ -108,53 +108,53 @@ pub fn filter(packet: &mut CreatureUpdate, former_state: &Creature, updated_stat
 
 
 	//todo: macro
-	packet.position             .is_some() ||
-	packet.rotation             .is_some() ||
-	packet.velocity             .is_some() ||
-	packet.acceleration         .is_some() ||
-	packet.velocity_extra       .is_some() ||
-	packet.climb_animation_state.is_some() ||
-	packet.flags_physics        .is_some() ||
-	packet.affiliation          .is_some() ||
-	packet.race                 .is_some() ||
-	packet.animation            .is_some() ||
-	packet.animation_time       .is_some() ||
-	packet.combo                .is_some() ||
-	packet.hit_time_out         .is_some() ||
-	packet.appearance           .is_some() ||
-	packet.flags                .is_some() ||
-	packet.effect_time_dodge    .is_some() ||
-	packet.effect_time_stun     .is_some() ||
-	packet.effect_time_fear     .is_some() ||
-	packet.effect_time_chill    .is_some() ||
-	packet.effect_time_wind     .is_some() ||
-	packet.show_patch_time      .is_some() ||
-	packet.combat_class_major   .is_some() ||
-	packet.combat_class_minor   .is_some() ||
-	packet.mana_charge          .is_some() ||
-	packet.unknown24            .is_some() ||
-	packet.unknown25            .is_some() ||
-	packet.aim_offset           .is_some() ||
-	packet.health               .is_some() ||
-	packet.mana                 .is_some() ||
-	packet.blocking_gauge       .is_some() ||
-	packet.multipliers          .is_some() ||
-	packet.unknown31            .is_some() ||
-	packet.unknown32            .is_some() ||
-	packet.level                .is_some() ||
-	packet.experience           .is_some() ||
-	packet.master               .is_some() ||
-	packet.unknown36            .is_some() ||
-	packet.power_base           .is_some() ||
-	packet.unknown38            .is_some() ||
-	packet.home_zone            .is_some() ||
-	packet.home                 .is_some() ||
-	packet.zone_to_reveal       .is_some() ||
-	packet.unknown42            .is_some() ||
-	packet.consumable           .is_some() ||
-	packet.equipment            .is_some() ||
-	packet.name                 .is_some() ||
-	packet.skill_tree           .is_some() ||
-	packet.mana_cubes           .is_some()
+	packet.position          .is_some() ||
+	packet.rotation          .is_some() ||
+	packet.velocity          .is_some() ||
+	packet.acceleration      .is_some() ||
+	packet.velocity_extra    .is_some() ||
+	packet.head_tilt         .is_some() ||
+	packet.flags_physics     .is_some() ||
+	packet.affiliation       .is_some() ||
+	packet.race              .is_some() ||
+	packet.animation         .is_some() ||
+	packet.animation_time    .is_some() ||
+	packet.combo             .is_some() ||
+	packet.hit_time_out      .is_some() ||
+	packet.appearance        .is_some() ||
+	packet.flags             .is_some() ||
+	packet.effect_time_dodge .is_some() ||
+	packet.effect_time_stun  .is_some() ||
+	packet.effect_time_fear  .is_some() ||
+	packet.effect_time_chill .is_some() ||
+	packet.effect_time_wind  .is_some() ||
+	packet.show_patch_time   .is_some() ||
+	packet.combat_class_major.is_some() ||
+	packet.combat_class_minor.is_some() ||
+	packet.mana_charge       .is_some() ||
+	packet.unknown24         .is_some() ||
+	packet.unknown25         .is_some() ||
+	packet.aim_offset        .is_some() ||
+	packet.health            .is_some() ||
+	packet.mana              .is_some() ||
+	packet.blocking_gauge    .is_some() ||
+	packet.multipliers       .is_some() ||
+	packet.unknown31         .is_some() ||
+	packet.unknown32         .is_some() ||
+	packet.level             .is_some() ||
+	packet.experience        .is_some() ||
+	packet.master            .is_some() ||
+	packet.unknown36         .is_some() ||
+	packet.power_base        .is_some() ||
+	packet.unknown38         .is_some() ||
+	packet.home_zone         .is_some() ||
+	packet.home              .is_some() ||
+	packet.zone_to_reveal    .is_some() ||
+	packet.unknown42         .is_some() ||
+	packet.consumable        .is_some() ||
+	packet.equipment         .is_some() ||
+	packet.name              .is_some() ||
+	packet.skill_tree        .is_some() ||
+	packet.mana_cubes        .is_some()
 	//returns whether any data is remaining
 }

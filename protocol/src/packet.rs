@@ -35,7 +35,7 @@ pub struct CreatureUpdate {
 	pub acceleration: Option<Vector3<f32>>,
 	///used by the 'retreat' ability
 	pub velocity_extra: Option<Vector3<f32>>,
-	pub climb_animation_state: Option<f32>,
+	pub head_tilt: Option<f32>,
 	pub flags_physics: Option<FlagSet32<PhysicsFlag>>,
 	pub affiliation: Option<Affiliation>,
 	pub race: Option<Race>,
