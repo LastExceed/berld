@@ -2,6 +2,7 @@ use protocol::nalgebra::{Point3, Vector3};
 use protocol::packet::common::{CreatureId, EulerAngles, Item, Race};
 use protocol::packet::creature_update::*;
 use protocol::packet::CreatureUpdate;
+use protocol::utils::CombatClass;
 use protocol::utils::flagset::{FlagSet16, FlagSet32};
 
 #[derive(Clone)]
@@ -64,6 +65,13 @@ pub struct Creature {
 }
 
 impl Creature {
+	pub fn combat_class(&self) -> CombatClass {
+		CombatClass {
+			major: self.combat_class_major,
+			minor: self.combat_class_minor
+		}
+	}
+
 	pub fn maybe_from(creature_update: &CreatureUpdate) -> Option<Creature> {
 		//todo: macro?
 		Some(Self {
