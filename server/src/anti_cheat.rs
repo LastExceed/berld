@@ -117,7 +117,7 @@ fn inspect_velocity_extra(velocity_extra: &Vector3<f32>, former_state: &Creature
 }
 fn inspect_climb_animation_state(climb_animation_state: &f32, former_state: &Creature, updated_state: &Creature) -> Result<(), &'static str> {
 	climb_animation_state
-		.ensure_within(&(-10.0..=45.0), "climb_animation_state")
+		.ensure_within(&(-32.5..=45.0), "climb_animation_state")//negative when attacking downwards
 }
 fn inspect_flags_physics(flags_physics: &FlagSet32<PhysicsFlag>, former_state: &Creature, updated_state: &Creature) -> Result<(), &'static str> {
 
@@ -284,6 +284,7 @@ fn inspect_mana(mana: &f32, former_state: &Creature, updated_state: &Creature) -
 	//- camouflage
 	//- sniping
 	//- stealth (leaving stealth keeps generating mp for a while)
+	//- intercept (1 frame to 1.0, then back to 0.0)
 }
 fn inspect_blocking_gauge(blocking_gauge: &f32, former_state: &Creature, updated_state: &Creature) -> Result<(), &'static str> {
 	const BLOCKING_ANIMATIONS: [Animation; 4] = [
