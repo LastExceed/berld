@@ -3,14 +3,15 @@ use std::ops::RangeBounds;
 use boolinator::Boolinator;
 
 use protocol::nalgebra::{Point3, Vector3};
-use protocol::packet::common::{CreatureId, EulerAngles, Hitbox, Item, Race};
+use protocol::packet::common::{CreatureId, EulerAngles, Hitbox, Item, item, Race};
 use protocol::packet::common::Race::*;
 use protocol::packet::creature_update::{Affiliation, Animation, Appearance, CombatClassMajor, CombatClassMinor, CreatureFlag, Equipment, Multipliers, PhysicsFlag, SkillTree};
 use protocol::packet::creature_update::Animation::*;
 use protocol::packet::creature_update::CombatClassMajor::*;
 use protocol::packet::creature_update::CombatClassMinor::*;
 use protocol::packet::CreatureUpdate;
-use protocol::utils::CombatClass;
+use protocol::utils::constants::combat_classes::*;
+use protocol::utils::constants::item_types::*;
 use protocol::utils::flagset::{FlagSet16, FlagSet32};
 
 use crate::creature::Creature;
@@ -555,7 +556,7 @@ fn inspect_blocking_gauge(blocking_gauge: &f32, former_state: &Creature, updated
 		updated_state.animation == ShieldM2Charging;
 
 	let blocking_via_guardians_passive =
-		(updated_state.combat_class() == CombatClass::GUARDIAN) &&
+		(updated_state.combat_class() == GUARDIAN) &&
 			updated_state.animation
 				.present_in(&[
 					DualWieldM2Charging,
