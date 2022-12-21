@@ -1,22 +1,27 @@
+use std::fmt::Debug;
 use std::ops::RangeBounds;
+use std::result;
 
 use boolinator::Boolinator;
 
 use protocol::nalgebra::{Point3, Vector3};
-use protocol::packet::common::{CreatureId, EulerAngles, Hitbox, Item, item, Race};
+use protocol::packet::common::{CreatureId, EulerAngles, Hitbox, Item, Race};
 use protocol::packet::common::Race::*;
 use protocol::packet::creature_update::{Affiliation, Animation, Appearance, CombatClassMajor, CombatClassMinor, CreatureFlag, Equipment, Multipliers, PhysicsFlag, SkillTree};
 use protocol::packet::creature_update::Animation::*;
 use protocol::packet::creature_update::CombatClassMajor::*;
 use protocol::packet::creature_update::CombatClassMinor::*;
 use protocol::packet::CreatureUpdate;
+use protocol::utils::constants::animations;
+use protocol::utils::constants::animations::{abilities, m1, m2};
 use protocol::utils::constants::combat_classes::*;
 use protocol::utils::constants::item_types::*;
 use protocol::utils::flagset::{FlagSet16, FlagSet32};
 
 use crate::creature::Creature;
 
-pub fn inspect_creature_update(packet: &CreatureUpdate, former_state: &Creature, updated_state: &Creature) -> Result<(), &'static str> {
+pub fn inspect_creature_update(packet: &CreatureUpdate, former_state: &Creature, updated_state: &Creature) -> Result {
+	//todo: macro
 	packet.position          .map_or_ok(|value| inspect_position(          value, &former_state, &updated_state))?;
 	packet.rotation          .map_or_ok(|value| inspect_rotation(          value, &former_state, &updated_state))?;
 	packet.velocity          .map_or_ok(|value| inspect_velocity(          value, &former_state, &updated_state))?;
@@ -69,10 +74,10 @@ pub fn inspect_creature_update(packet: &CreatureUpdate, former_state: &Creature,
 	Ok(())
 }
 
-fn inspect_position(position: &Point3<i64>, former_state: &Creature, updated_state: &Creature) -> Result<(), &'static str> {
+fn inspect_position(position: &Point3<i64>, former_state: &Creature, updated_state: &Creature) -> Result {
 	Ok(())
 }
-fn inspect_rotation(rotation: &EulerAngles, former_state: &Creature, updated_state: &Creature) -> Result<(), &'static str> {
+fn inspect_rotation(rotation: &EulerAngles, former_state: &Creature, updated_state: &Creature) -> Result {
 	//usually 0, except
 	//- rounding errors
 	//- 60f..=0 when swimming (or shortly afterwards)
@@ -84,12 +89,12 @@ fn inspect_rotation(rotation: &EulerAngles, former_state: &Creature, updated_sta
 		.ensure_within(&(-90f32..=90f32), "rotation.roll")?;
 	rotation.yaw//normally -180..=180, but over-/underflows while attacking
 		.is_finite()
-		.ok_or("rotation.yaw wasn't finite")
+		.ok_or("rotation.yaw wasn't finite".to_string())
 }
-fn inspect_velocity(velocity: &Vector3<f32>, former_state: &Creature, updated_state: &Creature) -> Result<(), &'static str> {
+fn inspect_velocity(velocity: &Vector3<f32>, former_state: &Creature, updated_state: &Creature) -> Result {
 	Ok(())
 }
-fn inspect_acceleration(acceleration: &Vector3<f32>, former_state: &Creature, updated_state: &Creature) -> Result<(), &'static str> {
+fn inspect_acceleration(acceleration: &Vector3<f32>, former_state: &Creature, updated_state: &Creature) -> Result {
 	let limit_xy = Vector3::<f32>::new(80.0, 80.0, 0.0).magnitude() + 0.00001; //113,1370849898476; //todo: would epsilon suffice?
 	let actual_xy = acceleration.xy().magnitude();
 	if !updated_state.flags.get(CreatureFlag::Gliding) {
@@ -103,11 +108,11 @@ fn inspect_acceleration(acceleration: &Vector3<f32>, former_state: &Creature, up
 		acceleration.z.ensure_exact(&0.0, "acceleration.vertical")
 	}
 }
-fn inspect_velocity_extra(velocity_extra: &Vector3<f32>, former_state: &Creature, updated_state: &Creature) -> Result<(), &'static str> {
+fn inspect_velocity_extra(velocity_extra: &Vector3<f32>, former_state: &Creature, updated_state: &Creature) -> Result {
 	let (max_xy, max_z): (f32, f32) =
 		match updated_state.combat_class_major {
-			CombatClassMajor::Ranger => (35.0, 17.0),
-			_                        => ( 0.1,  0.0)//0.1 because the game doesnt reset all the way to 0
+			Ranger => (35.0, 17.0),
+			_      => ( 0.1,  0.0)//0.1 because the game doesnt reset all the way to 0
 		};
 
 	velocity_extra.xy()
@@ -116,20 +121,20 @@ fn inspect_velocity_extra(velocity_extra: &Vector3<f32>, former_state: &Creature
 	velocity_extra.z
 		.ensure_within(&(0.0..=max_z), "")
 }
-fn inspect_head_tilt(head_tilt: &f32, former_state: &Creature, updated_state: &Creature) -> Result<(), &'static str> {
+fn inspect_head_tilt(head_tilt: &f32, former_state: &Creature, updated_state: &Creature) -> Result {
 	head_tilt
 		.ensure_within(&(-32.5..=45.0), "head_tilt")//negative when attacking downwards
 }
-fn inspect_flags_physics(flags_physics: &FlagSet32<PhysicsFlag>, former_state: &Creature, updated_state: &Creature) -> Result<(), &'static str> {
+fn inspect_flags_physics(flags_physics: &FlagSet32<PhysicsFlag>, former_state: &Creature, updated_state: &Creature) -> Result {
 
 
 	Ok(())
 }
-fn inspect_affiliation(affiliation: &Affiliation, former_state: &Creature, updated_state: &Creature) -> Result<(), &'static str> {
+fn inspect_affiliation(affiliation: &Affiliation, former_state: &Creature, updated_state: &Creature) -> Result {
 	affiliation
 	 	.ensure_exact(&Affiliation::Player, "affiliation")
 }
-fn inspect_race(race: &Race, former_state: &Creature, updated_state: &Creature) -> Result<(), &'static str> {
+fn inspect_race(race: &Race, former_state: &Creature, updated_state: &Creature) -> Result {
 	const PLAYABLE_RACES: [Race; 16] = [
 		ElfMale,
 		ElfFemale,
@@ -151,7 +156,7 @@ fn inspect_race(race: &Race, former_state: &Creature, updated_state: &Creature) 
 
 	race.ensure_one_of(PLAYABLE_RACES.as_slice(), "")
 }
-fn inspect_animation(animation: &Animation, former_state: &Creature, updated_state: &Creature) -> Result<(), &'static str> {
+fn inspect_animation(animation: &Animation, former_state: &Creature, updated_state: &Creature) -> Result {
 	let class_specific =//TODO: const
 		match updated_state.combat_class_major {
 			CombatClassMajor::Warrior => vec![Smash, Cyclone],
@@ -176,7 +181,7 @@ fn inspect_animation(animation: &Animation, former_state: &Creature, updated_sta
 
 	Ok(())
 }
-fn inspect_animation_time(animation_time: &i32, former_state: &Creature, updated_state: &Creature) -> Result<(), &'static str> {
+fn inspect_animation_time(animation_time: &i32, former_state: &Creature, updated_state: &Creature) -> Result {
 	const TIMELESS_ANIMATIONS: [Animation; 6] = [
 		Idle,
 		Stealth,
@@ -198,10 +203,10 @@ fn inspect_animation_time(animation_time: &i32, former_state: &Creature, updated
 
 	Ok(())
 }
-fn inspect_combo(combo: &i32, former_state: &Creature, updated_state: &Creature) -> Result<(), &'static str> {
+fn inspect_combo(combo: &i32, former_state: &Creature, updated_state: &Creature) -> Result {
 	combo.ensure_not_negative("combo")
 }
-fn inspect_hit_time_out(hit_time_out: &i32, former_state: &Creature, updated_state: &Creature) -> Result<(), &'static str> {
+fn inspect_hit_time_out(hit_time_out: &i32, former_state: &Creature, updated_state: &Creature) -> Result {
 	hit_time_out.ensure_not_negative("hit_time_out")
 	//todo
 //	if (this <= previous.hitTimeOut) {
@@ -224,7 +229,7 @@ fn inspect_hit_time_out(hit_time_out: &i32, former_state: &Creature, updated_sta
 //		abs(n).expectMaximum(2000, "hitTimeOut.clockdesync")
 //	}
 }
-fn inspect_appearance(appearance: &Appearance, former_state: &Creature, updated_state: &Creature) -> Result<(), &'static str> {
+fn inspect_appearance(appearance: &Appearance, former_state: &Creature, updated_state: &Creature) -> Result {
 	appearance.flags.ensure_exact(&core::default::Default::default(), "appearance.flags")?;
 
 	appearance.tail_model.ensure_exact(&-1, "asdf")?;
@@ -493,53 +498,53 @@ fn inspect_appearance(appearance: &Appearance, former_state: &Creature, updated_
 	appearance.weapon_size  .ensure_exact (&allowed_weapon_size  , "appearance.weaponSize")
 
 }
-fn inspect_flags(flags: &FlagSet16<CreatureFlag>, former_state: &Creature, updated_state: &Creature) -> Result<(), &'static str> {
+fn inspect_flags(flags: &FlagSet16<CreatureFlag>, former_state: &Creature, updated_state: &Creature) -> Result {
 	Ok(())
 }
-fn inspect_effect_time_dodge(effect_time_dodge: &i32, former_state: &Creature, updated_state: &Creature) -> Result<(), &'static str> {
+fn inspect_effect_time_dodge(effect_time_dodge: &i32, former_state: &Creature, updated_state: &Creature) -> Result {
 	effect_time_dodge.ensure_within(&(0..=600), "effect_time_dodge")
 }
-fn inspect_effect_time_stun(effect_time_stun: &i32, former_state: &Creature, updated_state: &Creature) -> Result<(), &'static str> {
+fn inspect_effect_time_stun(effect_time_stun: &i32, former_state: &Creature, updated_state: &Creature) -> Result {
 	//todo: ensure positive when increased
 	Ok(())
 }
-fn inspect_effect_time_fear(effect_time_fear: &i32, former_state: &Creature, updated_state: &Creature) -> Result<(), &'static str> {
+fn inspect_effect_time_fear(effect_time_fear: &i32, former_state: &Creature, updated_state: &Creature) -> Result {
 	effect_time_fear.ensure_not_negative("effect_time_fear")
 }
-fn inspect_effect_time_chill(effect_time_chill: &i32, former_state: &Creature, updated_state: &Creature) -> Result<(), &'static str> {
+fn inspect_effect_time_chill(effect_time_chill: &i32, former_state: &Creature, updated_state: &Creature) -> Result {
 	effect_time_chill.ensure_not_negative("effect_time_chill")
 }
-fn inspect_effect_time_wind(effect_time_wind: &i32, former_state: &Creature, updated_state: &Creature) -> Result<(), &'static str> {
+fn inspect_effect_time_wind(effect_time_wind: &i32, former_state: &Creature, updated_state: &Creature) -> Result {
 	effect_time_wind.ensure_within(&(0..=5000), "effect_time_wind")
 }
-fn inspect_show_patch_time(show_patch_time: &i32, former_state: &Creature, updated_state: &Creature) -> Result<(), &'static str> {
+fn inspect_show_patch_time(show_patch_time: &i32, former_state: &Creature, updated_state: &Creature) -> Result {
 	Ok(())
 }
-fn inspect_combat_class_major(combat_class_major: &CombatClassMajor, former_state: &Creature, updated_state: &Creature) -> Result<(), &'static str> {
+fn inspect_combat_class_major(combat_class_major: &CombatClassMajor, former_state: &Creature, updated_state: &Creature) -> Result {
 	combat_class_major.ensure_one_of([Warrior, Ranger, Mage, Rogue].as_slice(), "combat_class_major")
 	//todo: recheck gear
 }
-fn inspect_combat_class_minor(combat_class_minor: &CombatClassMinor, former_state: &Creature, updated_state: &Creature) -> Result<(), &'static str> {
+fn inspect_combat_class_minor(combat_class_minor: &CombatClassMinor, former_state: &Creature, updated_state: &Creature) -> Result {
 	combat_class_minor.ensure_one_of([Default, Alternative].as_slice(), "combat_class_minor")
 }
-fn inspect_mana_charge(mana_charge: &f32, former_state: &Creature, updated_state: &Creature) -> Result<(), &'static str> {
+fn inspect_mana_charge(mana_charge: &f32, former_state: &Creature, updated_state: &Creature) -> Result {
 	mana_charge.ensure_at_most(updated_state.mana, "mana_charge")
 }
-fn inspect_unknown24(unknown24: &[f32; 3], former_state: &Creature, updated_state: &Creature) -> Result<(), &'static str> {
+fn inspect_unknown24(unknown24: &[f32; 3], former_state: &Creature, updated_state: &Creature) -> Result {
 	Ok(())
 }
-fn inspect_unknown25(unknown25: &[f32; 3], former_state: &Creature, updated_state: &Creature) -> Result<(), &'static str> {
+fn inspect_unknown25(unknown25: &[f32; 3], former_state: &Creature, updated_state: &Creature) -> Result {
 	Ok(())
 }
-fn inspect_aim_offset(aim_offset: &Point3<f32>, former_state: &Creature, updated_state: &Creature) -> Result<(), &'static str> {
+fn inspect_aim_offset(aim_offset: &Point3<f32>, former_state: &Creature, updated_state: &Creature) -> Result {
 	//aim_offset.magnitude().ensure_at_most(60.0, "aim_offset_distance") //todo: account for rounding errors and movement
 	Ok(())
 }
-fn inspect_health(health: &f32, former_state: &Creature, updated_state: &Creature) -> Result<(), &'static str> {
+fn inspect_health(health: &f32, former_state: &Creature, updated_state: &Creature) -> Result {
 	//todo: calculate max hp
 	Ok(())
 }
-fn inspect_mana(mana: &f32, former_state: &Creature, updated_state: &Creature) -> Result<(), &'static str> {
+fn inspect_mana(mana: &f32, former_state: &Creature, updated_state: &Creature) -> Result {
 	mana.ensure_within(&(0.0..=1.0), "mana")
 	//todo: mana can only increase via:
 	//- m1
@@ -551,7 +556,7 @@ fn inspect_mana(mana: &f32, former_state: &Creature, updated_state: &Creature) -
 	//- stealth (leaving stealth keeps generating mp for a while)
 	//- intercept (1 frame to 1.0, then back to 0.0)
 }
-fn inspect_blocking_gauge(blocking_gauge: &f32, former_state: &Creature, updated_state: &Creature) -> Result<(), &'static str> {
+fn inspect_blocking_gauge(blocking_gauge: &f32, former_state: &Creature, updated_state: &Creature) -> Result {
 	let blocking_via_shield =
 		updated_state.animation == ShieldM2Charging;
 
@@ -575,53 +580,53 @@ fn inspect_blocking_gauge(blocking_gauge: &f32, former_state: &Creature, updated
 
 	blocking_gauge.ensure_within(&allowed_gauge, "blocking_gauge") //todo: negative gauge glitch?
 }
-fn inspect_multipliers(multipliers: &Multipliers, former_state: &Creature, updated_state: &Creature) -> Result<(), &'static str> {
+fn inspect_multipliers(multipliers: &Multipliers, former_state: &Creature, updated_state: &Creature) -> Result {
 	multipliers.health      .ensure_exact(&100.0, "multipliers.health")?;
 	multipliers.attack_speed.ensure_exact(&  1.0, "multipliers.attack_speed")?;
 	multipliers.damage      .ensure_exact(&  1.0, "multipliers.damage")?;
 	multipliers.resi        .ensure_exact(&  1.0, "multipliers.resi")?;
 	multipliers.armor       .ensure_exact(&  1.0, "multipliers.armor")
 }
-fn inspect_unknown31(unknown31: &i8, former_state: &Creature, updated_state: &Creature) -> Result<(), &'static str> {
+fn inspect_unknown31(unknown31: &i8, former_state: &Creature, updated_state: &Creature) -> Result {
 	Ok(())
 }
-fn inspect_unknown32(unknown32: &i8, former_state: &Creature, updated_state: &Creature) -> Result<(), &'static str> {
+fn inspect_unknown32(unknown32: &i8, former_state: &Creature, updated_state: &Creature) -> Result {
 	Ok(())
 }
-fn inspect_level(level: &i32, former_state: &Creature, updated_state: &Creature) -> Result<(), &'static str> {
+fn inspect_level(level: &i32, former_state: &Creature, updated_state: &Creature) -> Result {
 	level.ensure_within(&(1..=500), "level")
 }
-fn inspect_experience(experience: &i32, former_state: &Creature, updated_state: &Creature) -> Result<(), &'static str> {
+fn inspect_experience(experience: &i32, former_state: &Creature, updated_state: &Creature) -> Result {
 	let max = 9999;//todo: calc max xp based on lvl
 	experience.ensure_within(&(0..=max), "experience")
 }
-fn inspect_master(master: &CreatureId, former_state: &Creature, updated_state: &Creature) -> Result<(), &'static str> {
+fn inspect_master(master: &CreatureId, former_state: &Creature, updated_state: &Creature) -> Result {
 	master
 		.ensure_exact(&CreatureId(0), "master")
 }
-fn inspect_unknown36(unknown36: &i64, former_state: &Creature, updated_state: &Creature) -> Result<(), &'static str> {
+fn inspect_unknown36(unknown36: &i64, former_state: &Creature, updated_state: &Creature) -> Result {
 	Ok(())
 }
-fn inspect_power_base(power_base: &i8, former_state: &Creature, updated_state: &Creature) -> Result<(), &'static str> {
+fn inspect_power_base(power_base: &i8, former_state: &Creature, updated_state: &Creature) -> Result {
 	power_base
 		.ensure_exact(&0, "power_base")
 }
-fn inspect_unknown38(unknown38: &i32, former_state: &Creature, updated_state: &Creature) -> Result<(), &'static str> {
+fn inspect_unknown38(unknown38: &i32, former_state: &Creature, updated_state: &Creature) -> Result {
 	Ok(())
 }
-fn inspect_home_zone(home_zone: &Point3<i32>, former_state: &Creature, updated_state: &Creature) -> Result<(), &'static str> {
+fn inspect_home_zone(home_zone: &Point3<i32>, former_state: &Creature, updated_state: &Creature) -> Result {
 	Ok(())
 }
-fn inspect_home(home: &Point3<i64>, former_state: &Creature, updated_state: &Creature) -> Result<(), &'static str> {
+fn inspect_home(home: &Point3<i64>, former_state: &Creature, updated_state: &Creature) -> Result {
 	Ok(())
 }
-fn inspect_zone_to_reveal(zone_to_reveal: &Point3<i32>, former_state: &Creature, updated_state: &Creature) -> Result<(), &'static str> {
+fn inspect_zone_to_reveal(zone_to_reveal: &Point3<i32>, former_state: &Creature, updated_state: &Creature) -> Result {
 	Ok(())
 }
-fn inspect_unknown42(unknown42: &i8, former_state: &Creature, updated_state: &Creature) -> Result<(), &'static str> {
+fn inspect_unknown42(unknown42: &i8, former_state: &Creature, updated_state: &Creature) -> Result {
 	Ok(())
 }
-fn inspect_consumable(consumable: &Item, former_state: &Creature, updated_state: &Creature) -> Result<(), &'static str> {
+fn inspect_consumable(consumable: &Item, former_state: &Creature, updated_state: &Creature) -> Result {
 	//todo
 //	if (it.typeMajor == Item.Type.Major.None) return@let
 //
@@ -635,7 +640,7 @@ fn inspect_consumable(consumable: &Item, former_state: &Creature, updated_state:
 //	it.spiritCounter.expect(0, "consumable.spiritCounter")
 	Ok(())
 }
-fn inspect_equipment(equipment: &Equipment, former_state: &Creature, updated_state: &Creature) -> Result<(), &'static str> {
+fn inspect_equipment(equipment: &Equipment, former_state: &Creature, updated_state: &Creature) -> Result {
 //	mapOf(
 //		it::unknown     to setOf(Item.Type.Major.None),
 //		it::neck        to setOf(Item.Type.Major.Amulet),
@@ -712,11 +717,11 @@ fn inspect_equipment(equipment: &Equipment, former_state: &Creature, updated_sta
 //	}
 	Ok(())
 }
-fn inspect_name(name: &String, former_state: &Creature, updated_state: &Creature) -> Result<(), &'static str> {
+fn inspect_name(name: &String, former_state: &Creature, updated_state: &Creature) -> Result {
 	name.as_bytes().len().ensure_within(&(1..=15), "name.length")
 	//todo: limit characters to what the default font can display
 }
-fn inspect_skill_tree(skill_tree: &SkillTree, former_state: &Creature, updated_state: &Creature) -> Result<(), &'static str> {
+fn inspect_skill_tree(skill_tree: &SkillTree, former_state: &Creature, updated_state: &Creature) -> Result {
 	let skills = [//todo: implement .iter() for SkillTree directly?
 		skill_tree.pet_master,
 		skill_tree.pet_riding,
@@ -735,10 +740,11 @@ fn inspect_skill_tree(skill_tree: &SkillTree, former_state: &Creature, updated_s
 	}
 	skills.iter().sum::<i32>().ensure_at_most((updated_state.level - 1) * 2, "skillPoints.total")
 }
-fn inspect_mana_cubes(mana_cubes: &i32, former_state: &Creature, updated_state: &Creature) -> Result<(), &'static str> {
+fn inspect_mana_cubes(mana_cubes: &i32, former_state: &Creature, updated_state: &Creature) -> Result {
 	mana_cubes.ensure_not_negative("mana_cubes")
 }
 
+type Result = result::Result<(), String>;
 
 
 trait EnsureNotNegative {
@@ -794,12 +800,12 @@ impl<T: PartialEq> PresentIn for T {}
 
 
 
-trait MapOrOk<T> {
-	fn map_or_ok<E>(&self, f: impl FnOnce(&T) -> Result<(), E>) -> Result<(), E>;
+trait MapOrOk<Value> {
+	fn map_or_ok<Error>(&self, f: impl FnOnce(&Value) -> result::Result<(), Error>) -> result::Result<(), Error>;
 }
 
-impl<T> MapOrOk<T> for Option<T> {
-	fn map_or_ok<E>(&self, f: impl FnOnce(&T) -> Result<(), E>) -> Result<(), E> {
+impl<Value> MapOrOk<Value> for Option<Value> {
+	fn map_or_ok<Error>(&self, f: impl FnOnce(&Value) -> result::Result<(), Error>) -> result::Result<(), Error> {
 		match self {
 			Some(x) => f(x),
 			Option::None => Ok(())
