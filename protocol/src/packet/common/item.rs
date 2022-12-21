@@ -82,7 +82,7 @@ pub enum Material {
 	Linen,
 	Cotton,
 
-	Fire = -128,
+	Fire = i8::MIN,
 	Unholy,
 	IceSpirit,
 	Wind,

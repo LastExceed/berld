@@ -448,7 +448,7 @@ pub enum CombatClassMajor {
 	Mage,
 	Rogue,
 
-	GeneralShopkeep = -128,
+	GeneralShopkeep = i8::MIN,
 	WeaponShopkeep,
 	ArmorShopkeep,
 	Identifier,
