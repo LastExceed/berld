@@ -14,8 +14,8 @@ impl CwSerializable for AirshipTraffic {
 	}
 }
 
-#[derive(Clone, PartialEq)]
 #[repr(C)]
+#[derive(Debug, PartialEq, Clone)]
 pub struct Airship {
 	pub id: i64,
 	pub unknown_a: i32,
@@ -34,8 +34,8 @@ pub struct Airship {
 
 impl CwSerializable for Airship {}
 
-#[derive(Clone, PartialEq, Eq)]
 #[repr(i32)]
+#[derive(Debug, PartialEq, Eq, Clone)]
 pub enum State {
 	Unknown //todo
 }

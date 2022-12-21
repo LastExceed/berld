@@ -1,7 +1,7 @@
 use nalgebra::Point3;
 
 #[repr(u8)]
-#[derive(Clone, PartialEq, Eq, Copy, Default)]
+#[derive(Debug, PartialEq, Eq, Clone, Copy, Default)]
 pub enum TypeMajor {
 	#[default]
 	None,
@@ -32,11 +32,11 @@ pub enum TypeMajor {
 	ManaCube
 }
 
-#[derive(Clone, PartialEq, Eq, Copy, Default)]
+#[derive(Debug, PartialEq, Eq, Clone, Copy, Default)]
 pub struct TypeMinor(pub(crate) u8);
 
 #[repr(u8)]
-#[derive(Clone, PartialEq, Eq, Copy, Default)]
+#[derive(Debug, PartialEq, Eq, Clone, Copy, Default)]
 pub enum Rarity {
 	#[default]
 	Normal,
@@ -48,7 +48,7 @@ pub enum Rarity {
 }
 
 #[repr(i8)]
-#[derive(Clone, PartialEq, Eq, Copy, Default)]
+#[derive(Debug, PartialEq, Eq, Clone, Copy, Default)]
 pub enum Material {
 	#[default]
 	None,
@@ -87,7 +87,7 @@ pub enum Material {
 }
 
 #[repr(u8)]
-#[derive(Clone, PartialEq, Eq, Copy)]
+#[derive(Debug, PartialEq, Eq, Clone, Copy)]
 pub enum ItemFlag {
 	Adapted
 }
@@ -99,7 +99,7 @@ impl From<ItemFlag> for u8 {
 }
 
 #[repr(C, align(4))]
-#[derive(Clone, PartialEq, Eq, Default)]
+#[derive(Debug, PartialEq, Eq, Clone, Default)]
 pub struct Spirit {
 	pub position: Point3<i8>,
 	pub material: Material,

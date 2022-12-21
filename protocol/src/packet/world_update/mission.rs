@@ -1,5 +1,5 @@
 #[repr(u8)]
-#[derive(Clone, PartialEq, Eq, Copy)]
+#[derive(Debug, PartialEq, Eq, Clone, Copy)]
 pub enum MissionState {
 	Ready,
 	InProgress,

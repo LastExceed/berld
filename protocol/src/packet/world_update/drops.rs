@@ -18,7 +18,7 @@ impl CwSerializable for (Point2<i32>, Vec<Drop>) {
 }
 
 #[repr(C)]
-#[derive(Clone, PartialEq)]
+#[derive(Debug, PartialEq, Clone)]
 pub struct Drop {
 	pub item: Item,
 	pub position: Point3<i64>,

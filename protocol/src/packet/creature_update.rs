@@ -212,7 +212,7 @@ impl CwSerializable for CreatureUpdate {
 }
 
 #[repr(u32)]
-#[derive(Clone, PartialEq, Eq, Copy)]
+#[derive(Debug, PartialEq, Eq, Clone, Copy)]
 pub enum PhysicsFlag {
 	OnGround,
 	Swimming,
@@ -229,7 +229,7 @@ impl From<PhysicsFlag> for u32 {
 }
 
 #[repr(u8)]
-#[derive(Clone, PartialEq, Eq, Copy)]
+#[derive(Debug, PartialEq, Eq, Clone, Copy)]
 pub enum Affiliation {
 	Player,
 	Enemy,
@@ -241,7 +241,7 @@ pub enum Affiliation {
 }
 
 #[repr(u8)]
-#[derive(Clone, PartialEq, Eq, Copy)]
+#[derive(Debug, PartialEq, Eq, Clone, Copy)]
 pub enum Animation {
 	Idle,
 	DualWieldM1a,
@@ -357,7 +357,7 @@ pub enum Animation {
 }
 
 #[repr(C)]
-#[derive(Clone)]
+#[derive(Debug, PartialEq, Clone)]
 pub struct Appearance {
 	pub unknown: i16,
 	pub hair_color: RGB<u8>,
@@ -395,7 +395,7 @@ pub struct Appearance {
 }
 
 #[repr(u16)]
-#[derive(Clone, PartialEq, Eq, Copy)]
+#[derive(Debug, PartialEq, Eq, Clone, Copy)]
 pub enum AppearanceFlag {
 	FourLegged,
 	CanFly,
@@ -419,7 +419,7 @@ impl From<AppearanceFlag> for u16 {
 }
 
 #[repr(u16)]
-#[derive(Clone, PartialEq, Eq, Copy)]
+#[derive(Debug, PartialEq, Eq, Clone, Copy)]
 pub enum CreatureFlag {
 	Climbing,
 
@@ -440,7 +440,7 @@ impl From<CreatureFlag> for u16 {
 }
 
 #[repr(i8)]
-#[derive(Clone, PartialEq, Eq, Copy)]
+#[derive(Debug, PartialEq, Eq, Clone, Copy)]
 pub enum CombatClassMajor {
 	None,
 	Warrior,
@@ -461,7 +461,7 @@ pub enum CombatClassMajor {
 }
 
 #[repr(u8)]
-#[derive(Clone, PartialEq, Eq, Copy)]
+#[derive(Debug, PartialEq, Eq, Clone, Copy)]
 pub enum CombatClassMinor {
 	Default,
 	Alternative,
@@ -469,7 +469,7 @@ pub enum CombatClassMinor {
 }
 
 #[repr(C)]
-#[derive(Clone, PartialEq)]
+#[derive(Debug, PartialEq, Clone)]
 pub struct Multipliers {
 	pub health: f32,
 	pub attack_speed: f32,
@@ -479,7 +479,7 @@ pub struct Multipliers {
 }
 
 #[repr(C)]
-#[derive(Clone, PartialEq, Eq)]
+#[derive(Debug, PartialEq, Eq, Clone)]
 pub struct Equipment {
 	pub unknown: Item,
 	pub neck: Item,
@@ -497,7 +497,7 @@ pub struct Equipment {
 }
 
 #[repr(C)]
-#[derive(Clone, PartialEq, Eq, Default)]
+#[derive(Debug, PartialEq, Eq, Clone, Default)]
 pub struct SkillTree {
 	pub pet_master: i32,
 	pub pet_riding: i32,

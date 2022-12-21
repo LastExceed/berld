@@ -26,7 +26,7 @@ pub mod projectile;
 pub mod chat_message;
 pub mod common;
 
-#[derive(Clone, Default)]
+#[derive(Debug, Clone, Default)]
 pub struct CreatureUpdate {
 	pub id: CreatureId,
 	pub position: Option<Point3<i64>>,
@@ -86,19 +86,19 @@ pub struct CreatureUpdate {
 }
 
 #[repr(C)]
-#[derive(Clone)]
+#[derive(Debug, Clone, Default)]
 pub struct MultiCreatureUpdate; //todo
 
-#[derive(Clone)]
+#[derive(Debug, Clone, Default)]
 pub struct AirshipTraffic {
 	pub airships: Vec<Airship>
 }
 
 #[repr(C)]
-#[derive(Clone)]
+#[derive(Debug, Clone, Default)]
 pub struct ServerTick;
 
-#[derive(Clone, Default)]
+#[derive(Debug, Clone, Default)]
 pub struct WorldUpdate {
 	pub world_edits: Vec<WorldEdit>,
 	pub hits: Vec<Hit>,
@@ -116,14 +116,14 @@ pub struct WorldUpdate {
 }
 
 #[repr(C)]
-#[derive(Clone)]
+#[derive(Debug, Clone, Default)]
 pub struct IngameDatetime {
 	pub day: i32,
 	pub time: i32
 }
 
 #[repr(C)]
-#[derive(Clone)]
+#[derive(Debug, Clone)]//todo: Default
 pub struct CreatureAction {
 	pub item: Item,
 	pub zone: Point2<i32>,
@@ -134,7 +134,7 @@ pub struct CreatureAction {
 }
 
 #[repr(C)]
-#[derive(Clone)]
+#[derive(Debug, Clone, Default)]
 pub struct Hit {
 	pub attacker: CreatureId,
 	pub target: CreatureId,
@@ -152,7 +152,7 @@ pub struct Hit {
 }
 
 #[repr(C)]
-#[derive(Clone)]
+#[derive(Debug, Clone)]
 pub struct StatusEffect {
 	pub source: CreatureId,
 	pub target: CreatureId,
@@ -165,7 +165,7 @@ pub struct StatusEffect {
 }
 
 #[repr(C)]
-#[derive(Clone)]
+#[derive(Debug, Clone)]
 pub struct Projectile {
 	pub attacker: u64,
 	pub zone: Point2<i32>,
@@ -187,7 +187,7 @@ pub struct Projectile {
 	pub unknown_e: f32
 }
 
-#[derive(Clone)]
+#[derive(Debug, Clone, Default)]
 pub struct ChatMessageFromClient {
 	pub text: String
 }
@@ -198,27 +198,27 @@ pub struct ChatMessageFromServer {
 }
 
 #[repr(C)]
-#[derive(Clone)]
+#[derive(Debug, Clone, Default)]
 pub struct ZoneDiscovery(pub Point2<i32>);
 
 #[repr(C)]
-#[derive(Clone)]
+#[derive(Debug, Clone, Default)]
 pub struct RegionDiscovery(pub Point2<i32>);
 
 #[repr(C)]
-#[derive(Clone)]
+#[derive(Debug, Clone, Default)]
 pub struct MapSeed(pub i32);
 
 #[repr(C)]
-#[derive(Clone)]
+#[derive(Debug, Clone, Default)]
 pub struct ConnectionAcceptance;
 
 #[repr(C)]
-#[derive(Clone)]
+#[derive(Debug, Clone, Default)]
 pub struct ProtocolVersion(pub i32);
 
 #[repr(C)]
-#[derive(Clone)]
+#[derive(Debug, Clone, Default)]
 pub struct ConnectionRejection;
 
 
@@ -243,7 +243,7 @@ bulk_impl!(CwSerializable for
 	//ChatMessageFromServer
 );
 
-#[derive(Eq, PartialEq, Debug)]
+#[derive(Debug, Eq, PartialEq)]
 pub struct Id(i32);
 //the anonymous field is intentionally kept private to prevent manual construction
 //serialization isnt affected as it uses transmute to construct this

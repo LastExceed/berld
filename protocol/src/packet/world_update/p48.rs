@@ -20,7 +20,7 @@ impl CwSerializable for P48 {
 	}
 }
 
-#[derive(Clone, PartialEq, Eq)]
+#[derive(Debug, PartialEq, Eq, Clone)]
 pub struct P48sub(pub [u8; 16]);
 
 impl CwSerializable for P48sub {}

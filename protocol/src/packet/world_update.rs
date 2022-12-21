@@ -80,7 +80,7 @@ impl CwSerializable for WorldUpdate {
 }
 
 #[repr(C)]
-#[derive(Clone, PartialEq, Eq)]
+#[derive(Debug, PartialEq, Eq, Clone)]
 pub struct WorldEdit {
 	pub position: Point3<i32>,
 	pub color: RGB<u8>,
@@ -89,7 +89,7 @@ pub struct WorldEdit {
 }
 
 #[repr(C)]
-#[derive(Clone, PartialEq)]
+#[derive(Debug, PartialEq, Clone)]
 pub struct Particle {
 	pub position: Point3<i64>,
 	pub velocity: Vector3<f32>,
@@ -102,7 +102,7 @@ pub struct Particle {
 }
 
 #[repr(C)]
-#[derive(Clone, PartialEq)]
+#[derive(Debug, PartialEq, Clone)]
 pub struct SoundEffect {
 	pub position: Point3<f32>,
 	pub sound: Sound,
@@ -111,7 +111,7 @@ pub struct SoundEffect {
 }
 
 #[repr(C)]
-#[derive(Clone, PartialEq)]
+#[derive(Debug, PartialEq, Clone)]
 pub struct WorldObject {
 	pub zone: Point2<i32>,
 	pub id: i32,
@@ -130,21 +130,21 @@ pub struct WorldObject {
 	pub interactor: i64
 }
 
-#[derive(Clone, PartialEq, Eq)]
+#[derive(Debug, PartialEq, Eq, Clone)]
 pub struct P48 {
 	pub zone: Point2<i32>,
 	pub sub_packets: Vec<P48sub>
 }
 
 #[repr(C)]
-#[derive(Clone, PartialEq, Eq)]
+#[derive(Debug, PartialEq, Eq, Clone)]
 pub struct Pickup {
 	pub interactor: CreatureId,
 	pub item: Item
 }
 
 #[repr(C)]
-#[derive(Clone, PartialEq, Eq)]
+#[derive(Debug, PartialEq, Eq, Clone)]
 pub struct Kill {
 	pub killer: CreatureId,
 	pub victim: CreatureId,
@@ -153,7 +153,7 @@ pub struct Kill {
 }
 
 #[repr(C)]
-#[derive(Clone, PartialEq)]
+#[derive(Debug, PartialEq, Clone)]
 pub struct Attack {
 	pub target: i64,
 	pub attacker: i64,
@@ -162,7 +162,7 @@ pub struct Attack {
 }
 
 #[repr(C)]
-#[derive(Clone, PartialEq, Eq)]
+#[derive(Debug, PartialEq, Eq, Clone)]
 pub struct Mission {
 	pub sector: Point2<i32>,
 	pub unknown_a: i32,

@@ -1,5 +1,5 @@
 #[repr(u8)]
-#[derive(Clone, PartialEq, Eq)]
+#[derive(Debug, PartialEq, Eq, Clone)]
 pub enum CreatureActionType {
 	Bomb = 1,
 	Talk,
