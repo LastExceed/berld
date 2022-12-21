@@ -2,7 +2,7 @@ use protocol::nalgebra::{Point3, Vector3};
 use protocol::packet::common::{CreatureId, EulerAngles, Item, Race};
 use protocol::packet::creature_update::*;
 use protocol::packet::CreatureUpdate;
-use protocol::utils::CombatClass;
+use protocol::utils::constants::CombatClass;
 use protocol::utils::flagset::{FlagSet16, FlagSet32};
 
 #[derive(Clone)]
