@@ -1,5 +1,6 @@
 use crate::packet::common::Item;
-use crate::packet::common::item::{ItemType, TypeMajor, TypeMinor};
+use crate::packet::common::item::{TypeMajor, TypeMinor};
+use crate::utils::constants::ItemType;
 
 impl Item {
 	pub fn item_type(&self) -> ItemType {
@@ -29,9 +30,10 @@ macro_rules! item_types {
     );
 }
 
-item_types!(TypeMajor::None,
-	NONE
-);
+pub const NONE: ItemType = ItemType {
+	major: TypeMajor::None,
+	minor: TypeMinor(0),
+};
 
 item_types!(TypeMajor::Food,
 	COOKIE,

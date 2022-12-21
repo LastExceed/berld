@@ -12,6 +12,7 @@ use crate::utils::io_extensions::{ReadExtension, WriteExtension};
 
 pub mod io_extensions;
 pub mod flagset;
+pub mod constants;
 
 pub fn sound_position_of(position: Point3<i64>) -> Point3<f32> { //todo: move to SoundEffect ?
 	position.map(|scalar| scalar as f32 / SIZE_BLOCK as f32)
