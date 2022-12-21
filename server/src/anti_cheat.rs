@@ -746,47 +746,79 @@ fn inspect_mana_cubes(mana_cubes: &i32, former_state: &Creature, updated_state: 
 
 type Result = result::Result<(), String>;
 
+trait Ensure {
+	fn ensure<'a>(
+		&self,
+		property_name: &'a str,
+		actual_value: &impl Debug,
+		words: &'a str, //todo: come up with a better name
+		allowed: &impl Debug
+	) -> Result;
+}
+impl Ensure for bool {
+	fn ensure<'a>(
+		&self,
+		property_name: &'a str,
+		actual: &impl Debug,
+		words: &'a str,
+		allowed: &impl Debug
+	) -> Result {
+		self.ok_or(
+			format!(
+				"{} was {:?}, allowed was {} {:?}",
+				property_name,
+				actual,
+				words,
+				allowed
+			)
+		)
+	}
+}
 
 trait EnsureNotNegative {
-	fn ensure_not_negative<'a>(&self, property_name: &'a str) -> Result<(), &'a str>;
+	fn ensure_not_negative(&self, property_name: &str) -> Result;
 }
 impl EnsureNotNegative for i32 {
-	fn ensure_not_negative<'a>(&self, property_name: &'a str) -> Result<(), &'a str> {
-		(!self.is_negative()).ok_or(property_name)
+	fn ensure_not_negative(&self, property_name: &str) -> Result {
+		(!self.is_negative())//double negation in order for 0 to be Ok(())
+			.ensure(property_name, self, "positive or", &0)
 	}
 }
 
-trait EnsureAtMost: PartialOrd + Sized {
-	fn ensure_at_most<'a>(&self, limit: Self, property_name: &'a str) -> Result<(), &'a str> {
-		(*self <= limit).ok_or(property_name)
+
+
+trait EnsureAtMost: PartialOrd + Debug + Sized {
+	fn ensure_at_most(&self, limit: Self, property_name: &str) -> Result {
+		(*self <= limit)
+			.ensure(property_name, self, "at most", &limit)
 	}
 }
-impl<T: PartialOrd> EnsureAtMost for T {}
+impl<T: PartialOrd + Debug> EnsureAtMost for T {}
 
-trait EnsureWithin: PartialOrd + Sized {
-	fn ensure_within<'a>(&self, range: &impl RangeBounds<Self>, property_name: &'a str) -> Result<(), &'a str> {
-		range
-			.contains(&self)
-			.ok_or(property_name)//format!("{} was {} instead of {}", property_name, self, container).as_str()
+
+
+trait EnsureWithin: PartialOrd + Debug + Sized {
+	fn ensure_within(&self, allowed_range: &(impl RangeBounds<Self> + Debug), property_name: &str) -> Result {
+		allowed_range.contains(&self)
+			.ensure(property_name, self, "within", &allowed_range)
 	}
 }
-impl<T: PartialOrd> EnsureWithin for T {}
+impl<T: PartialOrd + Debug> EnsureWithin for T {}
 
 
 
-trait EnsureOneOf: PartialEq + Sized {
-	fn ensure_one_of<'a>(&self, range: &[Self], property_name: &'a str) -> Result<(), &'a str> {
-		range
-			.contains(self)
-			.ok_or(property_name)//format!("{} was {} instead of {}", property_name, self, container).as_str()
+trait EnsureOneOf: PartialEq + Debug + Sized {
+	fn ensure_one_of(&self, allowed_values: &[Self], property_name: &str) -> Result {
+		allowed_values.contains(self)
+			.ensure(property_name, self, "any of", &allowed_values)
 	}
 
-	fn ensure_exact<'a>(&self, expected: &Self, property_name: &'a str) -> Result<(), &'a str> {
-		(self == expected)
-			.ok_or(property_name)
+	fn ensure_exact(&self, allowed_value: &Self, property_name: &str) -> Result {
+		(self == allowed_value)
+			.ensure(property_name, self, "", allowed_value)
 	}
 }
-impl<T: PartialEq> EnsureOneOf for T {}
+impl<T: PartialEq + Debug> EnsureOneOf for T {}
 
 
 
