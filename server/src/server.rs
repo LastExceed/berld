@@ -231,6 +231,14 @@ impl Server {
 			text
 		}, None);
 	}
+
+	pub(crate) fn kick(&self, player: &Player, reason: String) {
+		self.announce(format!("kicked {} because {}", player.creature.read().name, reason));
+		//wait a bit to make sure the message arrives at the player about to be kicked
+		thread::sleep(Duration::from_millis(100));//todo: YIKES! just switch to async already
+		player.close_connection();
+		//remove_player will be called by the reading thread
+	}
 }
 
 /// during new player setup the server needs to send an abnormal CreatureUpdate which:

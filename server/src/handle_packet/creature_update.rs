@@ -22,7 +22,8 @@ impl HandlePacket<CreatureUpdate> for Server {
 		unsafe { source.creature.raw().downgrade(); }//todo: not sure
 
 		if let Err(message) = anti_cheat::inspect_creature_update(&packet, &snapshot, &character) {
-			dbg!(message);
+			dbg!(&message);
+			self.kick(&source, message);
 			return Err(ErrorKind::InvalidInput.into())
 		}
 

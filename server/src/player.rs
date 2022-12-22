@@ -42,4 +42,8 @@ impl Player {
 			text
 		});
 	}
+
+	pub fn close_connection(&self) {
+		let _ = self.stream.lock().shutdown(Shutdown::Both); //todo: error handling
+	}
 }
