@@ -610,12 +610,12 @@ fn inspect_mana(mana: &f32, former_state: &Creature, updated_state: &Creature) -
 	//- intercept (1 frame to 1.0, then back to 0.0)
 }
 fn inspect_blocking_gauge(blocking_gauge: &f32, former_state: &Creature, updated_state: &Creature) -> Result {
-	let blocking_via_shield =
-		updated_state.animation == ShieldM2Charging;
+	let blocking_via_shield =//check against former state as the blocking gauge updates with 1 frame delay
+		former_state.animation == ShieldM2Charging;
 
 	let blocking_via_guardians_passive =
-		(updated_state.combat_class() == GUARDIAN) &&
-			updated_state.animation
+		(former_state.combat_class() == GUARDIAN) &&
+			former_state.animation
 				.present_in(&[
 					DualWieldM2Charging,
 					GreatweaponM2Charging,
@@ -624,14 +624,15 @@ fn inspect_blocking_gauge(blocking_gauge: &f32, former_state: &Creature, updated
 
 	let blocking = blocking_via_shield || blocking_via_guardians_passive;
 
-	let allowed_gauge =
+	let max =
 		if blocking {
-			0.0..=former_state.blocking_gauge
+			former_state.blocking_gauge
 		} else {
-			former_state.blocking_gauge..=1.0
+			1.0
 		};
 
-	blocking_gauge.ensure_within(&allowed_gauge, "blocking_gauge") //todo: negative gauge glitch?
+	blocking_gauge
+		.ensure_within(&(0.0..=max), "blocking_gauge") //todo: negative gauge glitch?
 }
 fn inspect_multipliers(multipliers: &Multipliers, former_state: &Creature, updated_state: &Creature) -> Result {
 	multipliers.health      .ensure_exact(&100.0, "multipliers.health")?;
