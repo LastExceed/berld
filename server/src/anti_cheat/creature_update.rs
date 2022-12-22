@@ -7,15 +7,16 @@ use protocol::packet::creature_update::{Affiliation, Animation, Appearance, Comb
 use protocol::packet::creature_update::Animation::*;
 use protocol::packet::creature_update::CombatClassMajor::*;
 use protocol::packet::creature_update::CombatClassMinor::*;
-use protocol::utils::constants::{animations, PLAYABLE_RACES};
-use protocol::utils::constants::animations::{abilities, m1, m2};
 use protocol::utils::constants::combat_classes::*;
-use protocol::utils::constants::item_types::*;
+use protocol::utils::constants::PLAYABLE_RACES;
 use protocol::utils::flagset::{FlagSet16, FlagSet32};
 
 use crate::anti_cheat;
 use crate::anti_cheat::*;
+use crate::anti_cheat::creature_update::animation::animations_avilable_with;
 use crate::creature::Creature;
+
+mod animation;
 
 pub(super) fn inspect_position(position: &Point3<i64>, former_state: &Creature, updated_state: &Creature) -> anti_cheat::Result {
 	Ok(())
@@ -79,77 +80,7 @@ pub(super) fn inspect_race(race: &Race, former_state: &Creature, updated_state: 
 	race.ensure_one_of(PLAYABLE_RACES.as_slice(), "")
 }
 pub(super) fn inspect_animation(animation: &Animation, former_state: &Creature, updated_state: &Creature) -> anti_cheat::Result {
-	let abilities =
-		match updated_state.combat_class_major {
-			Warrior => &abilities::WARRIOR[..],
-			Ranger  => &abilities::RANGER[..],
-			Mage    => match updated_state.combat_class_minor {
-				Alternative => &abilities::WATER_MAGE[..],
-				Default | _ => &abilities::FIRE_MAGE[..],
-			}
-			Rogue   => match updated_state.combat_class_minor {
-				Default         => &abilities::ASSASSIN[..],
-				Alternative | _ => &abilities::NINJA[..],//no, this is not a bug. the game is actually that inconsistent
-			}
-			_ => &[][..]
-		};
-
-	let right = updated_state.equipment.right_weapon.item_type();
-	let left  = updated_state.equipment.left_weapon.item_type();
-
-	let left_handed = left.present_in(&[BOW, CROSSBOW]);
-
-	let (mainhand, offhand) =
-		if left_handed { (left, right) }
-		else           { (right, left) };
-
-	let (m1, m2) = match mainhand {
-		GREATSWORD |
-		GREATAXE   |
-		GREATMACE  |
-		PITCHFORK => (&m1::GREATWEAPON[..], &m2::GREATWEAPON[..]),
-		DAGGER    => (&m1::DAGGER[..]     , &m2::DAGGER[..]),
-		FIST      => (&m1::UNARMED[..]    , &m2::UNARMED[..]),//use redirecting constants?
-		LONGSWORD => (&m1::LONGSWORD[..]  , &m2::LONGSWORD[..]),
-		BOW       => (&m1::BOW[..]        , &m2::BOW[..]),
-		CROSSBOW  => (&m1::CROSSBOW[..]   , &m2::CROSSBOW[..]),
-		BOOMERANG => (&m1::BOOMERANG[..]  , &m2::BOOMERANG[..]),
-		STAFF     => match updated_state.combat_class_minor {
-			Alternative => (&m1::STAFF_WATER[..]   , &m2::STAFF_WATER[..]),
-			_           => (&m1::STAFF_FIRE[..]    , &m2::STAFF_FIRE[..])
-		},
-		WAND      => match updated_state.combat_class_minor {
-			Alternative => (&m1::WAND_WATER[..]    , &m2::WAND_WATER[..]),
-			_           => (&m1::WAND_FIRE[..]     , &m2::WAND_FIRE[..])
-		},
-		BRACELET  => match updated_state.combat_class_minor {
-			Alternative => (&m1::BRACELET_WATER[..], &m2::BRACELET_WATER[..]),
-			_           => (&m1::BRACELET_FIRE[..] , &m2::BRACELET_FIRE[..])
-		},
-		NONE      => {
-			let (mainhand_m1, mainhand_m2) = match updated_state.combat_class() {
-				FIRE_MAGE  => (&m1::BRACELET_FIRE[..] , &m2::BRACELET_FIRE[..]),
-				WATER_MAGE => (&m1::BRACELET_WATER[..], &m2::BRACELET_WATER[..]),
-				_          => (&m1::UNARMED[..]       , &m2::UNARMED[..])
-			};
-			let m2 =
-				match offhand {
-					SHIELD => &m2::SHIELD[..],
-					_      => mainhand_m2
-				};
-
-			(mainhand_m1, m2)
-		},
-//		SWORD | AXE | MACE |
-//		SHIELD|
-//		ARROW | QUIVER | PICKAXE | TORCH
-		_ => match offhand {
-			SHIELD => (&m1::SHIELD[..]   , &m2::SHIELD[..]),
-			_      => (&m1::DUALWIELD[..], &m2::UNARMED[..])//use redirecting constant?
-		}
-	};
-
-	let allowed_animations = [&animations::GENERAL[..], abilities, m1, m2].concat();
+	let allowed_animations = animations_avilable_with(updated_state.combat_class(), &updated_state.equipment);
 
 	animation
 		.ensure_one_of(&allowed_animations, "animation")?;
