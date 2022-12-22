@@ -7,7 +7,7 @@ use protocol::packet::creature_update::{Affiliation, Animation, Appearance, Comb
 use protocol::packet::creature_update::Animation::*;
 use protocol::packet::creature_update::CombatClassMajor::*;
 use protocol::packet::creature_update::CombatClassMinor::*;
-use protocol::utils::constants::animations;
+use protocol::utils::constants::{animations, PLAYABLE_RACES};
 use protocol::utils::constants::animations::{abilities, m1, m2};
 use protocol::utils::constants::combat_classes::*;
 use protocol::utils::constants::item_types::*;
@@ -69,8 +69,6 @@ pub(super) fn inspect_head_tilt(head_tilt: &f32, former_state: &Creature, update
 		.ensure_within(&(-32.5..=45.0), "head_tilt")//negative when attacking downwards
 }
 pub(super) fn inspect_flags_physics(flags_physics: &FlagSet32<PhysicsFlag>, former_state: &Creature, updated_state: &Creature) -> anti_cheat::Result {
-
-
 	Ok(())
 }
 pub(super) fn inspect_affiliation(affiliation: &Affiliation, former_state: &Creature, updated_state: &Creature) -> anti_cheat::Result {
@@ -78,25 +76,6 @@ pub(super) fn inspect_affiliation(affiliation: &Affiliation, former_state: &Crea
 		.ensure_exact(&Affiliation::Player, "affiliation")
 }
 pub(super) fn inspect_race(race: &Race, former_state: &Creature, updated_state: &Creature) -> anti_cheat::Result {
-	const PLAYABLE_RACES: [Race; 16] = [
-		ElfMale,
-		ElfFemale,
-		HumanMale,
-		HumanFemale,
-		GoblinMale,
-		GoblinFemale,
-		LizardmanMale,
-		LizardmanFemale,
-		DwarfMale,
-		DwarfFemale,
-		OrcMale,
-		OrcFemale,
-		FrogmanMale,
-		FrogmanFemale,
-		UndeadMale,
-		UndeadFemale
-	];
-
 	race.ensure_one_of(PLAYABLE_RACES.as_slice(), "")
 }
 pub(super) fn inspect_animation(animation: &Animation, former_state: &Creature, updated_state: &Creature) -> anti_cheat::Result {
