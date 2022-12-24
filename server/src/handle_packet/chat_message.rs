@@ -16,6 +16,11 @@ impl HandlePacket<ChatMessageFromClient> for Server {
 		cyan!("{}: ", source.creature.read().name);
 		white_ln!("{}", packet.text);
 
+		if packet.text.starts_with('/') {
+			handle_command(&self, &source, &packet);
+			return Ok(());
+		}
+
 		self.broadcast(
 			&ChatMessageFromServer {
 				source: source.creature.read().id,
@@ -25,5 +30,46 @@ impl HandlePacket<ChatMessageFromClient> for Server {
 		);
 
 		Ok(())
+	}
+}
+
+fn handle_command(server: &Server, source: &Player, packet: &ChatMessageFromClient) {
+	let mut params = packet.text.strip_prefix("/").unwrap().split(" ");
+	let Some(command) = params.next() else {
+		//text was just / with nothing else
+		return;
+	};
+	match command {
+		"xp" => {
+			let Some(amount) = params.next() else {
+				source.notify("too few arguments".to_string());
+				return;
+			};
+			let Ok(parsed_amount) = amount.parse::<i32>() else {
+				source.notify("failed to parse amount".to_string());
+				return;
+			};
+			let dummy = CreatureUpdate {
+				id: CreatureId(9999),
+				affiliation: Some(Affiliation::Enemy),
+				..Default::default()
+			};
+			source.send_ignoring(&dummy);
+
+			let kill = Kill {
+				killer: source.creature.read().id,
+				unknown: 0,
+				victim: dummy.id,
+				xp: parsed_amount
+			};
+
+			let world_update = WorldUpdate {
+				kills: vec![kill],
+				..Default::default()
+			};
+			source.send_ignoring(&world_update);
+			source.notify("ok".to_string());
+		}
+		other => {dbg!(other);}
 	}
 }
