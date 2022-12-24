@@ -1,7 +1,12 @@
+use std::default;
+
 use boolinator::Boolinator;
 
 use protocol::nalgebra::{Point3, Vector3};
 use protocol::packet::common::{CreatureId, EulerAngles, Hitbox, Item, Race};
+use protocol::packet::common::item::Rarity::*;
+use protocol::packet::common::item::TypeMajor;
+use protocol::packet::common::item::TypeMajor::*;
 use protocol::packet::common::Race::*;
 use protocol::packet::creature_update::{Affiliation, Animation, Appearance, CombatClassMajor, CombatClassMinor, CreatureFlag, Equipment, Multipliers, PhysicsFlag, SkillTree};
 use protocol::packet::creature_update::Animation::*;
@@ -14,9 +19,11 @@ use protocol::utils::flagset::{FlagSet16, FlagSet32};
 use crate::anti_cheat;
 use crate::anti_cheat::*;
 use crate::anti_cheat::creature_update::animation::animations_avilable_with;
+use crate::anti_cheat::creature_update::equipment::allowed_materials;
 use crate::creature::Creature;
 
 mod animation;
+mod equipment;
 
 pub(super) fn inspect_position(position: &Point3<i64>, former_state: &Creature, updated_state: &Creature) -> anti_cheat::Result {
 	Ok(())
@@ -478,11 +485,8 @@ pub(super) fn inspect_blocking_gauge(blocking_gauge: &f32, former_state: &Creatu
 	let blocking = blocking_via_shield || blocking_via_guardians_passive;
 
 	let max =
-		if blocking {
-			former_state.blocking_gauge
-		} else {
-			1.0
-		};
+		if blocking { former_state.blocking_gauge }
+		else        { 1.0 };
 
 	blocking_gauge
 		.ensure_within(&(0.0..=max), "blocking_gauge") //todo: negative gauge glitch?
@@ -534,94 +538,48 @@ pub(super) fn inspect_unknown42(unknown42: &i8, former_state: &Creature, updated
 	Ok(())
 }
 pub(super) fn inspect_consumable(consumable: &Item, former_state: &Creature, updated_state: &Creature) -> anti_cheat::Result {
-	//todo
-//	if (it.typeMajor == Item.Type.Major.None) return@let
-//
-//		it.typeMajor.expect(Item.Type.Major.Food, "consumable.typeMajor")
-//	it.rarity.expect(Item.Rarity.Normal, "consumable.rarity")
-//
-//	val powerAllowed = Utils.computePower(current.level)
-//	val powerActual = Utils.computePower(it.level.toInt())
-//
-//	powerActual.expectIn(1..=powerAllowed, "consumable.level")
-//	it.spiritCounter.expect(0, "consumable.spiritCounter")
-	Ok(())
+	if consumable.type_major == default::Default::default() {
+		return Ok(());
+	}
+	consumable.type_major.ensure_exact(&Food, "consumable.type_major")
+	//todo: power
 }
 pub(super) fn inspect_equipment(equipment: &Equipment, former_state: &Creature, updated_state: &Creature) -> anti_cheat::Result {
-//	mapOf(
-//		it::unknown     to setOf(Item.Type.Major.None),
-//		it::neck        to setOf(Item.Type.Major.Amulet),
-//		it::chest       to setOf(Item.Type.Major.Chest),
-//		it::feet        to setOf(Item.Type.Major.Boots),
-//		it::hands       to setOf(Item.Type.Major.Gloves),
-//		it::shoulder    to setOf(Item.Type.Major.Shoulder),
-//		it::leftWeapon  to setOf(Item.Type.Major.Weapon),
-//		it::rightWeapon to setOf(Item.Type.Major.Weapon),
-//		it::leftRing    to setOf(Item.Type.Major.Ring),
-//		it::rightRing   to setOf(Item.Type.Major.Ring),
-//		it::lamp        to setOf(Item.Type.Major.Lamp),
-//		it::special     to setOf(Item.Type.Major.Special),
-//		it::pet         to setOf(Item.Type.Major.Pet, Item.Type.Major.PetFood)
-//	).filterNot { it.key.get().typeMajor == Item.Type.Major.None }
-//		.forEach {
-//		val item = it.key.get()
-//		val prefix = "equipment." + it.key.name
-//
-//		item.typeMajor.expectIn(it.value, "$prefix.typeMajor")
-//
-//		val classMajor = current.combatClassMajor
-//		val allowedItemMaterials = when (item.typeMajor) {
-//			Item.Type.Major.Weapon -> {
-//				item.typeMinor.expectIn(getAllowedWeaponTypes(classMajor), "$prefix.typeMinor")
-//				allowedWeaponMaterials[item.typeMinor]!!
-//			}
-//			Item.Type.Major.Chest,
-//			Item.Type.Major.Boots,
-//			Item.Type.Major.Gloves,
-//			Item.Type.Major.Shoulder -> getAllowedMaterialsArmor(classMajor)
-//
-//			Item.Type.Major.Amulet,
-//			Item.Type.Major.Ring -> allowedMaterialsAccessories
-//
-//			Item.Type.Major.Special -> {
-//				item.typeMinor.expectIn(subTypesSpecial, "$prefix.typeMinor")
-//				setOf(Item.Material.Wood)
-//			}
-//			Item.Type.Major.Lamp -> setOf(Item.Material.Iron)
-//			else -> setOf(Item.Material.None)
-//		}
-//		item.material.expectIn(allowedItemMaterials, "$prefix.material")
-//		//item.randomSeed.expectMinimum(0, "$prefix.randomSeed")
-//		item.recipe.expect(Item.Type.Major.None, "$prefix.recipe")
-//		item.rarity.expectIn(allowedRarities, "$prefix.rarity")
-//
-//		val powerAllowed = Utils.computePower(current.level)
-//		val powerActual = Utils.computePower(item.level.toInt())
-//		powerActual.expectIn(1..=powerAllowed, "$prefix.level")
-//
-//		val spiritLimit = 32//if (item.typeMajor == Item.Type.Major.Weapon) getWeaponHandCount(item.typeMinor) * 16 else 0
-//		item.spiritCounter.expectIn(0..=spiritLimit, "$prefix.spiritCounter")
-//
-//		val allowedSpiritMaterials = setOf(
-//			Item.Material.Fire,
-//				Item.Material.Unholy,
-//			Item.Material.IceSpirit,
-//			Item.Material.Wind,
-//			item.material
-//			)
-//		item.spirits.take(item.spiritCounter).forEachIndexed { index, spirit ->
-//			spirit.material.expectIn(allowedSpiritMaterials, "$prefix.spirit#$index.material")
-//			spirit.level.toInt().expectIn(1..=item.level, "$prefix.spirit#$index.level")
-//		}
-//	}
-//	val r = if (it.rightWeapon == Item.void) 0 else getWeaponHandCount(it.rightWeapon.typeMinor)
-//	val l = if (it.leftWeapon == Item.void) 0 else getWeaponHandCount(it.leftWeapon.typeMinor)
-//		(r + l).expectMaximum(2, "equipment.dualwield")
-//	//ranger can hold 2h weapon in either hand
-//
-//	inspect(CreatureUpdate(id = id, animation = current.animation), current)?.let {
-//		throw CheaterException(it)
-//	}
+	//todo: kick message prefix
+	let equipment_slots = [
+		(&equipment.unknown, TypeMajor::None),
+		(&equipment.neck, Amulet),
+		(&equipment.chest, Chest),
+		(&equipment.feet, Boots),
+		(&equipment.hands, Gloves),
+		(&equipment.shoulder, Shoulder),
+		(&equipment.left_weapon, Weapon),
+		(&equipment.right_weapon, Weapon),
+		(&equipment.left_ring, Ring),
+		(&equipment.right_ring, Ring),
+		(&equipment.lamp, Lamp),
+		(&equipment.special, Special),
+		(&equipment.pet, Pet),
+	];
+	let occupied_item_slots = equipment_slots.iter()//todo: implement in equipment?
+		.filter(|(item, _)| item.type_major != default::Default::default());
+
+	for (item, allowed_type_major) in occupied_item_slots {
+		item.type_major.ensure_exact(allowed_type_major, ".type_major")?;
+		//item.seed.ensure_not_negative(".seed") //tolerating negative seeds due to popularity
+		item.recipe.ensure_exact(&default::Default::default(), ".recipe")?;
+		//item.minus_modifier
+		//item.rarity.ensure_one_of(&[Normal, Uncommon, Rare, Epic, Legendary], ".rarity")?; //todo: crashes for rarity 6+
+		let allowed_materials = allowed_materials(item.item_type(), updated_state.combat_class_major);
+		item.material.ensure_one_of(allowed_materials, ".material")?;
+		//item.flags
+		//item.level //todo: power
+		//item.spirits //tolerating everything due to popularity
+		item.spirit_counter.ensure_within(&(0..=32), "")?;//normally only 2h weapons can have more than 16 (up to 32) spirits, but we're tolerating 32 on everyhting due to popularity
+	}
+
+	//type_minor //todo: weapons/special
+
 	Ok(())
 }
 pub(super) fn inspect_name(name: &String, former_state: &Creature, updated_state: &Creature) -> anti_cheat::Result {
