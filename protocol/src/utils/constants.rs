@@ -6,6 +6,7 @@ use crate::packet::creature_update::{CombatClassMajor, CombatClassMinor};
 pub mod item_types;
 pub mod combat_classes;
 pub mod animations;
+pub mod materials;
 
 #[derive(Default, PartialEq, Eq, Clone, Copy)]
 pub struct ItemType {
