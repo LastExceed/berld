@@ -33,7 +33,7 @@ pub enum TypeMajor {
 }
 
 #[derive(Debug, PartialEq, Eq, Clone, Copy, Default)]
-pub struct TypeMinor(pub(crate) u8);
+pub struct TypeMinor(pub(crate) u8);//this is necessary. it can't be merged with TypeMajor into a variant enum because of `item.recipe` (Wollay pls)
 
 #[repr(u8)]
 #[derive(Debug, PartialEq, Eq, Clone, Copy, Default)]
