@@ -170,12 +170,12 @@ impl Server {
 				.collect(),
 			..Default::default()
 		}).await?;
+
+		self.announce(format!("[+] {}", new_player.creature.read().await.name)).await;
+
 		let new_player_arc = Arc::new(new_player);
 		self.players.write().await.push(new_player_arc.clone());
-
 		self.broadcast(&new_player_arc.creature.read().await.to_update(), None).await;
-
-		self.announce(format!("[+] {}", new_player_arc.creature.read().await.name)).await;
 
 		let _ = self.read_packets_forever(&new_player_arc, &mut read_half).await
 			.expect_err("impossible"); //TODO: check if error emerged from reading or writing
