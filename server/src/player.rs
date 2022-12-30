@@ -38,10 +38,10 @@ impl Player {
 		let _ = self.send(packet).await;
 	}
 
-	pub async fn notify(&self, text: String) {
+	pub async fn notify(&self, message: impl Into<String>) {
 		self.send_ignoring(&ChatMessageFromServer {
 			source: CreatureId(0),
-			text
+			text: message.into()
 		}).await;
 	}
 

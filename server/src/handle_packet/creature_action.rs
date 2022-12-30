@@ -16,7 +16,7 @@ impl HandlePacket<CreatureAction> for Server {
 	async fn handle_packet(&self, source: &Player, packet: CreatureAction) -> Result<(), io::Error> {
 		match packet.type_ {
 			CreatureActionType::Bomb => {
-				source.notify("bombs are disabled".to_owned()).await;
+				source.notify("bombs are disabled").await;
 
 				//the player consumed a bomb, so we need to reimburse it
 				source.send_ignoring(&WorldUpdate {
@@ -28,10 +28,10 @@ impl HandlePacket<CreatureAction> for Server {
 				}).await;
 			}
 			CreatureActionType::Talk => {
-				source.notify("quests coming soon(tm)".to_owned()).await;
+				source.notify("quests coming soon(tm)").await;
 			}
 			CreatureActionType::ObjectInteraction => {
-				source.notify("object interactions are disabled".to_owned()).await;
+				source.notify("object interactions are disabled").await;
 			}
 			CreatureActionType::PickUp => {
 				if let Some(item) = self.remove_drop(packet.zone, packet.item_index as usize).await {

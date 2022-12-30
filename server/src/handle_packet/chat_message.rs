@@ -43,11 +43,11 @@ async fn handle_command(server: &Server, source: &Player, packet: &ChatMessageFr
 	match command {
 		"xp" => {
 			let Some(amount) = params.next() else {
-				source.notify("too few arguments".to_string()).await;
+				source.notify("too few arguments").await;
 				return;
 			};
 			let Ok(parsed_amount) = amount.parse::<i32>() else {
-				source.notify("failed to parse amount".to_string()).await;
+				source.notify("failed to parse amount").await;
 				return;
 			};
 			let dummy = CreatureUpdate {
@@ -69,7 +69,7 @@ async fn handle_command(server: &Server, source: &Player, packet: &ChatMessageFr
 				..Default::default()
 			};
 			source.send_ignoring(&world_update).await;
-			source.notify("ok".to_string()).await;
+			source.notify("ok").await;
 		}
 		other => {dbg!(other);}
 	}
