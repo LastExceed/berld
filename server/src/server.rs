@@ -64,6 +64,66 @@ impl Server {
 		}
 	}
 
+	async fn handle_new_connection(&self, mut read_half: OwnedReadHalf, write_half: Arc<RwLock<OwnedWriteHalf>>) -> Result<(), io::Error> {
+		if read_half.read_struct::<packet::Id>().await? != ProtocolVersion::ID
+			|| ProtocolVersion::read_from(&mut read_half).await?.0 != 3 {
+			return Err(io::Error::from(ErrorKind::InvalidData));
+		}
+		let assigned_id = self.id_pool.write().await.claim();
+		let result = self.handle_new_player(read_half, write_half, assigned_id).await;
+		self.id_pool.write().await.free(assigned_id);
+		result
+	}
+
+	async fn handle_new_player(&self, mut read_half: OwnedReadHalf, write_half: Arc<RwLock<OwnedWriteHalf>>, assigned_id: CreatureId) -> Result<(), io::Error> {
+		{//todo: extract individual functions
+			let write_half_lock = &mut write_half.write().await as &mut OwnedWriteHalf;
+			ConnectionAcceptance {}.write_to_with_id(write_half_lock).await?;
+			write_abnormal_creature_update(write_half_lock, assigned_id).await?;
+		};
+
+		if read_half.read_struct::<packet::Id>().await? != CreatureUpdate::ID {
+			return Err(io::Error::from(ErrorKind::InvalidData))
+		}
+		let mut full_creature_update = CreatureUpdate::read_from(&mut read_half).await?;
+
+		enable_pvp(&mut full_creature_update);
+
+		let new_player = Player::new(
+			Creature::maybe_from(&full_creature_update).ok_or_else(|| io::Error::from(ErrorKind::InvalidData))?,
+			write_half.clone(),
+		);
+		new_player.send(&MapSeed(225)).await?;
+		new_player.notify("welcome to berld").await;
+
+		for existing_player in self.players.read().await.iter() {
+			new_player.send(&existing_player.creature.read().await.to_update()).await?;
+		}
+
+		new_player.send(&WorldUpdate {
+			drops: self.drops.read().await
+				.clone()
+				.into_iter()
+				.collect(),
+			..Default::default()
+		}).await?;
+
+		self.announce(format!("[+] {}", new_player.creature.read().await.name)).await;
+
+		let new_player_arc = Arc::new(new_player);
+		self.players.write().await.push(new_player_arc.clone());
+		self.broadcast(&new_player_arc.creature.read().await.to_update(), None).await;
+
+		let _ = self.read_packets_forever(&new_player_arc, &mut read_half).await
+			.expect_err("impossible"); //TODO: check if error emerged from reading or writing
+
+		self.remove_player(&new_player_arc).await;
+
+		self.announce(format!("[-] {}", new_player_arc.creature.read().await.name)).await;
+
+		Ok(())
+	}
+
 	pub async fn broadcast<Packet: FromServer + Sync>(&self, packet: &Packet, player_to_skip: Option<&Player>) where [(); size_of::<Packet>()]: {
 		for player in self.players.read().await.iter() {
 			if match player_to_skip {
@@ -125,66 +185,6 @@ impl Server {
 		}, None).await;
 
 		Some(removed_item)
-	}
-
-	async fn handle_new_connection(&self, mut read_half: OwnedReadHalf, write_half: Arc<RwLock<OwnedWriteHalf>>) -> Result<(), io::Error> {
-		if read_half.read_struct::<packet::Id>().await? != ProtocolVersion::ID
-			|| ProtocolVersion::read_from(&mut read_half).await?.0 != 3 {
-			return Err(io::Error::from(ErrorKind::InvalidData));
-		}
-		let assigned_id = self.id_pool.write().await.claim();
-		let result = self.handle_new_player(read_half, write_half, assigned_id).await;
-		self.id_pool.write().await.free(assigned_id);
-		result
-	}
-
-	async fn handle_new_player(&self, mut read_half: OwnedReadHalf, write_half: Arc<RwLock<OwnedWriteHalf>>, assigned_id: CreatureId) -> Result<(), io::Error> {
-		{//todo: extract individual functions
-			let write_half_lock = &mut write_half.write().await as &mut OwnedWriteHalf;
-			ConnectionAcceptance {}.write_to_with_id(write_half_lock).await?;
-			write_abnormal_creature_update(write_half_lock, assigned_id).await?;
-		};
-
-		if read_half.read_struct::<packet::Id>().await? != CreatureUpdate::ID {
-			return Err(io::Error::from(ErrorKind::InvalidData))
-		}
-		let mut full_creature_update = CreatureUpdate::read_from(&mut read_half).await?;
-
-		enable_pvp(&mut full_creature_update);
-
-		let new_player = Player::new(
-			Creature::maybe_from(&full_creature_update).ok_or_else(|| io::Error::from(ErrorKind::InvalidData))?,
-			write_half.clone(),
-		);
-		new_player.send(&MapSeed(225)).await?;
-		new_player.notify("welcome to berld").await;
-
-		for existing_player in self.players.read().await.iter() {
-			new_player.send(&existing_player.creature.read().await.to_update()).await?;
-		}
-
-		new_player.send(&WorldUpdate {
-			drops: self.drops.read().await
-				.clone()
-				.into_iter()
-				.collect(),
-			..Default::default()
-		}).await?;
-
-		self.announce(format!("[+] {}", new_player.creature.read().await.name)).await;
-
-		let new_player_arc = Arc::new(new_player);
-		self.players.write().await.push(new_player_arc.clone());
-		self.broadcast(&new_player_arc.creature.read().await.to_update(), None).await;
-
-		let _ = self.read_packets_forever(&new_player_arc, &mut read_half).await
-			.expect_err("impossible"); //TODO: check if error emerged from reading or writing
-
-		self.remove_player(&new_player_arc).await;
-
-		self.announce(format!("[-] {}", new_player_arc.creature.read().await.name)).await;
-
-		Ok(())
 	}
 
 	async fn remove_player(&self, player_to_remove: &Player) {
