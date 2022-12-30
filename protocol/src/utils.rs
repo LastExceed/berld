@@ -1,12 +1,11 @@
-use std::io;
-use std::io::{Read, Write};
 use std::mem::size_of;
 
+use async_trait::async_trait;
 use nalgebra::Point3;
+use tokio::io;
+use tokio::io::{AsyncRead, AsyncWrite};
 
 use crate::{CwSerializable, SIZE_BLOCK};
-use crate::packet::creature_update::CombatClassMajor::*;
-use crate::packet::creature_update::CombatClassMinor::*;
 use crate::utils::io_extensions::{ReadExtension, WriteExtension};
 
 pub mod io_extensions;
@@ -26,19 +25,23 @@ macro_rules! bulk_impl {
 	}
 }
 
-impl<Element: CwSerializable> CwSerializable for Vec<Element>
+#[async_trait]
+impl<Element: CwSerializable + Send + Sync> CwSerializable for Vec<Element>
 	where [(); size_of::<Element>()]:
 {
-	fn read_from(readable: &mut impl Read) -> Result<Self, io::Error> {
-		(0..readable.read_struct::<i32>()?)
-			.map(|_| Element::read_from(readable))
-			.collect::<Result<Self, io::Error>>()
+	async fn read_from<Readable: AsyncRead + Unpin + Send>(readable: &mut Readable) -> io::Result<Self> {
+		let count = readable.read_struct::<i32>().await?;
+		let mut vec = Vec::with_capacity(count as usize);
+		for _ in 0..count {
+			vec.push(Element::read_from(readable).await?); //todo: figure out how to do this functional style (probably create and collect an Iter)
+		}
+		Ok(vec)
 	}
 
-	fn write_to(&self, writable: &mut impl Write) -> Result<(), io::Error> {
-		writable.write_struct(&(self.len() as i32))?;
+	async fn write_to<Writable: AsyncWrite + Unpin + Send>(&self, writable: &mut Writable) -> io::Result<()> {
+		writable.write_struct(&(self.len() as i32)).await?;
 		for element in self {
-			element.write_to(writable)?;
+			element.write_to(writable).await?;
 		}
 		Ok(())
 	}

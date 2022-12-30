@@ -4,7 +4,6 @@ use boolinator::Boolinator;
 
 use protocol::nalgebra::{Point3, Vector3};
 use protocol::packet::common::{CreatureId, EulerAngles, Hitbox, Item, Race};
-use protocol::packet::common::item::Rarity::*;
 use protocol::packet::common::item::TypeMajor;
 use protocol::packet::common::item::TypeMajor::*;
 use protocol::packet::common::Race::*;

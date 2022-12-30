@@ -1,4 +1,5 @@
-use std::io;
+use async_trait::async_trait;
+use tokio::io;
 
 use protocol::packet::FromClient;
 
@@ -13,6 +14,7 @@ mod chat_message;
 mod zone_discovery;
 mod region_discovery;
 
+#[async_trait]
 pub trait HandlePacket<Packet: FromClient> {
-	fn handle_packet(&self, source: &Player, packet: Packet) -> Result<(), io::Error>;
+	async fn handle_packet(&self, source: &Player, packet: Packet) -> Result<(), io::Error>;
 }

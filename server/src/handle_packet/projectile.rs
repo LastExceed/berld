@@ -1,4 +1,5 @@
-use std::io;
+use async_trait::async_trait;
+use tokio::io;
 
 use protocol::packet::{Projectile, WorldUpdate};
 
@@ -6,15 +7,16 @@ use crate::handle_packet::HandlePacket;
 use crate::player::Player;
 use crate::server::Server;
 
+#[async_trait]
 impl HandlePacket<Projectile> for Server {
-	fn handle_packet(&self, source: &Player, packet: Projectile) -> Result<(), io::Error> {
+	async fn handle_packet(&self, source: &Player, packet: Projectile) -> Result<(), io::Error> {
 		self.broadcast(
 			&WorldUpdate {
 				projectiles: vec![packet],
 				..Default::default()
 			},
 			Some(source)
-		);
+		).await;
 
 		Ok(())
 	}

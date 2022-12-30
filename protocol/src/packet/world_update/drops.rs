@@ -1,19 +1,21 @@
-use std::io::{Error, Read, Write};
-
+use async_trait::async_trait;
 use nalgebra::{Point2, Point3};
+use tokio::io;
+use tokio::io::{AsyncRead, AsyncWrite};
 
 use crate::packet::CwSerializable;
 use crate::packet::Item;
 use crate::utils::io_extensions::{ReadExtension, WriteExtension};
 
 //todo: implementation is extremely similar to P48
+#[async_trait]
 impl CwSerializable for (Point2<i32>, Vec<Drop>) {
-	fn read_from(readable: &mut impl Read) -> Result<Self, Error> {
-		Ok((readable.read_struct::<Point2<i32>>()?, Vec::read_from(readable)?))
+	async fn read_from<Readable: AsyncRead + Unpin + Send>(readable: &mut Readable) -> io::Result<Self> {
+		Ok((readable.read_struct::<Point2<i32>>().await?, Vec::read_from(readable).await?))
 	}
-	fn write_to(&self, writable: &mut impl Write) -> Result<(), Error> {
-		writable.write_struct(&self.0)?;
-		self.1.write_to(writable)
+	async fn write_to<Writable: AsyncWrite + Unpin + Send>(&self, writable: &mut Writable) -> io::Result<()> {
+		writable.write_struct(&self.0).await?;
+		self.1.write_to(writable).await
 	}
 }
 

@@ -1,6 +1,6 @@
-use std::io;
-
+use async_trait::async_trait;
 use colour::{cyan, white_ln};
+use tokio::io;
 
 use protocol::packet::{ChatMessageFromClient, ChatMessageFromServer, CreatureUpdate, WorldUpdate};
 use protocol::packet::common::CreatureId;
@@ -11,29 +11,30 @@ use crate::handle_packet::HandlePacket;
 use crate::player::Player;
 use crate::server::Server;
 
+#[async_trait]
 impl HandlePacket<ChatMessageFromClient> for Server {
-	fn handle_packet(&self, source: &Player, packet: ChatMessageFromClient) -> Result<(), io::Error> {
-		cyan!("{}: ", source.creature.read().name);
+	async fn handle_packet(&self, source: &Player, packet: ChatMessageFromClient) -> Result<(), io::Error> {
+		cyan!("{}: ", source.creature.read().await.name);
 		white_ln!("{}", packet.text);
 
 		if packet.text.starts_with('/') {
-			handle_command(&self, &source, &packet);
+			handle_command(&self, &source, &packet).await;
 			return Ok(());
 		}
 
 		self.broadcast(
 			&ChatMessageFromServer {
-				source: source.creature.read().id,
+				source: source.creature.read().await.id,
 				text: packet.text
 			},
 			None
-		);
+		).await;
 
 		Ok(())
 	}
 }
 
-fn handle_command(server: &Server, source: &Player, packet: &ChatMessageFromClient) {
+async fn handle_command(server: &Server, source: &Player, packet: &ChatMessageFromClient) {
 	let mut params = packet.text.strip_prefix("/").unwrap().split(" ");
 	let Some(command) = params.next() else {
 		//text was just / with nothing else
@@ -42,11 +43,11 @@ fn handle_command(server: &Server, source: &Player, packet: &ChatMessageFromClie
 	match command {
 		"xp" => {
 			let Some(amount) = params.next() else {
-				source.notify("too few arguments".to_string());
+				source.notify("too few arguments".to_string()).await;
 				return;
 			};
 			let Ok(parsed_amount) = amount.parse::<i32>() else {
-				source.notify("failed to parse amount".to_string());
+				source.notify("failed to parse amount".to_string()).await;
 				return;
 			};
 			let dummy = CreatureUpdate {
@@ -54,10 +55,10 @@ fn handle_command(server: &Server, source: &Player, packet: &ChatMessageFromClie
 				affiliation: Some(Affiliation::Enemy),
 				..Default::default()
 			};
-			source.send_ignoring(&dummy);
+			source.send_ignoring(&dummy).await;
 
 			let kill = Kill {
-				killer: source.creature.read().id,
+				killer: source.creature.read().await.id,
 				unknown: 0,
 				victim: dummy.id,
 				xp: parsed_amount
@@ -67,8 +68,8 @@ fn handle_command(server: &Server, source: &Player, packet: &ChatMessageFromClie
 				kills: vec![kill],
 				..Default::default()
 			};
-			source.send_ignoring(&world_update);
-			source.notify("ok".to_string());
+			source.send_ignoring(&world_update).await;
+			source.notify("ok".to_string()).await;
 		}
 		other => {dbg!(other);}
 	}

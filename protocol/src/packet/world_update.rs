@@ -1,10 +1,11 @@
-use std::io::{Error, Read, Write};
-
-use flate2::Compression;
-use flate2::read::ZlibDecoder;
-use flate2::write::ZlibEncoder;
+use async_compression::Level;
+use async_compression::tokio::bufread::ZlibDecoder;
+use async_compression::tokio::write::ZlibEncoder;
+use async_trait::async_trait;
 use nalgebra::{Point2, Point3, Vector3};
 use rgb::{RGB, RGBA};
+use tokio::io;
+use tokio::io::{AsyncRead, AsyncReadExt, AsyncWrite, AsyncWriteExt};
 
 use crate::bulk_impl;
 use crate::packet::{CwSerializable, WorldUpdate};
@@ -26,56 +27,57 @@ pub mod drops;
 pub mod p48;
 pub mod mission;
 
+#[async_trait]
 impl CwSerializable for WorldUpdate {
-	fn read_from(readable: &mut impl Read) -> Result<Self, Error> {
+	async fn read_from<Readable: AsyncRead + Unpin + Send>(readable: &mut Readable) -> io::Result<Self> {
 		//todo: deduplicate (creature_update)
-		let mut buffer = vec![0u8; readable.read_struct::<i32>()? as usize];
-		readable.read_exact(&mut buffer)?;
+		let mut buffer = vec![0u8; readable.read_struct::<i32>().await? as usize];
+		readable.read_exact(&mut buffer).await?;
 
 		let mut decoder = ZlibDecoder::new(buffer.as_slice());
 
 		//todo: copypasta
 		Ok(Self {
-			world_edits   : Vec::read_from(&mut decoder)?,
-			hits          : Vec::read_from(&mut decoder)?,
-			particles     : Vec::read_from(&mut decoder)?,
-			sound_effects : Vec::read_from(&mut decoder)?,
-			projectiles   : Vec::read_from(&mut decoder)?,
-			world_objects : Vec::read_from(&mut decoder)?,
-			drops         : Vec::read_from(&mut decoder)?,
-			p48s          : Vec::read_from(&mut decoder)?,
-			pickups       : Vec::read_from(&mut decoder)?,
-			kills         : Vec::read_from(&mut decoder)?,
-			attacks       : Vec::read_from(&mut decoder)?,
-			status_effects: Vec::read_from(&mut decoder)?,
-			missions      : Vec::read_from(&mut decoder)?
+			world_edits   : Vec::read_from(&mut decoder).await?,
+			hits          : Vec::read_from(&mut decoder).await?,
+			particles     : Vec::read_from(&mut decoder).await?,
+			sound_effects : Vec::read_from(&mut decoder).await?,
+			projectiles   : Vec::read_from(&mut decoder).await?,
+			world_objects : Vec::read_from(&mut decoder).await?,
+			drops         : Vec::read_from(&mut decoder).await?,
+			p48s          : Vec::read_from(&mut decoder).await?,
+			pickups       : Vec::read_from(&mut decoder).await?,
+			kills         : Vec::read_from(&mut decoder).await?,
+			attacks       : Vec::read_from(&mut decoder).await?,
+			status_effects: Vec::read_from(&mut decoder).await?,
+			missions      : Vec::read_from(&mut decoder).await?
 		})
 	}
 
-	fn write_to(&self, writable: &mut impl Write) -> Result<(), Error> {
+	async fn write_to<Writable: AsyncWrite + Unpin + Send>(&self, writable: &mut Writable) -> io::Result<()> {
 		let mut buffer = vec![];
 		{
-			let mut encoder = ZlibEncoder::new(&mut buffer, Compression::default());
+			let mut encoder = ZlibEncoder::with_quality(&mut buffer, Level::Best);
 
 			//todo: copypasta
-			self.world_edits   .write_to(&mut encoder)?;
-			self.hits          .write_to(&mut encoder)?;
-			self.particles     .write_to(&mut encoder)?;
-			self.sound_effects .write_to(&mut encoder)?;
-			self.projectiles   .write_to(&mut encoder)?;
-			self.world_objects .write_to(&mut encoder)?;
-			self.drops         .write_to(&mut encoder)?;
-			self.p48s          .write_to(&mut encoder)?;
-			self.pickups       .write_to(&mut encoder)?;
-			self.kills         .write_to(&mut encoder)?;
-			self.attacks       .write_to(&mut encoder)?;
-			self.status_effects.write_to(&mut encoder)?;
-			self.missions      .write_to(&mut encoder)?;
+			self.world_edits   .write_to(&mut encoder).await?;
+			self.hits          .write_to(&mut encoder).await?;
+			self.particles     .write_to(&mut encoder).await?;
+			self.sound_effects .write_to(&mut encoder).await?;
+			self.projectiles   .write_to(&mut encoder).await?;
+			self.world_objects .write_to(&mut encoder).await?;
+			self.drops         .write_to(&mut encoder).await?;
+			self.p48s          .write_to(&mut encoder).await?;
+			self.pickups       .write_to(&mut encoder).await?;
+			self.kills         .write_to(&mut encoder).await?;
+			self.attacks       .write_to(&mut encoder).await?;
+			self.status_effects.write_to(&mut encoder).await?;
+			self.missions      .write_to(&mut encoder).await?;
 
-			encoder.flush()?;
+			encoder.shutdown().await?;
 		}
-		writable.write_struct(&(buffer.len() as i32))?;
-		writable.write_all(&buffer)
+		writable.write_struct(&(buffer.len() as i32)).await?;
+		writable.write_all(&buffer).await
 	}
 }
 

@@ -1,5 +1,3 @@
-use std::io::{Read, Write};
-
 use nalgebra::{Point2, Point3, Vector3};
 
 use crate::{bulk_impl, CwSerializable, Packet};

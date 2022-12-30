@@ -1,5 +1,8 @@
-use std::{io, thread};
 use std::time::Duration;
+
+use async_trait::async_trait;
+use tokio::io;
+use tokio::time::sleep;
 
 use protocol::nalgebra::Vector3;
 use protocol::packet::{Hit, StatusEffect, WorldUpdate};
@@ -14,26 +17,34 @@ use crate::handle_packet::HandlePacket;
 use crate::player::Player;
 use crate::server::Server;
 
+#[async_trait]
 impl HandlePacket<StatusEffect> for Server {
-	fn handle_packet(&self, source: &Player, packet: StatusEffect) -> Result<(), io::Error> {
+	async fn handle_packet(&self, source: &Player, packet: StatusEffect) -> Result<(), io::Error> {
 		self.broadcast(
 			&WorldUpdate {
 				status_effects: vec![packet.clone()],
 				..Default::default()
 			},
 			Some(source)
-		);
+		).await;
 
 		match packet.type_ {
 			StatusEffectType::Poison => {
-				let players_guard = self.players.read(); //todo: do i really have to do this?
+				let players_guard = self.players.read().await; //todo: do i really have to do this?
 
-				let Some(target) = players_guard.iter().find(|player| player.creature.read().id == packet.target) else {//todo: very expensive because RwLocks
+				let mut target = None;
+				for player in players_guard.iter() {
+					if player.creature.read().await.id == packet.target {
+						target = Some(player);
+						break;
+					}
+				}
+				let Some(target) = target else {//players_guard.iter().find(async move |player| player.creature.read().await.id == packet.target) else {//todo: very expensive because RwLocks
 					return Ok(()); //todo: invalid input?
 				};
 				let target_owned = target.to_owned();
-				thread::spawn(move || {
-					apply_poison(&target_owned, &packet);
+				tokio::spawn(async move {
+					apply_poison(&target_owned, &packet).await;
 				});
 			}
 
@@ -44,15 +55,15 @@ impl HandlePacket<StatusEffect> for Server {
 	}
 }
 
-fn apply_poison(target: &Player, status_effect: &StatusEffect) {
+async fn apply_poison(target: &Player, status_effect: &StatusEffect) {
 	let tick_count = status_effect.duration / 500;
 
 	for i in 0..=tick_count {
 		if i != 0 {
-			thread::sleep(Duration::from_millis(500));
+			sleep(Duration::from_millis(500)).await;
 		}
 
-		let target_position = target.creature.read().position;
+		let target_position = target.creature.read().await.position;
 
 		let hit = Hit {
 			attacker: CreatureId(0),//todo: check if this matters
@@ -80,7 +91,7 @@ fn apply_poison(target: &Player, status_effect: &StatusEffect) {
 			..Default::default()
 		};
 
-		if let Err(_) = target.send(&world_update) {
+		if let Err(_) = target.send(&world_update).await {
 			//disconnects are handled in the reading thread
 			break;
 		};

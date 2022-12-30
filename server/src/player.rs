@@ -1,8 +1,10 @@
-use std::io;
 use std::mem::size_of;
-use std::net::{Shutdown, TcpStream};
+use std::sync::Arc;
 
-use parking_lot::{Mutex, RwLock};
+use tokio::io;
+use tokio::io::AsyncWriteExt;
+use tokio::net::tcp::OwnedWriteHalf;
+use tokio::sync::RwLock;
 
 use protocol::packet::{ChatMessageFromServer, FromServer};
 use protocol::packet::common::CreatureId;
@@ -11,39 +13,39 @@ use crate::creature::Creature;
 
 pub struct Player {
 	pub creature: RwLock<Creature>,
-	stream: Mutex<TcpStream>,
+	write_half: Arc<RwLock<OwnedWriteHalf>>,
 }
 
 impl Player {
-	pub fn new(creature: Creature, stream: &mut TcpStream) -> Self {
+	pub fn new(creature: Creature, write_half: Arc<RwLock<OwnedWriteHalf>>) -> Self {
 		Self {
-			stream: Mutex::new(stream.try_clone().unwrap()),
+			write_half,
 			creature: RwLock::new(creature)
 		}
 	}
 
-	pub fn send<Packet: FromServer>(&self, packet: &Packet) -> Result<(), io::Error>
+	pub async fn send<Packet: FromServer + Sync>(&self, packet: &Packet) -> Result<(), io::Error>
 		where [(); size_of::<Packet>()]:
 	{
-		packet.write_to_with_id(&mut self.stream.lock() as &mut TcpStream)
+		packet.write_to_with_id(&mut self.write_half.write().await as &mut OwnedWriteHalf).await
 	}
 
 	///sends a packet to this player and ignores any io errors.
 	///useful when errors are already handled by the reading thread
-	pub fn send_ignoring<Packet: FromServer>(&self, packet: &Packet)
+	pub async fn send_ignoring<Packet: FromServer + Sync>(&self, packet: &Packet)
 		where [(); size_of::<Packet>()]:
 	{
-		let _ = self.send(packet);
+		let _ = self.send(packet).await;
 	}
 
-	pub fn notify(&self, text: String) {
+	pub async fn notify(&self, text: String) {
 		self.send_ignoring(&ChatMessageFromServer {
 			source: CreatureId(0),
 			text
-		});
+		}).await;
 	}
 
-	pub fn close_connection(&self) {
-		let _ = self.stream.lock().shutdown(Shutdown::Both); //todo: error handling
+	pub async fn close_connection(&self) {
+		let _ = self.write_half.write().await.shutdown().await; //todo: error handling
 	}
 }

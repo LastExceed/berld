@@ -1,46 +1,51 @@
-use std::io::{Error, Read, Write};
 use std::mem::size_of;
+
+use async_trait::async_trait;
+use tokio::io;
+use tokio::io::{AsyncRead, AsyncReadExt, AsyncWrite, AsyncWriteExt};
 
 use crate::packet::*;
 use crate::utils::io_extensions::{ReadExtension, WriteExtension};
 
+#[async_trait]
 impl CwSerializable for ChatMessageFromClient {
-	fn read_from(readable: &mut impl Read) -> Result<Self, Error> {
+	async fn read_from<Readable: AsyncRead + Unpin + Send>(readable: &mut Readable) -> io::Result<Self> {
 		Ok(
 			Self {
-				text: read_text(readable)?
+				text: read_text(readable).await?
 			}
 		)
 	}
 
-	fn write_to(&self, writable: &mut impl Write) -> Result<(), Error> {
-		write_text(writable, &self.text)
+	async fn write_to<Writable: AsyncWrite + Unpin + Send>(&self, writable: &mut Writable) -> io::Result<()> {
+		write_text(writable, &self.text).await
 	}
 }
 
+#[async_trait]
 impl CwSerializable for ChatMessageFromServer {
-	fn read_from(readable: &mut impl Read) -> Result<Self, Error> {
+	async fn read_from<Readable: AsyncRead + Unpin + Send>(readable: &mut Readable) -> io::Result<Self> {
 		Ok(
 			Self {
-				source: readable.read_struct::<CreatureId>()?,
-				text: read_text(readable)?
+				source: readable.read_struct::<CreatureId>().await?,
+				text: read_text(readable).await?
 			}
 		)
 	}
 
-	fn write_to(&self, writable: &mut impl Write) -> Result<(), Error> {
-		writable.write_struct(&self.source)?;
-		write_text(writable, &self.text)
+	async fn write_to<Writable: AsyncWrite + Unpin + Send>(&self, writable: &mut Writable) -> io::Result<()> {
+		writable.write_struct(&self.source).await?;
+		write_text(writable, &self.text).await
 	}
 }
 
-fn read_text(readable: &mut impl Read) -> Result<String, Error> {
-	let character_count = readable.read_struct::<i32>()? as usize;
+async fn read_text<Readable: AsyncRead + Unpin + Send>(readable: &mut Readable) -> io::Result<String> {
+	let character_count = readable.read_struct::<i32>().await? as usize;
 	const U16_SIZE: usize = size_of::<u16>();
 
 	let mut u8s = vec![0u8; character_count * U16_SIZE];
 
-	readable.read_exact(&mut u8s)?;
+	readable.read_exact(&mut u8s).await?;
 	let u16s = u8s
 		.windows(U16_SIZE)
 		.step_by(U16_SIZE)
@@ -56,12 +61,12 @@ fn read_text(readable: &mut impl Read) -> Result<String, Error> {
 	Ok(String::from_utf16_lossy(&u16s))
 }
 
-fn write_text(writable: &mut impl Write, string: &str) -> Result<(), Error> {
+async fn write_text<Writable: AsyncWrite + Unpin + Send>(writable: &mut Writable, string: &str) -> io::Result<()> {
 	let bytes = string
 		.encode_utf16()
 		.flat_map(u16::to_le_bytes)
 		.collect::<Vec<u8>>();
 	let character_count = (bytes.len() / 2) as i32; //cant use the utf16 iterator as counting it's elements would consume it prematurely
-	writable.write_struct(&character_count)?;
-	writable.write_all(&bytes)
+	writable.write_struct(&character_count).await?;
+	writable.write_all(&bytes).await
 }

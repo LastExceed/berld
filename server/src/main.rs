@@ -1,5 +1,6 @@
 #![allow(incomplete_features)]
 #![feature(generic_const_exprs)]
+#![feature(async_closure)]
 
 use colour::magenta_ln;
 
@@ -14,7 +15,8 @@ mod creature;
 mod handle_packet;
 mod anti_cheat;
 
-fn main() {
+#[tokio::main]
+async fn main() {
 	magenta_ln!("===== Berld =====");
-	Server::new().run();
+	Server::new().run().await;
 }

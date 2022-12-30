@@ -1,16 +1,18 @@
-use std::io::Error;
-
+use async_trait::async_trait;
 use nalgebra::Point3;
+use tokio::io;
+use tokio::io::{AsyncRead, AsyncWrite};
 
 use crate::packet::*;
 
+#[async_trait]
 impl CwSerializable for AirshipTraffic {
-	fn read_from(readable: &mut impl Read) -> Result<Self, Error> {
-		Ok(Self { airships: Vec::read_from(readable)? })
+	async fn read_from<Readable: AsyncRead + Unpin + Send>(readable: &mut Readable) -> io::Result<Self> {
+		Ok(Self { airships: Vec::read_from(readable).await? })
 	}
 
-	fn write_to(&self, writable: &mut impl Write) -> Result<(), Error> {
-		self.airships.write_to(writable)
+	async fn write_to<Writable: AsyncWrite + Unpin + Send>(&self, writable: &mut Writable) -> io::Result<()> {
+		self.airships.write_to(writable).await
 	}
 }
 
