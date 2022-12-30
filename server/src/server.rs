@@ -157,12 +157,9 @@ impl Server {
 			write_half.clone(),
 		);
 		new_player.send(&MapSeed(225)).await?;
-		new_player.send(&ChatMessageFromServer {
-			source: CreatureId(0),
-			text: "welcome to berld".to_string()
-		}).await?;//todo: notify?
+		new_player.notify("welcome to berld").await;
 
-		for existing_player in self.players.read().await.iter() {//todo: broadcast?
+		for existing_player in self.players.read().await.iter() {
 			new_player.send(&existing_player.creature.read().await.to_update()).await?;
 		}
 
