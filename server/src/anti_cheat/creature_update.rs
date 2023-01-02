@@ -539,7 +539,7 @@ pub(super) fn inspect_consumable(consumable: &Item, former_state: &Creature, upd
 	if consumable.type_major == default::Default::default() {
 		return Ok(());
 	}
-	consumable.type_major.ensure_exact(&Food, "consumable.type_major")
+	consumable.type_major.ensure_exact(&Consumable, "consumable.type_major")
 	//todo: power
 }
 pub(super) fn inspect_equipment(equipment: &Equipment, former_state: &Creature, updated_state: &Creature) -> anti_cheat::Result {

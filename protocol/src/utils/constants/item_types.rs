@@ -35,7 +35,7 @@ pub const VOID: ItemType = ItemType {
 	minor: TypeMinor(0),
 };
 
-item_types!(TypeMajor::Food,
+item_types!(TypeMajor::Consumable,
 	COOKIE,
 	LIFE_POTION,
 	CACTUS_POTION,

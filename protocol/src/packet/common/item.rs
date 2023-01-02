@@ -5,7 +5,7 @@ use nalgebra::Point3;
 pub enum TypeMajor {
 	#[default]
 	Void,
-	Food,
+	Consumable,
 	Formula,
 	Weapon,
 	Chest,
