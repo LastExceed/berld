@@ -96,7 +96,7 @@ pub(super) fn inspect_animation_time(animation_time: &i32, former_state: &Creatu
 	const TIMELESS_ANIMATIONS: [Animation; 6] = [
 		Idle,
 		Stealth,
-		Boat,
+		Sailing,
 		Sitting,
 		PetFoodPresent,
 		Sleeping

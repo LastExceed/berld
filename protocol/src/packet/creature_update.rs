@@ -353,7 +353,7 @@ pub enum Animation {
 	ShieldM2,
 	TeleportToCity,
 	Riding,
-	Boat,
+	Sailing,
 	Boulder,
 	ManaCubePickup,
 	Unknown110 //mob attack?

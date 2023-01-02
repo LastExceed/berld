@@ -13,5 +13,5 @@ pub const GENERAL: [Animation; 8] = [
 	Sitting,
 	Sleeping,
 	Riding,
-	Boat
+	Sailing
 ];
