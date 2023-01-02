@@ -4,7 +4,7 @@ use nalgebra::Point3;
 #[derive(Debug, PartialEq, Eq, Clone, Copy, Default)]
 pub enum TypeMajor {
 	#[default]
-	None,
+	Void,
 	Food,
 	Formula,
 	Weapon,

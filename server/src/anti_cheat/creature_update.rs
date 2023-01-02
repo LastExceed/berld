@@ -4,7 +4,6 @@ use boolinator::Boolinator;
 
 use protocol::nalgebra::{Point3, Vector3};
 use protocol::packet::common::{CreatureId, EulerAngles, Hitbox, Item, Race};
-use protocol::packet::common::item::TypeMajor;
 use protocol::packet::common::item::TypeMajor::*;
 use protocol::packet::common::Race::*;
 use protocol::packet::creature_update::{Affiliation, Animation, Appearance, CombatClassMajor, CombatClassMinor, CreatureFlag, Equipment, Multipliers, PhysicsFlag, SkillTree};
@@ -546,7 +545,7 @@ pub(super) fn inspect_consumable(consumable: &Item, former_state: &Creature, upd
 pub(super) fn inspect_equipment(equipment: &Equipment, former_state: &Creature, updated_state: &Creature) -> anti_cheat::Result {
 	//todo: kick message prefix
 	let equipment_slots = [
-		(&equipment.unknown, TypeMajor::None),
+		(&equipment.unknown, Void),
 		(&equipment.neck, Amulet),
 		(&equipment.chest, Chest),
 		(&equipment.feet, Boots),

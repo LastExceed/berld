@@ -30,8 +30,8 @@ macro_rules! item_types {
     );
 }
 
-pub const NONE: ItemType = ItemType {
-	major: TypeMajor::None,
+pub const VOID: ItemType = ItemType {
+	major: TypeMajor::Void,
 	minor: TypeMinor(0),
 };
 

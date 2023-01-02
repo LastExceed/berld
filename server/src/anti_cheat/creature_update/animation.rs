@@ -69,7 +69,7 @@ fn weapon_specific_animations(combat_class: CombatClass, equipment: &Equipment) 
 			Alternative => (&m1::BRACELET_WATER[..], &m2::BRACELET_WATER[..]),
 			_           => (&m1::BRACELET_FIRE[..] , &m2::BRACELET_FIRE[..])
 		},
-		NONE      => {
+		VOID => {
 			let (mainhand_m1, mainhand_m2) = match combat_class {
 				FIRE_MAGE  => (&m1::BRACELET_FIRE[..] , &m2::BRACELET_FIRE[..]),
 				WATER_MAGE => (&m1::BRACELET_WATER[..], &m2::BRACELET_WATER[..]),
@@ -82,7 +82,7 @@ fn weapon_specific_animations(combat_class: CombatClass, equipment: &Equipment) 
 				};
 
 			(mainhand_m1, m2)
-		},
+		}
 //		SWORD | AXE | MACE |
 //		SHIELD|
 //		ARROW | QUIVER | PICKAXE | TORCH
