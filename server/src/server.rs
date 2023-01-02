@@ -51,6 +51,7 @@ impl Server {
 
 		loop {
 			let (stream, _) = listener.accept().await.unwrap();
+			stream.set_nodelay(true).unwrap();
 
 			let self_arc_clone = self_arc.clone();
 			tokio::spawn(async move {
