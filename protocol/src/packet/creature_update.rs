@@ -272,7 +272,7 @@ pub enum Animation {
 	CrossbowM2,
 	CrossbowM2Charging,
 	BowM2Charging,
-	BoomerangM1,
+	BoomerangThrow,
 	BoomerangM2Charging,
 	BeamDraining,
 	Unknown029, //nothing

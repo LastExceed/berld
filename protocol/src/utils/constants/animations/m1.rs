@@ -40,7 +40,7 @@ pub const CROSSBOW: [Animation; 1] = [
 ];
 
 pub const BOOMERANG: [Animation; 1] = [
-	BoomerangM1
+	BoomerangThrow
 ];
 
 pub const STAFF_FIRE: [Animation; 1] = [
