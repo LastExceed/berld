@@ -2,7 +2,7 @@
 #[derive(Debug, PartialEq, Eq, Clone, Copy, Default)]
 pub enum HitType {
 	#[default]
-	Default,
+	Normal,
 	Block,
 
 	Miss = 3,

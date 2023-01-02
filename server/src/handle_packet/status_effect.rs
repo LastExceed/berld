@@ -74,7 +74,7 @@ async fn apply_poison(target: &Player, status_effect: &StatusEffect) {
 			position: target_position,
 			direction: Vector3::zeros(),
 			is_yellow: false,
-			type_: HitType::Default,
+			type_: HitType::Normal,
 			flash: true,
 		};
 
