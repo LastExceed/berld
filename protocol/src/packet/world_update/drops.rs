@@ -5,7 +5,7 @@ use tokio::io::{AsyncRead, AsyncWrite};
 
 use crate::packet::CwSerializable;
 use crate::packet::Item;
-use crate::utils::io_extensions::{ReadExtension, WriteExtension};
+use crate::utils::io_extensions::{ReadStruct, WriteStruct};
 
 //todo: implementation is extremely similar to P48
 #[async_trait]

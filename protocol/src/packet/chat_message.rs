@@ -5,7 +5,7 @@ use tokio::io;
 use tokio::io::{AsyncRead, AsyncReadExt, AsyncWrite, AsyncWriteExt};
 
 use crate::packet::*;
-use crate::utils::io_extensions::{ReadExtension, WriteExtension};
+use crate::utils::io_extensions::{ReadStruct, WriteStruct};
 
 #[async_trait]
 impl CwSerializable for ChatMessageFromClient {

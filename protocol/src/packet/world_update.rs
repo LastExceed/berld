@@ -10,7 +10,7 @@ use tokio::io::{AsyncRead, AsyncReadExt, AsyncWrite, AsyncWriteExt};
 use crate::bulk_impl;
 use crate::packet::{CwSerializable, WorldUpdate};
 use crate::packet::common::{CreatureId, Hitbox, Item, Race};
-use crate::utils::io_extensions::{ReadExtension, WriteExtension};
+use crate::utils::io_extensions::{ReadStruct, WriteStruct};
 
 use self::mission::*;
 use self::p48::*;

@@ -19,7 +19,7 @@ use protocol::packet::*;
 use protocol::packet::common::{CreatureId, Item};
 use protocol::packet::creature_update::Affiliation;
 use protocol::packet::world_update::drops::Drop;
-use protocol::utils::io_extensions::{ReadExtension, WriteExtension};
+use protocol::utils::io_extensions::{ReadStruct, WriteStruct};
 
 use crate::creature::Creature;
 use crate::creature_id_pool::CreatureIdPool;

@@ -13,7 +13,7 @@ pub use rgb;
 use tokio::io;
 use tokio::io::{AsyncRead, AsyncWrite};
 
-use crate::utils::io_extensions::{ReadExtension, WriteExtension};
+use crate::utils::io_extensions::{ReadStruct, WriteStruct};
 
 pub mod packet;
 pub mod utils;

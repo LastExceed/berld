@@ -6,7 +6,7 @@ use tokio::io;
 use tokio::io::{AsyncRead, AsyncReadExt, AsyncWrite, AsyncWriteExt};
 
 #[async_trait]
-pub trait ReadExtension: AsyncRead + Unpin {
+pub trait ReadStruct: AsyncRead + Unpin {
 	async fn read_struct<T>(&mut self) -> io::Result<T>
 		where [(); size_of::<T>()]:
 	{
@@ -19,12 +19,12 @@ pub trait ReadExtension: AsyncRead + Unpin {
 }
 
 #[async_trait]
-pub trait WriteExtension: AsyncWrite + Unpin {
+pub trait WriteStruct: AsyncWrite + Unpin {
 	async fn write_struct<T: Sync>(&mut self, data: &T) -> io::Result<()> {
 		let data_as_bytes = unsafe { slice::from_raw_parts((data as *const T).cast::<u8>(), size_of::<T>()) };
 		self.write_all(data_as_bytes).await
 	}
 }
 
-impl<Readable: AsyncRead + Unpin> ReadExtension for Readable {}
-impl<Writable: AsyncWrite + Unpin> WriteExtension for Writable {}
+impl<Readable: AsyncRead + Unpin> ReadStruct for Readable {}
+impl<Writable: AsyncWrite + Unpin> WriteStruct for Writable {}
