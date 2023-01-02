@@ -24,7 +24,7 @@ impl Player {
 		}
 	}
 
-	pub async fn send<Packet: FromServer + Sync>(&self, packet: &Packet) -> Result<(), io::Error>
+	pub async fn send<Packet: FromServer + Sync>(&self, packet: &Packet) -> io::Result<()>
 		where [(); size_of::<Packet>()]:
 	{
 		packet.write_to_with_id(&mut self.write_half.write().await as &mut OwnedWriteHalf).await

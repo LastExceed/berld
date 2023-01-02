@@ -9,7 +9,7 @@ use crate::server::Server;
 
 #[async_trait]
 impl HandlePacket<RegionDiscovery> for Server {
-	async fn handle_packet(&self, _source: &Player, _packet: RegionDiscovery) -> Result<(), io::Error> {
+	async fn handle_packet(&self, _source: &Player, _packet: RegionDiscovery) -> io::Result<()> {
 		Ok(())
 	}
 }

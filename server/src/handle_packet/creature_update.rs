@@ -14,7 +14,7 @@ use crate::traffic_filter::filter;
 
 #[async_trait]
 impl HandlePacket<CreatureUpdate> for Server {
-	async fn handle_packet(&self, source: &Player, mut packet: CreatureUpdate) -> Result<(), io::Error> {
+	async fn handle_packet(&self, source: &Player, mut packet: CreatureUpdate) -> io::Result<()> {
 		enable_pvp(&mut packet);
 
 		let mut character = source.creature.write().await;

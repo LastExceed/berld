@@ -13,7 +13,7 @@ use crate::server::Server;
 
 #[async_trait]
 impl HandlePacket<ChatMessageFromClient> for Server {
-	async fn handle_packet(&self, source: &Player, packet: ChatMessageFromClient) -> Result<(), io::Error> {
+	async fn handle_packet(&self, source: &Player, packet: ChatMessageFromClient) -> io::Result<()> {
 		cyan!("{}: ", source.creature.read().await.name);
 		white_ln!("{}", packet.text);
 

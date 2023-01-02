@@ -19,7 +19,7 @@ use crate::server::Server;
 
 #[async_trait]
 impl HandlePacket<StatusEffect> for Server {
-	async fn handle_packet(&self, source: &Player, packet: StatusEffect) -> Result<(), io::Error> {
+	async fn handle_packet(&self, source: &Player, packet: StatusEffect) -> io::Result<()> {
 		self.broadcast(
 			&WorldUpdate {
 				status_effects: vec![packet.clone()],

@@ -35,7 +35,7 @@ pub trait CwSerializable: Sized {
 pub trait Packet: CwSerializable {
 	const ID: packet::Id; //dedicated type ensures this can't be used in any mathematic manner
 
-	async fn write_to_with_id<Writable: AsyncWrite + Unpin + Send>(&self, writable: &mut Writable) -> Result<(), io::Error> {
+	async fn write_to_with_id<Writable: AsyncWrite + Unpin + Send>(&self, writable: &mut Writable) -> io::Result<()> {
 		writable.write_struct(&Self::ID).await?;
 		self.write_to(writable).await
 	}

@@ -13,7 +13,7 @@ use crate::server::Server;
 
 #[async_trait]
 impl HandlePacket<CreatureAction> for Server {
-	async fn handle_packet(&self, source: &Player, packet: CreatureAction) -> Result<(), io::Error> {
+	async fn handle_packet(&self, source: &Player, packet: CreatureAction) -> io::Result<()> {
 		match packet.type_ {
 			CreatureActionType::Bomb => {
 				source.notify("bombs are disabled").await;

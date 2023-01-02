@@ -9,7 +9,7 @@ use crate::server::Server;
 
 #[async_trait]
 impl HandlePacket<Projectile> for Server {
-	async fn handle_packet(&self, source: &Player, packet: Projectile) -> Result<(), io::Error> {
+	async fn handle_packet(&self, source: &Player, packet: Projectile) -> io::Result<()> {
 		self.broadcast(
 			&WorldUpdate {
 				projectiles: vec![packet],

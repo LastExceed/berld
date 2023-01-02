@@ -16,5 +16,5 @@ mod region_discovery;
 
 #[async_trait]
 pub trait HandlePacket<Packet: FromClient> {
-	async fn handle_packet(&self, source: &Player, packet: Packet) -> Result<(), io::Error>;
+	async fn handle_packet(&self, source: &Player, packet: Packet) -> io::Result<()>;
 }
