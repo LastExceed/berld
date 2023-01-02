@@ -5,7 +5,7 @@ use protocol::nalgebra::Vector3;
 use protocol::packet::{CreatureAction, WorldUpdate};
 use protocol::packet::creature_action::CreatureActionType;
 use protocol::packet::world_update::Pickup;
-use protocol::SIZE_BLOCK;
+use protocol::utils::constants::SIZE_BLOCK;
 
 use crate::handle_packet::HandlePacket;
 use crate::player::Player;

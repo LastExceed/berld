@@ -1,7 +1,7 @@
 use protocol::nalgebra::distance;
 use protocol::packet::creature_update::{Animation, CreatureFlag, PhysicsFlag};
 use protocol::packet::CreatureUpdate;
-use protocol::SIZE_BLOCK;
+use protocol::utils::constants::SIZE_BLOCK;
 
 use crate::creature::Creature;
 

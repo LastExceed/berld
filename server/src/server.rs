@@ -13,12 +13,13 @@ use tokio::net::TcpListener;
 use tokio::sync::RwLock;
 use tokio::time::sleep;
 
-use protocol::{CwSerializable, packet, Packet, SIZE_ZONE};
+use protocol::{CwSerializable, packet, Packet};
 use protocol::nalgebra::{Point2, Point3};
 use protocol::packet::*;
 use protocol::packet::common::{CreatureId, Item};
 use protocol::packet::creature_update::Affiliation;
 use protocol::packet::world_update::drops::Drop;
+use protocol::utils::constants::SIZE_ZONE;
 use protocol::utils::io_extensions::{ReadStruct, WriteStruct};
 
 use crate::creature::Creature;

@@ -5,7 +5,8 @@ use nalgebra::Point3;
 use tokio::io;
 use tokio::io::{AsyncRead, AsyncWrite};
 
-use crate::{CwSerializable, SIZE_BLOCK};
+use crate::CwSerializable;
+use crate::utils::constants::SIZE_BLOCK;
 use crate::utils::io_extensions::{ReadStruct, WriteStruct};
 
 pub mod io_extensions;
