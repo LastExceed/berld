@@ -18,11 +18,11 @@ pub const UNARMED: [Animation; 2] = [
 //pub const TORCH  : [Animation; 2] = DUALWIELD;
 
 pub const DAGGER: [Animation; 1] = [
-	DaggersM2
+	DaggerM2
 ];
 
 pub const FIST: [Animation; 1] = [
-	FistsM2
+	FistM2
 ];
 
 pub const LONGSWORD: [Animation; 1] = [

@@ -263,10 +263,10 @@ pub enum Animation {
 	LongswordM1b,
 	Unknown015, //probably for greatweapon A1
 	Unknown016, //same as 17
-	DaggersM2,
-	DaggersM1a,
-	DaggersM1b,
-	FistsM2,
+	DaggerM2,
+	DaggerM1a,
+	DaggerM1b,
+	FistM2,
 	Kick,
 	ShootArrow,
 	CrossbowM2,

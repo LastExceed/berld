@@ -20,8 +20,8 @@ pub const DUALWIELD: [Animation; 2] = [
 //pub const TORCH  : [Animation; 2] = DUALWIELD;
 
 pub const DAGGER: [Animation; 2] = [
-	DaggersM1a,
-	DaggersM1b
+	DaggerM1a,
+	DaggerM1b
 ];
 
 //pub const FIST: [Animation; 2] = UNARMED;
