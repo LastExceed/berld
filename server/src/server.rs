@@ -6,6 +6,7 @@ use std::sync::Arc;
 use std::time::Duration;
 
 use colour::white_ln;
+use futures::future;
 use tokio::io;
 use tokio::io::{AsyncWrite, AsyncWriteExt};
 use tokio::net::tcp::{OwnedReadHalf, OwnedWriteHalf};
@@ -127,14 +128,13 @@ impl Server {
 	}
 
 	pub async fn broadcast<Packet: FromServer + Sync>(&self, packet: &Packet, player_to_skip: Option<&Player>) where [(); size_of::<Packet>()]: {
-		for player in self.players.read().await.iter() {
-			if match player_to_skip {
-				Some(player_to_skip) => ptr::eq(player.as_ref(), player_to_skip),
-				None => false
-			} { continue }
+		future::join_all(self.players.read().await.iter().filter_map(|player| {
+			if let Some(pts) = player_to_skip && ptr::eq(player.as_ref(), pts) {
+				return None;
+			}
 
-			player.send_ignoring(packet).await;
-		}
+			Some(player.send_ignoring(packet))
+		})).await;
 	}
 
 	pub async fn add_drop(&self, item: Item, position: Point3<i64>, rotation: f32) {

@@ -1,6 +1,8 @@
 #![allow(incomplete_features)]
 #![feature(generic_const_exprs)]
 #![feature(async_closure)]
+#![feature(future_join)]
+#![feature(let_chains)]
 
 use colour::magenta_ln;
 
