@@ -7,7 +7,7 @@ pub mod item;
 #[derive(Debug, PartialEq, Eq, Clone, Copy, Default)]
 pub struct CreatureId(pub i64);
 
-#[repr(i32)]
+#[repr(u8)]
 #[derive(Debug, PartialEq, Eq, Clone, Copy)]
 pub enum Race {
 	ElfMale,

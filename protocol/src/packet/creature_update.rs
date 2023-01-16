@@ -36,7 +36,16 @@ impl CwSerializable for CreatureUpdate {
 			head_tilt         : if bitfield & (1 <<  5) > 0 { Some(decoder.read_struct().await?) } else { None },
 			flags_physics     : if bitfield & (1 <<  6) > 0 { Some(decoder.read_struct().await?) } else { None },
 			affiliation       : if bitfield & (1 <<  7) > 0 { Some(decoder.read_struct().await?) } else { None },
-			race              : if bitfield & (1 <<  8) > 0 { Some(decoder.read_struct().await?) } else { None },
+			race              : if bitfield & (1 <<  8) > 0 {
+				let race = decoder.read_struct().await?;
+				//the game treats Race as u32 here, but u8 everywhere else
+				//so we need to skip 3 bytes here
+				let padding = decoder.read_struct::<[u8;3]>().await?;
+				if padding != [0u8; 3] {
+					return Err(ErrorKind::InvalidData.into());
+				}
+				Some(race)
+			} else { None },
 			animation         : if bitfield & (1 <<  9) > 0 { Some(decoder.read_struct().await?) } else { None },
 			animation_time    : if bitfield & (1 << 10) > 0 { Some(decoder.read_struct().await?) } else { None },
 			combo             : if bitfield & (1 << 11) > 0 { Some(decoder.read_struct().await?) } else { None },
@@ -159,7 +168,7 @@ impl CwSerializable for CreatureUpdate {
 			if let Some(it) = &self.head_tilt          { encoder.write_struct(it).await?; }
 			if let Some(it) = &self.flags_physics      { encoder.write_struct(it).await?; }
 			if let Some(it) = &self.affiliation        { encoder.write_struct(it).await?; }
-			if let Some(it) = &self.race               { encoder.write_struct(it).await?; }
+			if let Some(it) = &self.race               { encoder.write_struct(&(*it as i32)).await?; } //see de-serialization
 			if let Some(it) = &self.animation          { encoder.write_struct(it).await?; }
 			if let Some(it) = &self.animation_time     { encoder.write_struct(it).await?; }
 			if let Some(it) = &self.combo              { encoder.write_struct(it).await?; }
