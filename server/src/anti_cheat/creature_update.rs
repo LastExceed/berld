@@ -1,10 +1,8 @@
-use std::default;
-
 use boolinator::Boolinator;
 
 use protocol::nalgebra::{Point3, Vector3};
 use protocol::packet::common::{CreatureId, EulerAngles, Hitbox, Item, Race};
-use protocol::packet::common::item::TypeMajor::*;
+use protocol::packet::common::item::Kind::*;
 use protocol::packet::common::Race::*;
 use protocol::packet::creature_update::{Affiliation, Animation, Appearance, CombatClassMajor, CombatClassMinor, CreatureFlag, Equipment, Multipliers, PhysicsFlag, SkillTree};
 use protocol::packet::creature_update::Animation::*;
@@ -536,46 +534,68 @@ pub(super) fn inspect_unknown42(unknown42: &i8, former_state: &Creature, updated
 	Ok(())
 }
 pub(super) fn inspect_consumable(consumable: &Item, former_state: &Creature, updated_state: &Creature) -> anti_cheat::Result {
-	if consumable.type_major == default::Default::default() {
+	if consumable.kind == Void {
 		return Ok(());
 	}
-	consumable.type_major.ensure_exact(&Consumable, "consumable.type_major")
+	matches!(consumable.kind, Consumable(_))
+		.ensure("consumable.kind", &consumable.kind, "any variant of", "Consumable")
 	//todo: power
 }
 pub(super) fn inspect_equipment(equipment: &Equipment, former_state: &Creature, updated_state: &Creature) -> anti_cheat::Result {
 	//todo: kick message prefix
-	let equipment_slots = [
-		(&equipment.unknown, Void),
-		(&equipment.neck, Amulet),
-		(&equipment.chest, Chest),
-		(&equipment.feet, Boots),
-		(&equipment.hands, Gloves),
-		(&equipment.shoulder, Shoulder),
-		(&equipment.left_weapon, Weapon),
-		(&equipment.right_weapon, Weapon),
-		(&equipment.left_ring, Ring),
-		(&equipment.right_ring, Ring),
-		(&equipment.lamp, Lamp),
-		(&equipment.special, Special),
-		(&equipment.pet, Pet),
-	];
-	let occupied_item_slots = equipment_slots.iter()//todo: implement in equipment?
-		.filter(|(item, _)| item.type_major != default::Default::default());
+	//todo: copypasta
+	equipment.unknown.kind.ensure_exact(&Void, "equipment.unknown.kind")?;
+	equipment.neck.kind.ensure_exact(&Amulet, "equipment.neck.kind")?;
+	equipment.chest.kind.ensure_exact(&Chest, "equipment.chest.kind")?;
+	equipment.feet.kind.ensure_exact(&Boots, "equipment.feet.kind")?;
+	equipment.hands.kind.ensure_exact(&Gloves, "equipment.hands.kind")?;
+	equipment.shoulder.kind.ensure_exact(&Shoulder, "equipment.shoulder.kind")?;
 
-	for (item, allowed_type_major) in occupied_item_slots {
-		item.type_major.ensure_exact(allowed_type_major, ".type_major")?;
+	matches!(equipment.left_weapon.kind, Weapon(_))
+		.ensure("equipment.left_weapon.kind", &equipment.left_weapon.kind, "any kind of", "Weapon")?;
+	matches!(equipment.right_weapon.kind, Weapon(_))
+		.ensure("equipment.right_weapon.kind", &equipment.left_weapon.kind, "any kind of", "Weapon")?;
+
+	equipment.left_ring.kind.ensure_exact(&Ring, "equipment.left_ring.kind")?;
+	equipment.right_ring.kind.ensure_exact(&Ring, "equipment.right_ring.kind")?;
+	equipment.lamp.kind.ensure_exact(&Lamp, "equipment.lamp.kind")?;
+
+	matches!(equipment.special.kind, Special(_))
+		.ensure("equipment.special.kind", &equipment.special.kind, "any kind of", "Special")?;
+	matches!(equipment.pet.kind, Pet(_) | PetFood(_))
+		.ensure("equipment.special.kind", &equipment.pet.kind, "any kind of", "Pet or PetFood")?;
+
+	//todo: implement slot iteration in Equipment
+	let equipment_slots = [
+		&equipment.unknown,
+		&equipment.neck,
+		&equipment.chest,
+		&equipment.feet,
+		&equipment.hands,
+		&equipment.shoulder,
+		&equipment.left_weapon,
+		&equipment.right_weapon,
+		&equipment.left_ring,
+		&equipment.right_ring,
+		&equipment.lamp,
+		&equipment.special,
+		&equipment.pet
+	];
+	let occupied_item_slots = equipment_slots.iter()
+		.filter(|item| item.kind != Void);
+
+	for item in occupied_item_slots {
 		//item.seed.ensure_not_negative(".seed") //tolerating negative seeds due to popularity
-		item.recipe.ensure_exact(&default::Default::default(), ".recipe")?;
+		item.recipe.ensure_exact(&Void, ".recipe")?;
 		//item.minus_modifier
 		//item.rarity.ensure_one_of(&[Normal, Uncommon, Rare, Epic, Legendary], ".rarity")?; //todo: crashes for rarity 6+
-		let allowed_materials = allowed_materials(item.item_type(), updated_state.combat_class_major);
+		let allowed_materials = allowed_materials(item.kind, updated_state.combat_class_major);
 		item.material.ensure_one_of(allowed_materials, ".material")?;
 		//item.flags
 		//item.level //todo: power
 		//item.spirits //tolerating everything due to popularity
 		item.spirit_counter.ensure_within(&(0..=32), "")?;//normally only 2h weapons can have more than 16 (up to 32) spirits, but we're tolerating 32 on everyhting due to popularity
 	}
-
 	//type_minor //todo: weapons/special
 
 	Ok(())

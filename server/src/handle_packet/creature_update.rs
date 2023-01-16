@@ -1,5 +1,4 @@
 use std::io;
-use std::io::ErrorKind;
 
 use async_trait::async_trait;
 
@@ -23,9 +22,9 @@ impl HandlePacket<CreatureUpdate> for Server {
 		//todo: downgrade character lock
 
 		if let Err(message) = anti_cheat::inspect_creature_update(&packet, &snapshot, &character) {
-			dbg!(&message);
-			self.kick(&source, message).await;
-			return Err(ErrorKind::InvalidInput.into())
+//			dbg!(&message);
+//			self.kick(&source, message).await;
+//			return Err(ErrorKind::InvalidInput.into())
 		}
 
 		if filter(&mut packet, &snapshot, &character) {

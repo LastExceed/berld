@@ -1,41 +1,39 @@
+use protocol::packet::common::item;
+use protocol::packet::common::item::Kind::*;
+use protocol::packet::common::item::kind::Weapon::*;
 use protocol::packet::common::item::Material;
 use protocol::packet::common::item::Material::*;
-use protocol::packet::common::item::TypeMajor::*;
 use protocol::packet::creature_update::CombatClassMajor;
 use protocol::packet::creature_update::CombatClassMajor::*;
-use protocol::utils::constants::{ItemType, materials};
-use protocol::utils::constants::item_types::*;
+use protocol::utils::constants::materials;
 
-pub(super) fn allowed_materials(item_type: ItemType, combat_class_major: CombatClassMajor) -> &'static [Material] {
-	match item_type.major {
-		Weapon => match item_type {
-			SWORD      => &materials::SWORD[..],
-			AXE        => &materials::AXE[..],
-			MACE       => &materials::MACE[..],
-			DAGGER     => &materials::DAGGER[..],
-			FIST       => &materials::FIST[..],
-			LONGSWORD  => &materials::LONGSWORD[..],
-			BOW        => &materials::BOW[..],
-			CROSSBOW   => &materials::CROSSBOW[..],
-			BOOMERANG  => &materials::BOOMERANG[..],
-			ARROW      => &materials::ARROW[..],
-			STAFF      => &materials::STAFF[..],
-			WAND       => &materials::WAND[..],
-			BRACELET   => &materials::BRACELET[..],
-			SHIELD     => &materials::SHIELD[..],
-			QUIVER     => &materials::QUIVER[..],
-			GREATSWORD => &materials::GREATSWORD[..],
-			GREATAXE   => &materials::GREATAXE[..],
-			GREATMACE  => &materials::GREATMACE[..],
-			PITCHFORK  => &materials::PITCHFORK[..],
-			PICKAXE    => &materials::PICKAXE[..],
-			TORCH      => &materials::TORCH[..],
-			_          => &[Material::None][..]
-		},
+pub(super) fn allowed_materials(item_kind: item::Kind, combat_class_major: CombatClassMajor) -> &'static [Material] {
+	match item_kind {
+		Weapon(Sword)      => &materials::SWORD[..],
+		Weapon(Axe)        => &materials::AXE[..],
+		Weapon(Mace)       => &materials::MACE[..],
+		Weapon(Dagger)     => &materials::DAGGER[..],
+		Weapon(Fist)       => &materials::FIST[..],
+		Weapon(Longsword)  => &materials::LONGSWORD[..],
+		Weapon(Bow)        => &materials::BOW[..],
+		Weapon(Crossbow)   => &materials::CROSSBOW[..],
+		Weapon(Boomerang)  => &materials::BOOMERANG[..],
+		Weapon(Arrow)      => &materials::ARROW[..],
+		Weapon(Staff)      => &materials::STAFF[..],
+		Weapon(Wand)       => &materials::WAND[..],
+		Weapon(Bracelet)   => &materials::BRACELET[..],
+		Weapon(Shield)     => &materials::SHIELD[..],
+		Weapon(Quiver)     => &materials::QUIVER[..],
+		Weapon(Greatsword) => &materials::GREATSWORD[..],
+		Weapon(Greataxe)   => &materials::GREATAXE[..],
+		Weapon(Greatmace)  => &materials::GREATMACE[..],
+		Weapon(Pitchfork)  => &materials::PITCHFORK[..],
+		Weapon(Pickaxe)    => &materials::PICKAXE[..],
+		Weapon(Torch)      => &materials::TORCH[..],
 
-		Chest |
-		Boots |
-		Gloves |
+		Chest    |
+		Boots    |
+		Gloves   |
 		Shoulder => match combat_class_major {
 			Warrior => &[Bone, Mammoth, Gold, Iron, Obsidian, Saurian, Ice][..],
 			Ranger  => &[Bone, Mammoth, Gold, Parrot, Linen][..],
@@ -44,15 +42,15 @@ pub(super) fn allowed_materials(item_type: ItemType, combat_class_major: CombatC
 			_       => &[Bone, Mammoth, Gold][..]
 		},//todo: burn it with fire
 
-		Amulet |
-		Ring    => &materials::ACCESSORIES[..],
+		Amulet     |
+		Ring       => &materials::ACCESSORIES[..],
 
-		Special => &materials::SPECIAL[..],
+		Special(_) => &materials::SPECIAL[..],
 
-		Lamp    => &materials::LAMP[..],
+		Lamp       => &materials::LAMP[..],
 
-		Pet |
-		PetFood |
-		_ => &[Material::None][..],
+		Pet(_)     |
+		PetFood(_) |
+		_          => &[Material::None][..],
 	}
 }

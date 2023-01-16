@@ -171,19 +171,17 @@ pub enum Race {
 #[repr(C)]
 #[derive(Debug, PartialEq, Eq, Clone)]
 pub struct Item {
-	pub type_major: TypeMajor,
-	pub type_minor: TypeMinor,
-	//pad 2
+	pub kind: Kind,
+	//pad 2 (ephemeral)
 	pub seed: i32,
-	pub recipe: TypeMajor,
-	//pad 1
-	pub minus_modifier: i16,//todo: structure alignment entails this properties' existence, name adopted from cuwo
+	pub recipe: Kind,
+	pub minus_modifier: i16,//todo: structure alignment entails this property's existence, name adopted from cuwo (might just be an incorrectly sized property)
 	pub rarity: Rarity,
 	pub material: Material,
 	pub flags: FlagSet8<ItemFlag>,
-	//pad1
+	//pad1 (ephemeral)
 	pub level: i16,
-	//pad2
+	//pad2 (ephemeral)
 	pub spirits: [Spirit; 32],
 	pub spirit_counter: i32
 }

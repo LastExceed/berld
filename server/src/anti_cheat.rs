@@ -74,7 +74,7 @@ trait Ensure {
 		property_name: &'a str,
 		actual_value: &impl Debug,
 		words: &'a str, //todo: come up with a better name (or drop this parameter entirely)
-		allowed: &impl Debug
+		allowed: &(impl Debug + ?Sized)
 	) -> Result;
 }
 impl Ensure for bool {
@@ -83,7 +83,7 @@ impl Ensure for bool {
 		property_name: &'a str,
 		actual: &impl Debug,
 		words: &'a str,
-		allowed: &impl Debug
+		allowed: &(impl Debug + ?Sized)
 	) -> Result {
 		self.ok_or(
 			format!(

@@ -1,9 +1,7 @@
-use crate::packet::common::item::{TypeMajor, TypeMinor};
 use crate::packet::common::Race;
 use crate::packet::common::Race::*;
 use crate::packet::creature_update::{CombatClassMajor, CombatClassMinor};
 
-pub mod item_types;
 pub mod combat_classes;
 pub mod animations;
 pub mod materials;
@@ -16,12 +14,6 @@ pub const SIZE_REGION: i64 = SIZE_ZONE * 64;
 pub const SIZE_WORLD: i64 = SIZE_REGION * 1024;
 pub const SIZE_UNIVERSE: i64 = SIZE_WORLD * 256;
 //const SIZE_MULTIVERSE: i64 = SIZE_UNIVERSE * 65536; //overflows; it's basically u64::MAX + 1
-
-#[derive(Default, PartialEq, Eq, Clone, Copy)]
-pub struct ItemType {
-	pub major: TypeMajor,
-	pub minor: TypeMinor
-}
 
 #[derive(Clone, PartialEq, Eq, Copy)]
 pub struct CombatClass {
