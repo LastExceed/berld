@@ -139,9 +139,9 @@ pub(super) fn inspect_hit_time_out(hit_time_out: &i32, former_state: &Creature, 
 pub(super) fn inspect_appearance(appearance: &Appearance, former_state: &Creature, updated_state: &Creature) -> anti_cheat::Result {
 	appearance.flags.ensure_exact(&core::default::Default::default(), "appearance.flags")?;
 
-	appearance.tail_model.ensure_exact(&-1, "asdf")?;
-	appearance.shoulder2model.ensure_exact(&-1, "asdf")?;
-	appearance.wing_model.ensure_exact(&-1, "asdf")?;
+	appearance.tail_model.ensure_exact(&-1, "appearance.tail_model")?;
+	appearance.shoulder2model.ensure_exact(&-1, "appearance.shoulder2model")?;
+	appearance.wing_model.ensure_exact(&-1, "appearance.wing_model")?;
 
 	appearance.hand_size.ensure_exact(&1.0, "appearance.hand_size")?;
 	appearance.foot_size.ensure_exact(&0.98, "appearance.footSize")?;
