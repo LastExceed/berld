@@ -116,25 +116,14 @@ pub(super) fn inspect_combo(combo: &i32, former_state: &Creature, updated_state:
 }
 pub(super) fn inspect_hit_time_out(hit_time_out: &i32, former_state: &Creature, updated_state: &Creature) -> anti_cheat::Result {
 	hit_time_out.ensure_not_negative("hit_time_out")
-	//todo
-//	if (this <= previous.hitTimeOut) {
-//		lastHitTime[id] = System.currentTimeMillis() - this
-//	} else {
-//		val n = System.currentTimeMillis() - this - lastHitTime[id]!!
-//		if (id.value == 1L) println(n)
-//		abs(n).expectMaximum(2000, "hitTimeOut.clockdesync")
-//	}
+	//todo: speedhack detection
+//	expectMinimum(0, "hitTimeOut")
 //
-//	if (this == previous.hitTimeOut) {
-//		//join packet, ignore because lag
-//	} else if (this < previous.hitTimeOut) {
-//		lastHitTime[id] = System.currentTimeMillis() - this
-//	} else if (lastHitTime[id] == null) {
-//		//no reference point generated yet
+//	if (hit_time_out <= former_state.hit_time_out) { //equal incase of seed change lag
+//		lastHitTime[id] = Instant::now() - Duration::from_millis(*hit_time_out as u64)
 //	} else {
-//		val n = System.currentTimeMillis() - this - lastHitTime[id]!!
-//		if (id.value == 1L) println(n)
-//		abs(n).expectMaximum(2000, "hitTimeOut.clockdesync")
+//		val delta = (Instant::now() - lastHitTime[id]!!) - Duration::from_millis(*hit_time_out as u64)
+//		abs(delta).expectMaximum(2000, "hitTimeOut.clockdesync")
 //	}
 }
 pub(super) fn inspect_appearance(appearance: &Appearance, former_state: &Creature, updated_state: &Creature) -> anti_cheat::Result {
