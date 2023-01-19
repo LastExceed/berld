@@ -1,8 +1,9 @@
 use boolinator::Boolinator;
 
 use protocol::nalgebra::{Point3, Vector3};
-use protocol::packet::common::{CreatureId, EulerAngles, Hitbox, Item, Race};
+use protocol::packet::common::{CreatureId, EulerAngles, Hitbox, Item, item, Race};
 use protocol::packet::common::item::Kind::*;
+use protocol::packet::common::item::Rarity::Normal;
 use protocol::packet::common::Race::*;
 use protocol::packet::creature_update::{Affiliation, Animation, Appearance, CombatClassMajor, CombatClassMinor, CreatureFlag, Equipment, Multipliers, PhysicsFlag, SkillTree};
 use protocol::packet::creature_update::Animation::*;
@@ -406,6 +407,18 @@ pub(super) fn inspect_appearance(appearance: &Appearance, former_state: &Creatur
 
 }
 pub(super) fn inspect_flags(flags: &FlagSet16<CreatureFlag>, former_state: &Creature, updated_state: &Creature) -> anti_cheat::Result {
+	flags.get(CreatureFlag::FriendlyFire)
+		.ensure_exact(&false, "flags[FriendlyFire]")?;\
+
+	if updated_state.combat_class() != SNIPER {
+		flags.get(CreatureFlag::Sniping)
+			.ensure_exact(&false, "flags[Sniping]")?;
+	}
+
+	if updated_state.equipment.lamp.kind == item::Kind::Void {
+		flags.get(CreatureFlag::Lamp)
+			.ensure_exact(&false, "flags[Lamp]")?;
+	}
 	Ok(())
 }
 pub(super) fn inspect_effect_time_dodge(effect_time_dodge: &i32, former_state: &Creature, updated_state: &Creature) -> anti_cheat::Result {
