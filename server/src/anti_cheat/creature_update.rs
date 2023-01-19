@@ -638,9 +638,9 @@ pub(super) fn inspect_skill_tree(skill_tree: &SkillTree, former_state: &Creature
 		skill_tree.ability5,
 	];
 	for skill in skills {
-		skill.ensure_not_negative("skill")?;//todo: individual names
+		skill.ensure_not_negative("skill_tree.?")?;//todo: individual names
 	}
-	skills.iter().sum::<i32>().ensure_at_most((updated_state.level - 1) * 2, "skillPoints.total")
+	skills.iter().sum::<i32>().ensure_at_most((updated_state.level - 1) * 2, "skill_tree.total")
 }
 pub(super) fn inspect_mana_cubes(mana_cubes: &i32, former_state: &Creature, updated_state: &Creature) -> anti_cheat::Result {
 	mana_cubes.ensure_not_negative("mana_cubes")
