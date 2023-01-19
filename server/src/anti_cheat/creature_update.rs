@@ -86,9 +86,7 @@ pub(super) fn inspect_animation(animation: &Animation, former_state: &Creature, 
 	let allowed_animations = animations_avilable_with(updated_state.combat_class(), &updated_state.equipment);
 
 	animation
-		.ensure_one_of(&allowed_animations, "animation")?;
-
-	Ok(())
+		.ensure_one_of(&allowed_animations, "animation")
 }
 pub(super) fn inspect_animation_time(animation_time: &i32, former_state: &Creature, updated_state: &Creature) -> anti_cheat::Result {
 	const TIMELESS_ANIMATIONS: [Animation; 6] = [
