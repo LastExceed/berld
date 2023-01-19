@@ -4,8 +4,10 @@ use tokio::io;
 use protocol::nalgebra::Vector3;
 use protocol::packet::{CreatureAction, WorldUpdate};
 use protocol::packet::creature_action::CreatureActionType;
-use protocol::packet::world_update::Pickup;
+use protocol::packet::world_update::{Pickup, SoundEffect};
+use protocol::packet::world_update::sound_effect::Sound;
 use protocol::utils::constants::SIZE_BLOCK;
+use protocol::utils::sound_position_of;
 
 use crate::handle_packet::HandlePacket;
 use crate::player::Player;
@@ -40,6 +42,14 @@ impl HandlePacket<CreatureAction> for Server {
 							interactor: source.creature.read().await.id,
 							item
 						}],
+						sound_effects: vec![
+							SoundEffect {
+								position: sound_position_of(source.creature.read().await.position),
+								sound: Sound::Pickup,
+								pitch: 1f32,
+								volume: 1f32
+							}
+						],
 						..Default::default()
 					}).await;
 				}

@@ -1,6 +1,6 @@
 use std::collections::HashMap;
 use std::io::ErrorKind;
-use std::mem::size_of;
+use std::mem::{size_of, transmute};
 use std::ptr;
 use std::sync::Arc;
 use std::time::Duration;
@@ -20,8 +20,11 @@ use protocol::packet::*;
 use protocol::packet::common::{CreatureId, Item};
 use protocol::packet::creature_update::Affiliation;
 use protocol::packet::world_update::drops::Drop;
+use protocol::packet::world_update::sound_effect::Sound;
+use protocol::packet::world_update::SoundEffect;
 use protocol::utils::constants::SIZE_ZONE;
 use protocol::utils::io_extensions::{ReadStruct, WriteStruct};
+use protocol::utils::sound_position_of;
 
 use crate::creature::Creature;
 use crate::creature_id_pool::CreatureIdPool;
@@ -161,8 +164,32 @@ impl Server {
 
 		self.broadcast(&WorldUpdate {
 			drops: vec![(zone, drops_to_send)],
+			sound_effects: vec![
+				SoundEffect {
+					position: sound_position_of(position),
+					sound: Sound::Drop,
+					pitch: 1f32,
+					volume: 1f32
+				}
+			],
 			..Default::default()
 		}, None).await;
+
+		let server_static: &'static Server = unsafe { transmute(self) }; //todo: scoped task
+		tokio::spawn(async move {
+			sleep(Duration::from_millis(500)).await;
+			server_static.broadcast(&WorldUpdate {
+				sound_effects: vec![
+					SoundEffect {
+						position: sound_position_of(position),
+						sound: Sound::DropItem,
+						pitch: 1f32,
+						volume: 1f32
+					}
+				],
+				..Default::default()
+			}, None).await;
+		});
 	}
 
 	///returns none if a player picks up an item they dropped in single player

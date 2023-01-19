@@ -397,7 +397,7 @@ pub(super) fn inspect_appearance(appearance: &Appearance, former_state: &Creatur
 }
 pub(super) fn inspect_flags(flags: &FlagSet16<CreatureFlag>, former_state: &Creature, updated_state: &Creature) -> anti_cheat::Result {
 	flags.get(CreatureFlag::FriendlyFire)
-		.ensure_exact(&false, "flags[FriendlyFire]")?;\
+		.ensure_exact(&false, "flags[FriendlyFire]")?;
 
 	if updated_state.combat_class() != SNIPER {
 		flags.get(CreatureFlag::Sniping)
