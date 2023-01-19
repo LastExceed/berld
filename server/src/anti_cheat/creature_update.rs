@@ -549,7 +549,8 @@ pub(super) fn inspect_consumable(consumable: &Item, former_state: &Creature, upd
 		return Ok(());
 	}
 	matches!(consumable.kind, Consumable(_))
-		.ensure("consumable.kind", &consumable.kind, "any variant of", "Consumable")
+		.ensure("consumable.kind", &consumable.kind, "any variant of", "Consumable")?;
+	consumable.rarity.ensure_exact(&Normal, "consumable.rarity")
 	//todo: power
 }
 pub(super) fn inspect_equipment(equipment: &Equipment, former_state: &Creature, updated_state: &Creature) -> anti_cheat::Result {
