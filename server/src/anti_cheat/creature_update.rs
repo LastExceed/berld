@@ -425,7 +425,9 @@ pub(super) fn inspect_effect_time_dodge(effect_time_dodge: &i32, former_state: &
 	effect_time_dodge.ensure_within(&(0..=600), "effect_time_dodge")
 }
 pub(super) fn inspect_effect_time_stun(effect_time_stun: &i32, former_state: &Creature, updated_state: &Creature) -> anti_cheat::Result {
-	//todo: ensure positive when increased
+	if *effect_time_stun > former_state.effect_time_stun {
+		effect_time_stun.ensure_not_negative("effect_time_stun")?;
+	}
 	Ok(())
 }
 pub(super) fn inspect_effect_time_fear(effect_time_fear: &i32, former_state: &Creature, updated_state: &Creature) -> anti_cheat::Result {
