@@ -556,29 +556,46 @@ pub(super) fn inspect_consumable(consumable: &Item, former_state: &Creature, upd
 	//todo: power
 }
 pub(super) fn inspect_equipment(equipment: &Equipment, former_state: &Creature, updated_state: &Creature) -> anti_cheat::Result {
-	//todo: kick message prefix
 	//todo: copypasta
-	equipment.unknown.kind.ensure_exact(&Void, "equipment.unknown.kind")?;
-	equipment.neck.kind.ensure_exact(&Amulet, "equipment.neck.kind")?;
-	equipment.chest.kind.ensure_exact(&Chest, "equipment.chest.kind")?;
-	equipment.feet.kind.ensure_exact(&Boots, "equipment.feet.kind")?;
-	equipment.hands.kind.ensure_exact(&Gloves, "equipment.hands.kind")?;
-	equipment.shoulder.kind.ensure_exact(&Shoulder, "equipment.shoulder.kind")?;
+	equipment.unknown   .kind.ensure_exact(&Void    , "equipment.unknown.kind"   )?;
+	equipment.neck      .kind.ensure_exact(&Amulet  , "equipment.neck.kind"      )?;
+	equipment.chest     .kind.ensure_exact(&Chest   , "equipment.chest.kind"     )?;
+	equipment.feet      .kind.ensure_exact(&Boots   , "equipment.feet.kind"      )?;
+	equipment.hands     .kind.ensure_exact(&Gloves  , "equipment.hands.kind"     )?;
+	equipment.shoulder  .kind.ensure_exact(&Shoulder, "equipment.shoulder.kind"  )?;
+	equipment.left_ring .kind.ensure_exact(&Ring    , "equipment.left_ring.kind" )?;
+	equipment.right_ring.kind.ensure_exact(&Ring    , "equipment.right_ring.kind")?;
+	equipment.lamp      .kind.ensure_exact(&Lamp    , "equipment.lamp.kind"      )?;
 
 	matches!(equipment.left_weapon.kind, Weapon(_))
-		.ensure("equipment.left_weapon.kind", &equipment.left_weapon.kind, "any kind of", "Weapon")?;
+		.ensure(
+			"equipment.left_weapon.kind",
+			&equipment.left_weapon.kind,
+			"any kind of",
+			"Weapon"
+		)?;
 	matches!(equipment.right_weapon.kind, Weapon(_))
-		.ensure("equipment.right_weapon.kind", &equipment.left_weapon.kind, "any kind of", "Weapon")?;
-
-	equipment.left_ring.kind.ensure_exact(&Ring, "equipment.left_ring.kind")?;
-	equipment.right_ring.kind.ensure_exact(&Ring, "equipment.right_ring.kind")?;
-	equipment.lamp.kind.ensure_exact(&Lamp, "equipment.lamp.kind")?;
-
+		.ensure(
+			"equipment.right_weapon.kind",
+			&equipment.left_weapon.kind,
+			"any kind of",
+			"Weapon"
+		)?;
 	matches!(equipment.special.kind, Special(_))
-		.ensure("equipment.special.kind", &equipment.special.kind, "any kind of", "Special")?;
+		.ensure(
+			"equipment.special.kind",
+			&equipment.special.kind,
+			"any kind of",
+			"Special"
+		)?;
 	matches!(equipment.pet.kind, Pet(_) | PetFood(_))
-		.ensure("equipment.special.kind", &equipment.pet.kind, "any kind of", "Pet or PetFood")?;
-
+		.ensure(
+			"equipment.special.kind",
+			&equipment.pet.kind,
+			"any kind of",
+			"Pet or PetFood"
+		)?;
+	//todo: kick message prefix
 	//todo: implement slot iteration in Equipment
 	let equipment_slots = [
 		&equipment.unknown,
@@ -610,7 +627,6 @@ pub(super) fn inspect_equipment(equipment: &Equipment, former_state: &Creature, 
 		//item.spirits //tolerating everything due to popularity
 		item.spirit_counter.ensure_within(&(0..=32), "")?;//normally only 2h weapons can have more than 16 (up to 32) spirits, but we're tolerating 32 on everyhting due to popularity
 	}
-	//type_minor //todo: weapons/special
 
 	Ok(())
 }
