@@ -64,11 +64,7 @@ async fn handle_command(server: &Server, source: &Player, packet: &ChatMessageFr
 				xp: parsed_amount
 			};
 
-			let world_update = WorldUpdate {
-				kills: vec![kill],
-				..Default::default()
-			};
-			source.send_ignoring(&world_update).await;
+			source.send_ignoring(&WorldUpdate::from(kill)).await;
 			source.notify("ok").await;
 		}
 		other => {dbg!(other);}

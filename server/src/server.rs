@@ -178,17 +178,13 @@ impl Server {
 		let server_static: &'static Server = unsafe { transmute(self) }; //todo: scoped task
 		tokio::spawn(async move {
 			sleep(Duration::from_millis(500)).await;
-			server_static.broadcast(&WorldUpdate {
-				sound_effects: vec![
-					SoundEffect {
-						position: sound_position_of(position),
-						sound: Sound::DropItem,
-						pitch: 1f32,
-						volume: 1f32
-					}
-				],
-				..Default::default()
-			}, None).await;
+			let sound_effect = SoundEffect {
+				position: sound_position_of(position),
+				sound: Sound::DropItem,
+				pitch: 1f32,
+				volume: 1f32
+			};
+			server_static.broadcast(&WorldUpdate::from(sound_effect), None).await;
 		});
 	}
 
@@ -208,10 +204,7 @@ impl Server {
 			(zone_drops_owned, removed_drop.item)
 		};//scope ensures the guard is dropped asap
 
-		self.broadcast(&WorldUpdate {
-			drops: vec![(zone, remaining_zone_drops)],
-			..Default::default()
-		}, None).await;
+		self.broadcast(&WorldUpdate::from((zone, remaining_zone_drops)), None).await;
 
 		Some(removed_item)
 	}

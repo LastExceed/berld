@@ -21,13 +21,11 @@ impl HandlePacket<CreatureAction> for Server {
 				source.notify("bombs are disabled").await;
 
 				//the player consumed a bomb, so we need to reimburse it
-				source.send_ignoring(&WorldUpdate {
-					pickups: vec![Pickup {
-						interactor: source.creature.read().await.id,
-						item: packet.item
-					}],
-					..Default::default()
-				}).await;
+				let pickup = Pickup {
+					interactor: source.creature.read().await.id,
+					item: packet.item
+				};
+				source.send_ignoring(&WorldUpdate::from(pickup)).await;
 			}
 			CreatureActionType::Talk => {
 				source.notify("quests coming soon(tm)").await;
@@ -37,21 +35,22 @@ impl HandlePacket<CreatureAction> for Server {
 			}
 			CreatureActionType::PickUp => {
 				if let Some(item) = self.remove_drop(packet.zone, packet.item_index as usize).await {
-					source.send_ignoring(&WorldUpdate {
-						pickups: vec![Pickup {
-							interactor: source.creature.read().await.id,
-							item
-						}],
-						sound_effects: vec![
-							SoundEffect {
-								position: sound_position_of(source.creature.read().await.position),
-								sound: Sound::Pickup,
-								pitch: 1f32,
-								volume: 1f32
-							}
-						],
+					let pickup = Pickup {
+						interactor: source.creature.read().await.id,
+						item
+					};
+					let sound_effect = SoundEffect {
+						position: sound_position_of(source.creature.read().await.position),
+						sound: Sound::Pickup,
+						pitch: 1f32,
+						volume: 1f32
+					};
+					let world_update = WorldUpdate {
+						pickups: vec![pickup],
+						sound_effects: vec![sound_effect],
 						..Default::default()
-					}).await;
+					};
+					source.send_ignoring(&world_update).await;
 				}
 			}
 			CreatureActionType::Drop => {

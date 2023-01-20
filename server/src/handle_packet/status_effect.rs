@@ -43,13 +43,7 @@ impl HandlePacket<StatusEffect> for Server {
 			_ => ()
 		}
 
-		self.broadcast(
-			&WorldUpdate {
-				status_effects: vec![packet],
-				..Default::default()
-			},
-			Some(source)
-		).await;
+		self.broadcast(&WorldUpdate::from(packet), Some(source)).await;
 
 		Ok(())
 	}
