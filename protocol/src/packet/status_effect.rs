@@ -8,9 +8,10 @@ pub enum StatusEffectType {
 	Poison,
 
 	ManaShield = 6,
-
-
-	FireSpark = 9,
+	Taming,
+	///unused, name guessed
+	Confusion,
+	FireSpark,
 	Intuition,
 	Elusiveness,
 	Swiftness
