@@ -24,6 +24,8 @@ impl HandlePacket<Hit> for Server {
 			return Ok(()) //can happen when the target disconnected in this moment
 		};
 
+		packet.flash = true;
+
 		let sound_effects =
 			impact_sounds(packet.type_, target.creature.read().await.race)
 				.iter()
