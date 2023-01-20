@@ -8,7 +8,7 @@ use tokio::io;
 use tokio::io::{AsyncRead, AsyncReadExt, AsyncWrite, AsyncWriteExt};
 
 use crate::bulk_impl;
-use crate::packet::{CwSerializable, WorldUpdate};
+use crate::packet::{CwSerializable, Hit, Projectile, StatusEffect, WorldUpdate};
 use crate::packet::common::{CreatureId, Hitbox, Item, Race};
 use crate::utils::io_extensions::{ReadStruct, WriteStruct};
 
@@ -197,3 +197,112 @@ bulk_impl!(CwSerializable for
 	//StatusEffect
 	Mission
 );
+
+//todo: copypasta
+impl From<WorldEdit> for WorldUpdate {
+	fn from(value: WorldEdit) -> Self {
+		Self {
+			world_edits: vec![value],
+			..Default::default()
+		}
+	}
+}
+
+impl From<Hit> for WorldUpdate {
+	fn from(value: Hit) -> Self {
+		Self {
+			hits: vec![value],
+			..Default::default()
+		}
+	}
+}
+
+impl From<Particle> for WorldUpdate {
+	fn from(value: Particle) -> Self {
+		Self {
+			particles: vec![value],
+			..Default::default()
+		}
+	}
+}
+
+impl From<SoundEffect> for WorldUpdate {
+	fn from(value: SoundEffect) -> Self {
+		Self {
+			sound_effects: vec![value],
+			..Default::default()
+		}
+	}
+}
+
+impl From<Projectile> for WorldUpdate {
+	fn from(value: Projectile) -> Self {
+		Self {
+			projectiles: vec![value],
+			..Default::default()
+		}
+	}
+}
+
+impl From<(Point2<i32>, Vec<drops::Drop>)> for WorldUpdate {
+	fn from(value: (Point2<i32>, Vec<drops::Drop>)) -> Self {
+		Self {
+			drops: vec![value],
+			..Default::default()
+		}
+	}
+}
+
+impl From<P48> for WorldUpdate {
+	fn from(value: P48) -> Self {
+		Self {
+			p48s: vec![value],
+			..Default::default()
+		}
+	}
+}
+
+impl From<Pickup> for WorldUpdate {
+	fn from(value: Pickup) -> Self {
+		Self {
+			pickups: vec![value],
+			..Default::default()
+		}
+	}
+}
+
+impl From<Kill> for WorldUpdate {
+	fn from(value: Kill) -> Self {
+		Self {
+			kills: vec![value],
+			..Default::default()
+		}
+	}
+}
+
+impl From<Attack> for WorldUpdate {
+	fn from(value: Attack) -> Self {
+		Self {
+			attacks: vec![value],
+			..Default::default()
+		}
+	}
+}
+
+impl From<StatusEffect> for WorldUpdate {
+	fn from(value: StatusEffect) -> Self {
+		Self {
+			status_effects: vec![value],
+			..Default::default()
+		}
+	}
+}
+
+impl From<Mission> for WorldUpdate {
+	fn from(value: Mission) -> Self {
+		Self {
+			missions: vec![value],
+			..Default::default()
+		}
+	}
+}
