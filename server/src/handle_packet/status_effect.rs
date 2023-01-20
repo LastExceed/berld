@@ -20,14 +20,6 @@ use crate::server::Server;
 #[async_trait]
 impl HandlePacket<StatusEffect> for Server {
 	async fn handle_packet(&self, source: &Player, packet: StatusEffect) -> io::Result<()> {
-		self.broadcast(
-			&WorldUpdate {
-				status_effects: vec![packet.clone()],
-				..Default::default()
-			},
-			Some(source)
-		).await;
-
 		match packet.type_ {
 			StatusEffectType::Poison => {
 				let players_guard = self.players.read().await; //todo: do i really have to do this?
@@ -50,6 +42,14 @@ impl HandlePacket<StatusEffect> for Server {
 
 			_ => ()
 		}
+
+		self.broadcast(
+			&WorldUpdate {
+				status_effects: vec![packet],
+				..Default::default()
+			},
+			Some(source)
+		).await;
 
 		Ok(())
 	}
