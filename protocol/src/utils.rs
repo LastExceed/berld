@@ -13,6 +13,18 @@ pub mod io_extensions;
 pub mod flagset;
 pub mod constants;
 
+fn level_scaling_factor(level: i32) -> f32 {
+	1f32 / (0.05f32 * (level as f32 - 1f32) + 1f32)
+}
+
+pub fn power_of(level: i32) -> i32 {
+	(101f32 - 100f32 * level_scaling_factor(level)) as i32
+}
+
+pub fn maximum_experience_of(level: i32) -> i32 {
+	1050 - 1000 * level_scaling_factor(level) as i32
+}
+
 pub fn sound_position_of(position: Point3<i64>) -> Point3<f32> { //todo: move to SoundEffect ?
 	position.map(|scalar| scalar as f32 / SIZE_BLOCK as f32)
 }
