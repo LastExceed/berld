@@ -14,7 +14,12 @@ impl HandlePacket<Hit> for Server {
 			return Ok(()) //self-heal is already applied client-side (which is a bug) so we need to ignore it server-side
 		}
 
-		self.broadcast(&WorldUpdate::from(packet), Some(source)).await; //todo: only target needs to receive this packet, but finding player by id is expensive atm
+		let players_guard = self.players.read().await;
+		let Some(target) = players_guard.iter().find(|player| { player.id == packet.target }) else {
+			return Ok(()) //can happen when the target disconnected in this moment
+		};
+
+		target.send_ignoring(&WorldUpdate::from(packet)).await; //todo: only target needs to receive this packet, but finding player by id is expensive atm
 
 		Ok(())
 	}

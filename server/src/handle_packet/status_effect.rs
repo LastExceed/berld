@@ -24,15 +24,8 @@ impl HandlePacket<StatusEffect> for Server {
 			StatusEffectType::Poison => {
 				let players_guard = self.players.read().await; //todo: do i really have to do this?
 
-				let mut target = None;
-				for player in players_guard.iter() {
-					if player.id == packet.target {
-						target = Some(player);
-						break;
-					}
-				}
-				let Some(target) = target else {//players_guard.iter().find(async move |player| player.creature.read().await.id == packet.target) else {//todo: very expensive because RwLocks
-					return Ok(()); //todo: invalid input?
+				let Some(target) = players_guard.iter().find(|player| { player.id == packet.target }) else {
+					return Ok(()); //todo: invalid input? //can happen when the target disconnected in this moment
 				};
 				let target_owned = target.to_owned();
 				let packet_clone = packet.clone();
