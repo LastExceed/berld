@@ -24,7 +24,7 @@ impl HandlePacket<ChatMessageFromClient> for Server {
 
 		self.broadcast(
 			&ChatMessageFromServer {
-				source: source.creature.read().await.id,
+				source: source.id,
 				text: packet.text
 			},
 			None
@@ -58,7 +58,7 @@ async fn handle_command(server: &Server, source: &Player, packet: &ChatMessageFr
 			source.send_ignoring(&dummy).await;
 
 			let kill = Kill {
-				killer: source.creature.read().await.id,
+				killer: source.id,
 				unknown: 0,
 				victim: dummy.id,
 				xp: parsed_amount

@@ -7,7 +7,6 @@ use protocol::utils::flagset::{FlagSet16, FlagSet32};
 
 #[derive(Clone)]
 pub struct Creature {
-	pub id: CreatureId,
 	pub position: Point3<i64>,
 	pub rotation: EulerAngles,
 	pub velocity: Vector3<f32>,
@@ -75,7 +74,6 @@ impl Creature {
 	pub fn maybe_from(creature_update: &CreatureUpdate) -> Option<Creature> {
 		//todo: macro?
 		Some(Self {
-			id: creature_update.id,
 			position             : creature_update.position?,
 			rotation             : creature_update.rotation.clone()?,
 			velocity             : creature_update.velocity?,
@@ -128,7 +126,6 @@ impl Creature {
 	}
 
 	pub fn update(&mut self, packet: &CreatureUpdate) {
-		self.id = packet.id;
 		//todo: macro
 		if let Some(it) = packet.position              { self.position              = it }
 		if let Some(it) = packet.rotation.clone()      { self.rotation              = it }
@@ -180,9 +177,9 @@ impl Creature {
 		if let Some(it) = packet.mana_cubes            { self.mana_cubes            = it }
 	}
 
-	pub fn to_update(&self) -> CreatureUpdate {
+	pub fn to_update(&self, id: CreatureId) -> CreatureUpdate {
 		CreatureUpdate {
-			id: self.id,
+			id,
 			position          : Some(self.position),
 			rotation          : Some(self.rotation.clone()),
 			velocity          : Some(self.velocity),

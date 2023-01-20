@@ -12,15 +12,17 @@ use protocol::packet::common::CreatureId;
 use crate::creature::Creature;
 
 pub struct Player {
+	pub id: CreatureId,
 	pub creature: RwLock<Creature>,
 	write_half: Arc<RwLock<OwnedWriteHalf>>,
 }
 
 impl Player {
-	pub fn new(creature: Creature, write_half: Arc<RwLock<OwnedWriteHalf>>) -> Self {
+	pub fn new(id: CreatureId, creature: Creature, write_half: Arc<RwLock<OwnedWriteHalf>>) -> Self {
 		Self {
+			id,
+			creature: RwLock::new(creature),
 			write_half,
-			creature: RwLock::new(creature)
 		}
 	}
 

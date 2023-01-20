@@ -96,6 +96,7 @@ impl Server {
 		enable_pvp(&mut full_creature_update);
 
 		let new_player = Player::new(
+			assigned_id,
 			Creature::maybe_from(&full_creature_update).ok_or_else(|| io::Error::from(ErrorKind::InvalidData))?,
 			write_half.clone(),
 		);
@@ -103,7 +104,7 @@ impl Server {
 		new_player.notify("welcome to berld").await;
 
 		for existing_player in self.players.read().await.iter() {
-			new_player.send(&existing_player.creature.read().await.to_update()).await?;
+			new_player.send(&existing_player.creature.read().await.to_update(existing_player.id)).await?;
 		}
 
 		new_player.send(&WorldUpdate {
@@ -118,7 +119,7 @@ impl Server {
 
 		let new_player_arc = Arc::new(new_player);
 		self.players.write().await.push(new_player_arc.clone());
-		self.broadcast(&new_player_arc.creature.read().await.to_update(), None).await;
+		self.broadcast(&full_creature_update, None).await;
 
 		let _ = self.read_packets_forever(&new_player_arc, &mut read_half).await
 			.expect_err("impossible"); //TODO: check if error emerged from reading or writing
@@ -215,7 +216,7 @@ impl Server {
 			let index = players.iter().position(|player| ptr::eq(player_to_remove, player.as_ref())).expect("player not found");
 			players.swap_remove(index);
 		};
-		self.remove_creature(&player_to_remove.creature.read().await.id).await;
+		self.remove_creature(&player_to_remove.id).await;
 	}
 
 	async fn remove_creature(&self, creature_id: &CreatureId) {

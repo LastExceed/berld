@@ -22,7 +22,7 @@ impl HandlePacket<CreatureAction> for Server {
 
 				//the player consumed a bomb, so we need to reimburse it
 				let pickup = Pickup {
-					interactor: source.creature.read().await.id,
+					interactor: source.id,
 					item: packet.item
 				};
 				source.send_ignoring(&WorldUpdate::from(pickup)).await;
@@ -36,7 +36,7 @@ impl HandlePacket<CreatureAction> for Server {
 			CreatureActionType::PickUp => {
 				if let Some(item) = self.remove_drop(packet.zone, packet.item_index as usize).await {
 					let pickup = Pickup {
-						interactor: source.creature.read().await.id,
+						interactor: source.id,
 						item
 					};
 					let sound_effect = SoundEffect {
