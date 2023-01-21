@@ -144,27 +144,23 @@ impl Server {
 	pub async fn add_drop(&self, item: Item, position: Point3<i64>, rotation: f32) {
 		let zone = position.xy().map(|scalar| (scalar / SIZE_ZONE) as i32);
 
-		let drops_to_send = {
-			let mut drops_guard = self.drops.write().await;
-			let zone_drops = drops_guard.entry(zone).or_insert(vec![]);
-			zone_drops.push(Drop {
-				item,
-				position,
-				rotation,
-				scale: 0.1,
-				unknown_a: 0,
-				unknown_b: 0,
-				droptime: 0
-			});
-
-			let mut zone_drops_copy = zone_drops.clone();
-			zone_drops_copy[zone_drops.len() - 1].droptime = 500;
-
-			zone_drops_copy
-		};//scope ensures the guard is dropped asap
+		let mut drops_guard = self.drops.write().await;
+		let zone_drops = drops_guard.entry(zone).or_insert(vec![]);
+		zone_drops.push(Drop {
+			item,
+			position,
+			rotation,
+			scale: 0.1,
+			unknown_a: 0,
+			unknown_b: 0,
+			droptime: 0
+		});
+		let mut zone_drops_copy = zone_drops.clone();
+		zone_drops_copy[zone_drops.len() - 1].droptime = 500;
+		drop(drops_guard);
 
 		self.broadcast(&WorldUpdate {
-			drops: vec![(zone, drops_to_send)],
+			drops: vec![(zone, zone_drops_copy)],
 			sound_effects: vec![
 				SoundEffect {
 					position: sound_position_of(position),
@@ -191,23 +187,18 @@ impl Server {
 
 	///returns none if a player picks up an item they dropped in single player
 	pub async fn remove_drop(&self, zone: Point2<i32>, item_index: usize) -> Option<Item> {
-		let (remaining_zone_drops, removed_item) = {
-			let mut drops_guard = self.drops.write().await;
+		let mut drops_guard = self.drops.write().await;
+		let Some(zone_drops) = drops_guard.get_mut(&zone) else { return None; };
+		let removed_drop = zone_drops.swap_remove(item_index);
+		let zone_drops_owned = zone_drops.to_owned();
+		if zone_drops.is_empty() {
+			drops_guard.remove(&zone);
+		}
+		drop(drops_guard);
 
-			let Some(zone_drops) = drops_guard.get_mut(&zone) else { return None };
+		self.broadcast(&WorldUpdate::from((zone, zone_drops_owned)), None).await;
 
-			let removed_drop = zone_drops.swap_remove(item_index);
-			let zone_drops_owned = zone_drops.to_owned();
-			if zone_drops.is_empty() {
-				drops_guard.remove(&zone);
-			}
-
-			(zone_drops_owned, removed_drop.item)
-		};//scope ensures the guard is dropped asap
-
-		self.broadcast(&WorldUpdate::from((zone, remaining_zone_drops)), None).await;
-
-		Some(removed_item)
+		Some(removed_drop.item)
 	}
 
 	async fn remove_player(&self, player_to_remove: &Player) {
