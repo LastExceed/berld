@@ -12,6 +12,7 @@ use protocol::packet::creature_update::CombatClassMinor::*;
 use protocol::utils::constants::combat_classes::*;
 use protocol::utils::constants::PLAYABLE_RACES;
 use protocol::utils::flagset::{FlagSet16, FlagSet32};
+use protocol::utils::power_of;
 
 use crate::anti_cheat;
 use crate::anti_cheat::*;
@@ -541,8 +542,10 @@ pub(super) fn inspect_consumable(consumable: &Item, former_state: &Creature, upd
 	}
 	matches!(consumable.kind, Consumable(_))
 		.ensure("consumable.kind", &consumable.kind, "any variant of", "Consumable")?;
-	consumable.rarity.ensure_exact(&Normal, "consumable.rarity")
-	//todo: power
+	consumable.rarity
+		.ensure_exact(&Normal, "consumable.rarity")?;
+	power_of(consumable.level as i32)
+		.ensure_within(&(0..=power_of(updated_state.level)), "consumable.power")
 }
 pub(super) fn inspect_equipment(equipment: &Equipment, former_state: &Creature, updated_state: &Creature) -> anti_cheat::Result {
 	//todo: copypasta
@@ -612,7 +615,8 @@ pub(super) fn inspect_equipment(equipment: &Equipment, former_state: &Creature, 
 		let allowed_materials = allowed_materials(item.kind, updated_state.combat_class_major);
 		item.material.ensure_one_of(allowed_materials, ".material")?;
 		//item.flags
-		//item.level //todo: power
+		power_of(item.level as i32)
+			.ensure_within(&(0..=power_of(updated_state.level)), ".power")?;
 		//item.spirits //tolerating everything due to popularity
 		item.spirit_counter.ensure_within(&(0..=32), "")?;//normally only 2h weapons can have more than 16 (up to 32) spirits, but we're tolerating 32 on everyhting due to popularity
 	}
