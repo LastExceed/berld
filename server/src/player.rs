@@ -1,5 +1,4 @@
 use std::mem::size_of;
-use std::sync::Arc;
 use std::sync::atomic::AtomicBool;
 
 use tokio::io;
@@ -15,16 +14,16 @@ use crate::creature::Creature;
 pub struct Player {
 	pub id: CreatureId,
 	pub creature: RwLock<Creature>,
-	write_half: Arc<RwLock<OwnedWriteHalf>>,
+	write_half: RwLock<OwnedWriteHalf>,
 	pub should_disconnect: AtomicBool,
 }
 
 impl Player {
-	pub fn new(id: CreatureId, creature: Creature, write_half: Arc<RwLock<OwnedWriteHalf>>) -> Self {
+	pub fn new(id: CreatureId, creature: Creature, write_half: OwnedWriteHalf) -> Self {
 		Self {
 			id,
 			creature: RwLock::new(creature),
-			write_half,
+			write_half: RwLock::new(write_half),
 			should_disconnect: AtomicBool::new(false)
 		}
 	}

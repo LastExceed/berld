@@ -10,8 +10,8 @@ use colour::white_ln;
 use futures::future;
 use tokio::io;
 use tokio::io::{AsyncWrite, AsyncWriteExt};
-use tokio::net::tcp::{OwnedReadHalf, OwnedWriteHalf};
-use tokio::net::TcpListener;
+use tokio::net::{TcpListener, TcpStream};
+use tokio::net::tcp::OwnedReadHalf;
 use tokio::sync::RwLock;
 use tokio::time::sleep;
 
@@ -62,53 +62,49 @@ impl Server {
 
 			let self_arc_clone = self_arc.clone();
 			tokio::spawn(async move {
-				let (read_half, write_half) = stream.into_split();
-				let write_lock_arc = Arc::new(RwLock::new(write_half));
-				if let Err(_) = self_arc_clone.handle_new_connection(read_half, write_lock_arc.clone()).await {
+				if let Err(_) = self_arc_clone.handle_new_connection(stream).await {
 					//TODO: error logging
 				}
-				write_lock_arc.write().await.shutdown().await.expect("TODO: panic message");
 			});
 		}
 	}
 
-	async fn handle_new_connection(&self, mut read_half: OwnedReadHalf, write_half: Arc<RwLock<OwnedWriteHalf>>) -> io::Result<()> {
-		if read_half.read_struct::<packet::Id>().await? != ProtocolVersion::ID
-			|| ProtocolVersion::read_from(&mut read_half).await?.0 != 3 {
+	async fn handle_new_connection(&self, mut stream: TcpStream) -> io::Result<()> {
+		if stream.read_struct::<packet::Id>().await? != ProtocolVersion::ID
+			|| ProtocolVersion::read_from(&mut stream).await?.0 != 3 {
 			return Err(io::Error::from(ErrorKind::InvalidData));
 		}
 		let assigned_id = self.id_pool.write().await.claim();
-		let result = self.handle_new_player(read_half, write_half, assigned_id).await;
+		let result = self.handle_new_player(stream, assigned_id).await;
 		self.id_pool.write().await.free(assigned_id);
 		result
 	}
 
-	async fn handle_new_player(&self, mut read_half: OwnedReadHalf, write_half: Arc<RwLock<OwnedWriteHalf>>, assigned_id: CreatureId) -> io::Result<()> {
-		{//todo: extract individual functions
-			let write_half_lock = &mut write_half.write().await as &mut OwnedWriteHalf;
-			ConnectionAcceptance {}.write_to_with_id(write_half_lock).await?;
-			write_abnormal_creature_update(write_half_lock, assigned_id).await?;
-		};
+	async fn handle_new_player(&self, mut stream: TcpStream, assigned_id: CreatureId) -> io::Result<()> {
+		ConnectionAcceptance {}.write_to_with_id(&mut stream).await?;
+		write_abnormal_creature_update(&mut stream, assigned_id).await?;
 
-		if read_half.read_struct::<packet::Id>().await? != CreatureUpdate::ID {
+		if stream.read_struct::<packet::Id>().await? != CreatureUpdate::ID {
 			return Err(io::Error::from(ErrorKind::InvalidData))
 		}
-		let mut full_creature_update = CreatureUpdate::read_from(&mut read_half).await?;
+		let mut full_creature_update = CreatureUpdate::read_from(&mut stream).await?;
 		let character = Creature::maybe_from(&full_creature_update).ok_or_else(|| io::Error::from(ErrorKind::InvalidData))?;
 
 		if let Err(reason) = inspect_creature_update(&full_creature_update, &character, &character) {
 			ChatMessageFromServer {
 				source: CreatureId(0),
 				text: reason
-			}.write_to_with_id(&mut write_half.write().await as &mut OwnedWriteHalf).await?;
+			}.write_to_with_id(&mut stream).await?;
 			sleep(Duration::from_millis(100)).await;
 			return Err(ErrorKind::InvalidInput.into());
 		}
 
+		let (read_half, write_half) = stream.into_split();
+
 		let new_player = Player::new(
 			assigned_id,
 			character,
-			write_half.clone(),
+			write_half,
 		);
 		new_player.send(&MapSeed(225)).await?;
 		new_player.notify("welcome to berld").await;
@@ -133,7 +129,7 @@ impl Server {
 		enable_pvp(&mut full_creature_update);
 		self.broadcast(&full_creature_update, None).await;
 
-		let _ = self.read_packets_forever(&new_player_arc, &mut read_half).await
+		let _ = self.read_packets_forever(&new_player_arc, read_half).await
 			.expect_err("impossible"); //TODO: check if error emerged from reading or writing
 
 		self.remove_player(&new_player_arc).await;
@@ -233,18 +229,18 @@ impl Server {
 		}, None).await;
 	}
 
-	async fn read_packets_forever(&self, source: &Player, readable: &mut OwnedReadHalf) -> io::Result<()> {
+	async fn read_packets_forever(&self, source: &Player, mut readable: OwnedReadHalf) -> io::Result<()> {
 		loop {
 			//todo: copypasta
 			match readable.read_struct::<packet::Id>().await? {
-				CreatureUpdate       ::ID => self.handle_packet(source, CreatureUpdate       ::read_from(readable).await?).await,
-				CreatureAction       ::ID => self.handle_packet(source, CreatureAction       ::read_from(readable).await?).await,
-				Hit                  ::ID => self.handle_packet(source, Hit                  ::read_from(readable).await?).await,
-				StatusEffect         ::ID => self.handle_packet(source, StatusEffect         ::read_from(readable).await?).await,
-				Projectile           ::ID => self.handle_packet(source, Projectile           ::read_from(readable).await?).await,
-				ChatMessageFromClient::ID => self.handle_packet(source, ChatMessageFromClient::read_from(readable).await?).await,
-				ZoneDiscovery        ::ID => self.handle_packet(source, ZoneDiscovery        ::read_from(readable).await?).await,
-				RegionDiscovery      ::ID => self.handle_packet(source, RegionDiscovery      ::read_from(readable).await?).await,
+				CreatureUpdate       ::ID => self.handle_packet(source, CreatureUpdate       ::read_from(&mut readable).await?).await,
+				CreatureAction       ::ID => self.handle_packet(source, CreatureAction       ::read_from(&mut readable).await?).await,
+				Hit                  ::ID => self.handle_packet(source, Hit                  ::read_from(&mut readable).await?).await,
+				StatusEffect         ::ID => self.handle_packet(source, StatusEffect         ::read_from(&mut readable).await?).await,
+				Projectile           ::ID => self.handle_packet(source, Projectile           ::read_from(&mut readable).await?).await,
+				ChatMessageFromClient::ID => self.handle_packet(source, ChatMessageFromClient::read_from(&mut readable).await?).await,
+				ZoneDiscovery        ::ID => self.handle_packet(source, ZoneDiscovery        ::read_from(&mut readable).await?).await,
+				RegionDiscovery      ::ID => self.handle_packet(source, RegionDiscovery      ::read_from(&mut readable).await?).await,
 				unexpected_packet_id => panic!("unexpected packet id {:?}", unexpected_packet_id)
 			}
 
