@@ -1,4 +1,5 @@
 use boolinator::Boolinator;
+use strum::IntoEnumIterator;
 
 use protocol::nalgebra::{Point3, Vector3};
 use protocol::packet::common::{CreatureId, EulerAngles, Hitbox, Item, item, Race};
@@ -10,10 +11,11 @@ use protocol::packet::creature_update::Animation::*;
 use protocol::packet::creature_update::CombatClassMajor::*;
 use protocol::packet::creature_update::CombatClassMinor::*;
 use protocol::packet::creature_update::equipment::Slot;
+use protocol::packet::creature_update::skill_tree::Skill;
+use protocol::utils::{maximum_experience_of, power_of};
 use protocol::utils::constants::combat_classes::*;
 use protocol::utils::constants::PLAYABLE_RACES;
 use protocol::utils::flagset::{FlagSet16, FlagSet32};
-use protocol::utils::power_of;
 
 use crate::anti_cheat;
 use crate::anti_cheat::*;
@@ -618,23 +620,10 @@ pub(super) fn inspect_name(name: &String, former_state: &Creature, updated_state
 	//todo: limit characters to what the default font can display
 }
 pub(super) fn inspect_skill_tree(skill_tree: &SkillTree, former_state: &Creature, updated_state: &Creature) -> anti_cheat::Result {
-	let skills = [//todo: implement .iter() for SkillTree directly?
-		skill_tree.pet_master,
-		skill_tree.pet_riding,
-		skill_tree.sailing,
-		skill_tree.climbing,
-		skill_tree.hang_gliding,
-		skill_tree.swimming,
-		skill_tree.ability1,
-		skill_tree.ability2,
-		skill_tree.ability3,
-		skill_tree.ability4,
-		skill_tree.ability5,
-	];
-	for skill in skills {
-		skill.ensure_not_negative("skill_tree.?")?;//todo: individual names
+	for skill in Skill::iter() {
+		skill_tree[skill].ensure_not_negative(&format!("skill_tree.{:?}", skill))?;
 	}
-	skills.iter().sum::<i32>().ensure_at_most((updated_state.level - 1) * 2, "skill_tree.total")
+	skill_tree.iter().sum::<i32>().ensure_at_most((updated_state.level - 1) * 2, "skill_tree.total")
 }
 pub(super) fn inspect_mana_cubes(mana_cubes: &i32, former_state: &Creature, updated_state: &Creature) -> anti_cheat::Result {
 	mana_cubes.ensure_not_negative("mana_cubes")

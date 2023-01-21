@@ -13,6 +13,7 @@ use crate::packet::*;
 use crate::packet::common::EulerAngles;
 
 pub mod equipment;
+pub mod skill_tree;
 
 #[async_trait]
 impl CwSerializable for CreatureUpdate {
@@ -498,16 +499,4 @@ pub struct Equipment([Item; 13]);
 
 #[repr(C)]
 #[derive(Debug, PartialEq, Eq, Clone, Default)]
-pub struct SkillTree {
-	pub pet_master: i32,
-	pub pet_riding: i32,
-	pub sailing: i32,
-	pub climbing: i32,
-	pub hang_gliding: i32,
-	pub swimming: i32,
-	pub ability1: i32,
-	pub ability2: i32,
-	pub ability3: i32,
-	pub ability4: i32,
-	pub ability5: i32
-}
+pub struct SkillTree([i32; 11]);
