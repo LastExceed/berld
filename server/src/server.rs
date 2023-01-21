@@ -93,8 +93,6 @@ impl Server {
 		}
 		let mut full_creature_update = CreatureUpdate::read_from(&mut read_half).await?;
 
-		enable_pvp(&mut full_creature_update);
-
 		let new_player = Player::new(
 			assigned_id,
 			Creature::maybe_from(&full_creature_update).ok_or_else(|| io::Error::from(ErrorKind::InvalidData))?,
@@ -119,6 +117,8 @@ impl Server {
 
 		let new_player_arc = Arc::new(new_player);
 		self.players.write().await.push(new_player_arc.clone());
+
+		enable_pvp(&mut full_creature_update);
 		self.broadcast(&full_creature_update, None).await;
 
 		let _ = self.read_packets_forever(&new_player_arc, &mut read_half).await
