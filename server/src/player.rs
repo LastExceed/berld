@@ -1,5 +1,6 @@
 use std::mem::size_of;
 use std::sync::Arc;
+use std::sync::atomic::AtomicBool;
 
 use tokio::io;
 use tokio::io::AsyncWriteExt;
@@ -15,6 +16,7 @@ pub struct Player {
 	pub id: CreatureId,
 	pub creature: RwLock<Creature>,
 	write_half: Arc<RwLock<OwnedWriteHalf>>,
+	pub should_disconnect: AtomicBool,
 }
 
 impl Player {
@@ -23,6 +25,7 @@ impl Player {
 			id,
 			creature: RwLock::new(creature),
 			write_half,
+			should_disconnect: AtomicBool::new(false)
 		}
 	}
 
@@ -45,9 +48,5 @@ impl Player {
 			source: CreatureId(0),
 			text: message.into()
 		}).await;
-	}
-
-	pub async fn close_connection(&self) {
-		let _ = self.write_half.write().await.shutdown().await; //todo: error handling
 	}
 }

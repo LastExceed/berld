@@ -2,7 +2,7 @@ use async_trait::async_trait;
 use colour::{cyan, white_ln};
 use tokio::io;
 
-use protocol::packet::{ChatMessageFromClient, ChatMessageFromServer, CreatureUpdate, WorldUpdate};
+use protocol::packet::{ChatMessageFromClient, ChatMessageFromServer, ConnectionRejection, CreatureUpdate, WorldUpdate};
 use protocol::packet::common::CreatureId;
 use protocol::packet::creature_update::Affiliation;
 use protocol::packet::world_update::Kill;
@@ -41,6 +41,9 @@ async fn handle_command(server: &Server, source: &Player, packet: &ChatMessageFr
 		return;
 	};
 	match command {
+		"a" => {
+			source.send_ignoring(&ConnectionRejection{}).await;
+		}
 		"xp" => {
 			let Some(amount) = params.next() else {
 				source.notify("too few arguments").await;

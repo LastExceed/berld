@@ -1,4 +1,5 @@
 use std::io;
+use std::io::ErrorKind;
 
 use async_trait::async_trait;
 
@@ -17,12 +18,13 @@ impl HandlePacket<CreatureUpdate> for Server {
 		let mut character = source.creature.write().await;
 		let snapshot = character.clone();
 		character.update(&packet);
-		//todo: downgrade character lock
+		drop(character);
+		let character = source.creature.read().await;//todo: downgrade character lock
 
 		if let Err(message) = anti_cheat::inspect_creature_update(&packet, &snapshot, &character) {
 			dbg!(&message);
-//			self.kick(&source, message).await;
-//			return Err(ErrorKind::InvalidInput.into())
+			self.kick(&source, message).await;
+			return Err(ErrorKind::InvalidInput.into())
 		}
 
 		enable_pvp(&mut packet);

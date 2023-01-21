@@ -3,6 +3,7 @@ use std::io::ErrorKind;
 use std::mem::{size_of, transmute};
 use std::ptr;
 use std::sync::Arc;
+use std::sync::atomic::Ordering;
 use std::time::Duration;
 
 use colour::white_ln;
@@ -235,6 +236,10 @@ impl Server {
 				RegionDiscovery      ::ID => self.handle_packet(source, RegionDiscovery      ::read_from(readable).await?).await?,
 				unexpected_packet_id => panic!("unexpected packet id {:?}", unexpected_packet_id)
 			}
+
+			if source.should_disconnect.load(Ordering::Relaxed) {
+				return Err(ErrorKind::InvalidInput.into());
+			}
 		}
 	}
 
@@ -250,8 +255,9 @@ impl Server {
 		self.announce(format!("kicked {} because {}", player.creature.read().await.name, reason)).await;
 		//wait a bit to make sure the message arrives at the player about to be kicked
 		sleep(Duration::from_millis(100)).await;
-		player.close_connection().await;
-		//remove_player will be called by the reading thread
+
+		player.should_disconnect.store(true, Ordering::Relaxed);
+		//remove_player will be called by the reading task
 	}
 }
 
