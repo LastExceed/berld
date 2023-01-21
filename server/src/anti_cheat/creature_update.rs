@@ -549,38 +549,44 @@ pub(super) fn inspect_consumable(consumable: &Item, former_state: &Creature, upd
 }
 pub(super) fn inspect_equipment(equipment: &Equipment, former_state: &Creature, updated_state: &Creature) -> anti_cheat::Result {
 	//todo: copypasta
-	equipment.unknown   .kind.ensure_exact(&Void    , "equipment.unknown.kind"   )?;
-	equipment.neck      .kind.ensure_exact(&Amulet  , "equipment.neck.kind"      )?;
-	equipment.chest     .kind.ensure_exact(&Chest   , "equipment.chest.kind"     )?;
-	equipment.feet      .kind.ensure_exact(&Boots   , "equipment.feet.kind"      )?;
-	equipment.hands     .kind.ensure_exact(&Gloves  , "equipment.hands.kind"     )?;
-	equipment.shoulder  .kind.ensure_exact(&Shoulder, "equipment.shoulder.kind"  )?;
-	equipment.left_ring .kind.ensure_exact(&Ring    , "equipment.left_ring.kind" )?;
-	equipment.right_ring.kind.ensure_exact(&Ring    , "equipment.right_ring.kind")?;
-	equipment.lamp      .kind.ensure_exact(&Lamp    , "equipment.lamp.kind"      )?;
+	let invariant_slots = [
+		(&equipment.unknown   , "unknown",    Void),
+		(&equipment.neck      , "neck",       Amulet),
+		(&equipment.chest     , "chest",      Chest),
+		(&equipment.feet      , "feet",       Boots),
+		(&equipment.hands     , "hands",      Gloves),
+		(&equipment.shoulder  , "shoulder",   Shoulder),
+		(&equipment.left_ring , "left_ring",  Ring),
+		(&equipment.right_ring, "right_ring", Ring),
+		(&equipment.lamp      , "lamp",       Lamp)
+	];
 
-	matches!(equipment.left_weapon.kind, Weapon(_))
+	for (item, property_name, allowed_kind) in invariant_slots {
+		item.kind.ensure_one_of(&[Void, allowed_kind], &format!("equipment.{}.kind", property_name))?;
+	}
+
+	matches!(equipment.left_weapon.kind, Void | Weapon(_))
 		.ensure(
 			"equipment.left_weapon.kind",
 			&equipment.left_weapon.kind,
 			"any kind of",
 			"Weapon"
 		)?;
-	matches!(equipment.right_weapon.kind, Weapon(_))
+	matches!(equipment.right_weapon.kind, Void | Weapon(_))
 		.ensure(
 			"equipment.right_weapon.kind",
 			&equipment.left_weapon.kind,
 			"any kind of",
 			"Weapon"
 		)?;
-	matches!(equipment.special.kind, Special(_))
+	matches!(equipment.special.kind, Void | Special(_))
 		.ensure(
 			"equipment.special.kind",
 			&equipment.special.kind,
 			"any kind of",
 			"Special"
 		)?;
-	matches!(equipment.pet.kind, Pet(_) | PetFood(_))
+	matches!(equipment.pet.kind, Void | Pet(_) | PetFood(_))
 		.ensure(
 			"equipment.special.kind",
 			&equipment.pet.kind,
