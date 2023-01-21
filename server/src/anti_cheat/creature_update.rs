@@ -11,6 +11,7 @@ use protocol::packet::creature_update::Animation::*;
 use protocol::packet::creature_update::CombatClassMajor::*;
 use protocol::packet::creature_update::CombatClassMinor::*;
 use protocol::packet::creature_update::equipment::Slot;
+use protocol::packet::creature_update::multipliers::Multiplier::*;
 use protocol::packet::creature_update::skill_tree::Skill;
 use protocol::utils::{maximum_experience_of, power_of};
 use protocol::utils::constants::combat_classes::*;
@@ -493,11 +494,11 @@ pub(super) fn inspect_blocking_gauge(blocking_gauge: &f32, former_state: &Creatu
 		.ensure_within(&(0.0..=max), "blocking_gauge") //todo: negative gauge glitch?
 }
 pub(super) fn inspect_multipliers(multipliers: &Multipliers, former_state: &Creature, updated_state: &Creature) -> anti_cheat::Result {
-	multipliers.health      .ensure_exact(&100.0, "multipliers.health")?;
-	multipliers.attack_speed.ensure_exact(&  1.0, "multipliers.attack_speed")?;
-	multipliers.damage      .ensure_exact(&  1.0, "multipliers.damage")?;
-	multipliers.resi        .ensure_exact(&  1.0, "multipliers.resi")?;
-	multipliers.armor       .ensure_exact(&  1.0, "multipliers.armor")
+	multipliers[Health]     .ensure_exact(&100.0, "multipliers.health")?;
+	multipliers[AttackSpeed].ensure_exact(&  1.0, "multipliers.attack_speed")?;
+	multipliers[Damage]     .ensure_exact(&  1.0, "multipliers.damage")?;
+	multipliers[Resi]       .ensure_exact(&  1.0, "multipliers.resi")?;
+	multipliers[Armor]      .ensure_exact(&  1.0, "multipliers.armor")
 }
 pub(super) fn inspect_unknown31(unknown31: &i8, former_state: &Creature, updated_state: &Creature) -> anti_cheat::Result {
 	Ok(())

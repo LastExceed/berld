@@ -6,14 +6,20 @@ use async_compression::tokio::write::ZlibEncoder;
 use async_trait::async_trait;
 use nalgebra::Point3;
 use rgb::RGB;
+use strum::EnumCount;
 use tokio::io;
 use tokio::io::{AsyncRead, AsyncReadExt, AsyncWrite, AsyncWriteExt};
 
 use crate::packet::*;
 use crate::packet::common::EulerAngles;
+use crate::packet::creature_update::equipment::Slot;
+use crate::packet::creature_update::multipliers::Multiplier;
+use crate::packet::creature_update::skill_tree::Skill;
+use crate::utils::ArrayWrapper;
 
 pub mod equipment;
 pub mod skill_tree;
+pub mod multipliers;
 
 #[async_trait]
 impl CwSerializable for CreatureUpdate {
@@ -483,20 +489,8 @@ pub enum CombatClassMinor {
 	Witch
 }
 
-#[repr(C)]
-#[derive(Debug, PartialEq, Clone)]
-pub struct Multipliers {
-	pub health: f32,
-	pub attack_speed: f32,
-	pub damage: f32,
-	pub armor: f32,
-	pub resi: f32
-}
+pub type Multipliers = ArrayWrapper<Multiplier, f32>;
 
-#[repr(C)]
-#[derive(Debug, PartialEq, Eq, Clone)]
-pub struct Equipment([Item; 13]);
+pub type Equipment = ArrayWrapper<Slot, Item>;
 
-#[repr(C)]
-#[derive(Debug, PartialEq, Eq, Clone, Default)]
-pub struct SkillTree([i32; 11]);
+pub type SkillTree = ArrayWrapper<Skill, i32>;

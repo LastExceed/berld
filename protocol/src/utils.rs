@@ -1,7 +1,11 @@
+use std::marker::PhantomData;
 use std::mem::size_of;
+use std::ops::{Index, IndexMut};
+use std::slice::Iter;
 
 use async_trait::async_trait;
 use nalgebra::Point3;
+use strum::EnumCount;
 use tokio::io;
 use tokio::io::{AsyncRead, AsyncWrite};
 
@@ -57,5 +61,36 @@ impl<Element: CwSerializable + Send + Sync> CwSerializable for Vec<Element>
 			element.write_to(writable).await?;
 		}
 		Ok(())
+	}
+}
+
+#[repr(C)]
+#[derive(Debug, PartialEq, Eq, Clone)]
+pub struct ArrayWrapper<Idx: Into<usize> + EnumCount, Element>([Element; Idx::COUNT], PhantomData<Idx>)
+	where [(); Idx::COUNT]:;
+
+impl<Idx: Into<usize> + EnumCount, Element> ArrayWrapper<Idx, Element>
+	where [(); Idx::COUNT]:
+{
+	pub fn iter(&self) -> Iter<'_, Element> {
+		self.0.iter()
+	}
+}
+
+impl<Idx: Into<usize> + EnumCount, Element> Index<Idx> for ArrayWrapper<Idx, Element>
+	where [(); Idx::COUNT]:
+{
+	type Output = Element;
+
+	fn index(&self, index: Idx) -> &Self::Output {
+		&self.0[index.into()]
+	}
+}
+
+impl<Idx: Into<usize> + EnumCount, Element> IndexMut<Idx> for ArrayWrapper<Idx, Element>
+	where [(); Idx::COUNT]:
+{
+	fn index_mut(&mut self, index: Idx) -> &mut Self::Output {
+		&mut self.0[index.into()]
 	}
 }
