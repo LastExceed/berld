@@ -1,6 +1,5 @@
 use async_trait::async_trait;
 use colour::{cyan, white_ln};
-use tokio::io;
 
 use protocol::packet::{ChatMessageFromClient, ChatMessageFromServer, ConnectionRejection, CreatureUpdate, WorldUpdate};
 use protocol::packet::common::CreatureId;
@@ -13,13 +12,13 @@ use crate::server::Server;
 
 #[async_trait]
 impl HandlePacket<ChatMessageFromClient> for Server {
-	async fn handle_packet(&self, source: &Player, packet: ChatMessageFromClient) -> io::Result<()> {
+	async fn handle_packet(&self, source: &Player, packet: ChatMessageFromClient) {
 		cyan!("{}: ", source.creature.read().await.name);
 		white_ln!("{}", packet.text);
 
 		if packet.text.starts_with('/') {
 			handle_command(&self, &source, &packet).await;
-			return Ok(());
+			return;
 		}
 
 		self.broadcast(
@@ -29,8 +28,6 @@ impl HandlePacket<ChatMessageFromClient> for Server {
 			},
 			None
 		).await;
-
-		Ok(())
 	}
 }
 

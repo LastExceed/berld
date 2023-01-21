@@ -1,5 +1,4 @@
 use async_trait::async_trait;
-use tokio::io;
 
 use protocol::packet::RegionDiscovery;
 
@@ -9,7 +8,7 @@ use crate::server::Server;
 
 #[async_trait]
 impl HandlePacket<RegionDiscovery> for Server {
-	async fn handle_packet(&self, _source: &Player, _packet: RegionDiscovery) -> io::Result<()> {
-		Ok(())
+	async fn handle_packet(&self, _source: &Player, _packet: RegionDiscovery) {
+
 	}
 }

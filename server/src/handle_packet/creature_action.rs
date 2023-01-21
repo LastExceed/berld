@@ -1,5 +1,4 @@
 use async_trait::async_trait;
-use tokio::io;
 
 use protocol::nalgebra::Vector3;
 use protocol::packet::{CreatureAction, WorldUpdate};
@@ -15,7 +14,7 @@ use crate::server::Server;
 
 #[async_trait]
 impl HandlePacket<CreatureAction> for Server {
-	async fn handle_packet(&self, source: &Player, packet: CreatureAction) -> io::Result<()> {
+	async fn handle_packet(&self, source: &Player, packet: CreatureAction) {
 		match packet.type_ {
 			CreatureActionType::Bomb => {
 				source.notify("bombs are disabled").await;
@@ -66,7 +65,5 @@ impl HandlePacket<CreatureAction> for Server {
 				//source.notify("pets are disabled".to_owned());
 			}
 		}
-
-		Ok(())
 	}
 }

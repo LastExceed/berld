@@ -1,5 +1,4 @@
 use async_trait::async_trait;
-use tokio::io;
 
 use protocol::packet::FromClient;
 
@@ -16,5 +15,5 @@ mod region_discovery;
 
 #[async_trait]
 pub trait HandlePacket<Packet: FromClient> {
-	async fn handle_packet(&self, source: &Player, packet: Packet) -> io::Result<()>;
+	async fn handle_packet(&self, source: &Player, packet: Packet);
 }

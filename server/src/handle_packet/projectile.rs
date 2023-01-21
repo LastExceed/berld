@@ -1,5 +1,4 @@
 use async_trait::async_trait;
-use tokio::io;
 
 use protocol::packet::{Projectile, WorldUpdate};
 
@@ -9,9 +8,7 @@ use crate::server::Server;
 
 #[async_trait]
 impl HandlePacket<Projectile> for Server {
-	async fn handle_packet(&self, source: &Player, packet: Projectile) -> io::Result<()> {
+	async fn handle_packet(&self, source: &Player, packet: Projectile) {
 		self.broadcast(&WorldUpdate::from(packet), Some(source)).await;
-
-		Ok(())
 	}
 }

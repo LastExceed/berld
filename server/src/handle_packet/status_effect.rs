@@ -1,7 +1,6 @@
 use std::time::Duration;
 
 use async_trait::async_trait;
-use tokio::io;
 use tokio::time::sleep;
 
 use protocol::nalgebra::Vector3;
@@ -19,13 +18,13 @@ use crate::server::Server;
 
 #[async_trait]
 impl HandlePacket<StatusEffect> for Server {
-	async fn handle_packet(&self, source: &Player, packet: StatusEffect) -> io::Result<()> {
+	async fn handle_packet(&self, source: &Player, packet: StatusEffect) {
 		match packet.type_ {
 			StatusEffectType::Poison => {
 				let players_guard = self.players.read().await; //todo: do i really have to do this?
 
 				let Some(target) = players_guard.iter().find(|player| { player.id == packet.target }) else {
-					return Ok(()); //todo: invalid input? //can happen when the target disconnected in this moment
+					return; //todo: invalid input? //can happen when the target disconnected in this moment
 				};
 				let target_owned = target.to_owned();
 				let packet_clone = packet.clone();
@@ -38,8 +37,6 @@ impl HandlePacket<StatusEffect> for Server {
 		}
 
 		self.broadcast(&WorldUpdate::from(packet), Some(source)).await;
-
-		Ok(())
 	}
 }
 

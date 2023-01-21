@@ -1,5 +1,4 @@
 use async_trait::async_trait;
-use tokio::io;
 
 use protocol::packet::{Hit, WorldUpdate};
 use protocol::packet::common::Race;
@@ -14,14 +13,14 @@ use crate::server::Server;
 
 #[async_trait]
 impl HandlePacket<Hit> for Server {
-	async fn handle_packet(&self, source: &Player, mut packet: Hit) -> io::Result<()> {
+	async fn handle_packet(&self, source: &Player, mut packet: Hit) {
 		if packet.target == packet.attacker && packet.damage.is_sign_negative() {
-			return Ok(()) //self-heal is already applied client-side (which is a bug) so we need to ignore it server-side
+			return; //self-heal is already applied client-side (which is a bug) so we need to ignore it server-side
 		}
 
 		let players_guard = self.players.read().await;
 		let Some(target) = players_guard.iter().find(|player| { player.id == packet.target }) else {
-			return Ok(()) //can happen when the target disconnected in this moment
+			return; //can happen when the target disconnected in this moment
 		};
 
 		packet.flash = true;
@@ -43,8 +42,6 @@ impl HandlePacket<Hit> for Server {
 			..Default::default()
 		};
 		target.send_ignoring(&world_update).await; //todo: only target needs to receive this packet, but finding player by id is expensive atm
-
-		Ok(())
 	}
 }
 

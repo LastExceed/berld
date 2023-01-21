@@ -226,14 +226,14 @@ impl Server {
 		loop {
 			//todo: copypasta
 			match readable.read_struct::<packet::Id>().await? {
-				CreatureUpdate       ::ID => self.handle_packet(source, CreatureUpdate       ::read_from(readable).await?).await?,
-				CreatureAction       ::ID => self.handle_packet(source, CreatureAction       ::read_from(readable).await?).await?,
-				Hit                  ::ID => self.handle_packet(source, Hit                  ::read_from(readable).await?).await?,
-				StatusEffect         ::ID => self.handle_packet(source, StatusEffect         ::read_from(readable).await?).await?,
-				Projectile           ::ID => self.handle_packet(source, Projectile           ::read_from(readable).await?).await?,
-				ChatMessageFromClient::ID => self.handle_packet(source, ChatMessageFromClient::read_from(readable).await?).await?,
-				ZoneDiscovery        ::ID => self.handle_packet(source, ZoneDiscovery        ::read_from(readable).await?).await?,
-				RegionDiscovery      ::ID => self.handle_packet(source, RegionDiscovery      ::read_from(readable).await?).await?,
+				CreatureUpdate       ::ID => self.handle_packet(source, CreatureUpdate       ::read_from(readable).await?).await,
+				CreatureAction       ::ID => self.handle_packet(source, CreatureAction       ::read_from(readable).await?).await,
+				Hit                  ::ID => self.handle_packet(source, Hit                  ::read_from(readable).await?).await,
+				StatusEffect         ::ID => self.handle_packet(source, StatusEffect         ::read_from(readable).await?).await,
+				Projectile           ::ID => self.handle_packet(source, Projectile           ::read_from(readable).await?).await,
+				ChatMessageFromClient::ID => self.handle_packet(source, ChatMessageFromClient::read_from(readable).await?).await,
+				ZoneDiscovery        ::ID => self.handle_packet(source, ZoneDiscovery        ::read_from(readable).await?).await,
+				RegionDiscovery      ::ID => self.handle_packet(source, RegionDiscovery      ::read_from(readable).await?).await,
 				unexpected_packet_id => panic!("unexpected packet id {:?}", unexpected_packet_id)
 			}
 
