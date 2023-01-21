@@ -27,6 +27,7 @@ use protocol::utils::constants::SIZE_ZONE;
 use protocol::utils::io_extensions::{ReadStruct, WriteStruct};
 use protocol::utils::sound_position_of;
 
+use crate::anti_cheat::inspect_creature_update;
 use crate::creature::Creature;
 use crate::creature_id_pool::CreatureIdPool;
 use crate::handle_packet::HandlePacket;
@@ -93,10 +94,20 @@ impl Server {
 			return Err(io::Error::from(ErrorKind::InvalidData))
 		}
 		let mut full_creature_update = CreatureUpdate::read_from(&mut read_half).await?;
+		let character = Creature::maybe_from(&full_creature_update).ok_or_else(|| io::Error::from(ErrorKind::InvalidData))?;
+
+		if let Err(reason) = inspect_creature_update(&full_creature_update, &character, &character) {
+			ChatMessageFromServer {
+				source: CreatureId(0),
+				text: reason
+			}.write_to_with_id(&mut write_half.write().await as &mut OwnedWriteHalf).await?;
+			sleep(Duration::from_millis(100)).await;
+			return Err(ErrorKind::InvalidInput.into());
+		}
 
 		let new_player = Player::new(
 			assigned_id,
-			Creature::maybe_from(&full_creature_update).ok_or_else(|| io::Error::from(ErrorKind::InvalidData))?,
+			character,
 			write_half.clone(),
 		);
 		new_player.send(&MapSeed(225)).await?;
