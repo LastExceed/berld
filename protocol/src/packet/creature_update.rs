@@ -12,6 +12,8 @@ use tokio::io::{AsyncRead, AsyncReadExt, AsyncWrite, AsyncWriteExt};
 use crate::packet::*;
 use crate::packet::common::EulerAngles;
 
+pub mod equipment;
+
 #[async_trait]
 impl CwSerializable for CreatureUpdate {
 	async fn read_from<Readable: AsyncRead + Unpin + Send>(readable: &mut Readable) -> io::Result<Self> {
@@ -492,21 +494,7 @@ pub struct Multipliers {
 
 #[repr(C)]
 #[derive(Debug, PartialEq, Eq, Clone)]
-pub struct Equipment {
-	pub unknown: Item,
-	pub neck: Item,
-	pub chest: Item,
-	pub feet: Item,
-	pub hands: Item,
-	pub shoulder: Item,
-	pub left_weapon: Item,
-	pub right_weapon: Item,
-	pub left_ring: Item,
-	pub right_ring: Item,
-	pub lamp: Item,
-	pub special: Item,
-	pub pet: Item
-}
+pub struct Equipment([Item; 13]);
 
 #[repr(C)]
 #[derive(Debug, PartialEq, Eq, Clone, Default)]

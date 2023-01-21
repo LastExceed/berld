@@ -3,6 +3,7 @@ use protocol::packet::common::item::kind::Weapon::*;
 use protocol::packet::creature_update::{Animation, Equipment};
 use protocol::packet::creature_update::CombatClassMajor::*;
 use protocol::packet::creature_update::CombatClassMinor::*;
+use protocol::packet::creature_update::equipment::Slot::*;
 use protocol::utils::constants::{animations, CombatClass};
 use protocol::utils::constants::animations::{abilities, m1, m2};
 use protocol::utils::constants::combat_classes::*;
@@ -38,8 +39,8 @@ fn class_specific_animations(combat_class: CombatClass) -> &'static [Animation] 
 }
 
 fn weapon_specific_animations(combat_class: CombatClass, equipment: &Equipment) -> (&'static [Animation], &'static [Animation]) {
-	let right = equipment.right_weapon.kind;
-	let left  = equipment.left_weapon.kind;
+	let right = equipment[RightWeapon].kind;
+	let left  = equipment[LeftWeapon].kind;
 
 	let left_handed = left.present_in(&[Weapon(Bow), Weapon(Crossbow)]);
 

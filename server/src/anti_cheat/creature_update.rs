@@ -9,6 +9,7 @@ use protocol::packet::creature_update::{Affiliation, Animation, Appearance, Comb
 use protocol::packet::creature_update::Animation::*;
 use protocol::packet::creature_update::CombatClassMajor::*;
 use protocol::packet::creature_update::CombatClassMinor::*;
+use protocol::packet::creature_update::equipment::Slot;
 use protocol::utils::constants::combat_classes::*;
 use protocol::utils::constants::PLAYABLE_RACES;
 use protocol::utils::flagset::{FlagSet16, FlagSet32};
@@ -405,7 +406,7 @@ pub(super) fn inspect_flags(flags: &FlagSet16<CreatureFlag>, former_state: &Crea
 			.ensure_exact(&false, "flags[Sniping]")?;
 	}
 
-	if updated_state.equipment.lamp.kind == item::Kind::Void {
+	if updated_state.equipment[Slot::Lamp].kind == item::Kind::Void {
 		flags.get(CreatureFlag::Lamp)
 			.ensure_exact(&false, "flags[Lamp]")?;
 	}
@@ -550,67 +551,51 @@ pub(super) fn inspect_consumable(consumable: &Item, former_state: &Creature, upd
 pub(super) fn inspect_equipment(equipment: &Equipment, former_state: &Creature, updated_state: &Creature) -> anti_cheat::Result {
 	//todo: copypasta
 	let invariant_slots = [
-		(&equipment.unknown   , "unknown",    Void),
-		(&equipment.neck      , "neck",       Amulet),
-		(&equipment.chest     , "chest",      Chest),
-		(&equipment.feet      , "feet",       Boots),
-		(&equipment.hands     , "hands",      Gloves),
-		(&equipment.shoulder  , "shoulder",   Shoulder),
-		(&equipment.left_ring , "left_ring",  Ring),
-		(&equipment.right_ring, "right_ring", Ring),
-		(&equipment.lamp      , "lamp",       Lamp)
+		(Slot::Unknown  , item::Kind::Void),
+		(Slot::Neck     , item::Kind::Amulet),
+		(Slot::Chest    , item::Kind::Chest),
+		(Slot::Feet     , item::Kind::Boots),
+		(Slot::Hands    , item::Kind::Gloves),
+		(Slot::Shoulder , item::Kind::Shoulder),
+		(Slot::LeftRing , item::Kind::Ring),
+		(Slot::RightRing, item::Kind::Ring),
+		(Slot::Lamp     , item::Kind::Lamp)
 	];
 
-	for (item, property_name, allowed_kind) in invariant_slots {
-		item.kind.ensure_one_of(&[Void, allowed_kind], &format!("equipment.{}.kind", property_name))?;
+	for (slot, allowed_kind) in invariant_slots {
+		equipment[slot].kind.ensure_one_of(&[Void, allowed_kind], &format!("equipment.{:?}.kind", slot))?;
 	}
 
-	matches!(equipment.left_weapon.kind, Void | Weapon(_))
+	matches!(equipment[Slot::LeftWeapon].kind, Void | Weapon(_))
 		.ensure(
-			"equipment.left_weapon.kind",
-			&equipment.left_weapon.kind,
-			"any kind of",
+			"equipment[LeftWeapon].kind",
+			&equipment[Slot::LeftWeapon].kind,
+			"any variant of",
 			"Weapon"
 		)?;
-	matches!(equipment.right_weapon.kind, Void | Weapon(_))
+	matches!(equipment[Slot::RightWeapon].kind, Void | Weapon(_))
 		.ensure(
-			"equipment.right_weapon.kind",
-			&equipment.left_weapon.kind,
-			"any kind of",
+			"equipment[RightWeapon].kind",
+			&equipment[Slot::RightWeapon],
+			"any variant of",
 			"Weapon"
 		)?;
-	matches!(equipment.special.kind, Void | Special(_))
+	matches!(equipment[Slot::Special].kind, Void | Special(_))
 		.ensure(
 			"equipment.special.kind",
-			&equipment.special.kind,
-			"any kind of",
+			&equipment[Slot::Special].kind,
+			"any variant of",
 			"Special"
 		)?;
-	matches!(equipment.pet.kind, Void | Pet(_) | PetFood(_))
+	matches!(equipment[Slot::Pet].kind, Void | Pet(_) | PetFood(_))
 		.ensure(
 			"equipment.special.kind",
-			&equipment.pet.kind,
-			"any kind of",
+			&equipment[Slot::Pet].kind,
+			"any variant of",
 			"Pet or PetFood"
 		)?;
 	//todo: kick message prefix
-	//todo: implement slot iteration in Equipment
-	let equipment_slots = [
-		&equipment.unknown,
-		&equipment.neck,
-		&equipment.chest,
-		&equipment.feet,
-		&equipment.hands,
-		&equipment.shoulder,
-		&equipment.left_weapon,
-		&equipment.right_weapon,
-		&equipment.left_ring,
-		&equipment.right_ring,
-		&equipment.lamp,
-		&equipment.special,
-		&equipment.pet
-	];
-	let occupied_item_slots = equipment_slots.iter()
+	let occupied_item_slots = equipment.iter()
 		.filter(|item| item.kind != Void);
 
 	for item in occupied_item_slots {
