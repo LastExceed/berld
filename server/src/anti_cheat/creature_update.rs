@@ -477,7 +477,6 @@ pub(super) fn inspect_blocking_gauge(blocking_gauge: &f32, former_state: &Creatu
 		(former_state.combat_class() == GUARDIAN) &&
 			former_state.animation
 				.present_in(&[
-					DualWieldM2Charging,
 					GreatweaponM2Charging,
 					UnarmedM2Charging
 				]);

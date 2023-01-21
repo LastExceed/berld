@@ -307,7 +307,7 @@ pub enum Animation {
 	Unknown047, //same as smash
 	Intercept,
 	Teleport,
-	Unknown050,
+	Unknown050, //BowM2 but slower
 	Unknown051, //mob attack?
 	Unknown052, //nothing, immediately switches to 0
 	Unknown053, //nothing
@@ -320,8 +320,8 @@ pub enum Animation {
 	GreatweaponM2Berserker,
 	GreatweaponM2Guardian,
 	Unknown062, //probably for greatweapon A2
-	UnarmedM2Charging,
-	DualWieldM2Charging,
+	UnarmedM2Charging, //also used for DualWieldM2Charging
+	Unknown064, //some sort of dualwield charge?
 	Unknown065, //probably for greatweapon B1
 	Unknown066, //probably for greatweapon B2
 	GreatweaponM1b,
