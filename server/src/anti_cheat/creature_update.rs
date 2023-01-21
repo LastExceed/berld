@@ -583,34 +583,35 @@ pub(super) fn inspect_equipment(equipment: &Equipment, former_state: &Creature, 
 		)?;
 	matches!(equipment[Slot::Special].kind, Void | Special(_))
 		.ensure(
-			"equipment.special.kind",
+			"equipment[Special].kind",
 			&equipment[Slot::Special].kind,
 			"any variant of",
 			"Special"
 		)?;
 	matches!(equipment[Slot::Pet].kind, Void | Pet(_) | PetFood(_))
 		.ensure(
-			"equipment.special.kind",
+			"equipment[Pet].kind",
 			&equipment[Slot::Pet].kind,
 			"any variant of",
 			"Pet or PetFood"
 		)?;
-	//todo: kick message prefix
-	let occupied_item_slots = equipment.iter()
-		.filter(|item| item.kind != Void);
 
-	for item in occupied_item_slots {
-		//item.seed.ensure_not_negative(".seed") //tolerating negative seeds due to popularity
-		item.recipe.ensure_exact(&Void, ".recipe")?;
+	for slot in Slot::iter() {
+		let item = &equipment[slot];
+		if item.kind == Void {
+			continue; //empty item slots contain uninitialized memory
+		}
+		//item.seed.ensure_not_negative(&format!("equipment[{:?}].seed", slot)) //tolerating negative seeds due to popularity
+		item.recipe.ensure_exact(&Void, &format!("equipment[{:?}].recipe", slot))?;
 		//item.minus_modifier
-		//item.rarity.ensure_one_of(&[Normal, Uncommon, Rare, Epic, Legendary], ".rarity")?; //todo: crashes for rarity 6+
+		//item.rarity.ensure_one_of(&[Normal, Uncommon, Rare, Epic, Legendary], &format!("equipment[{:?}].rarity", slot))?; //todo: crashes for rarity 6+
 		let allowed_materials = allowed_materials(item.kind, updated_state.combat_class_major);
-		item.material.ensure_one_of(allowed_materials, ".material")?;
+		item.material.ensure_one_of(allowed_materials, &format!("equipment[{:?}].material", slot))?;
 		//item.flags
 		power_of(item.level as i32)
-			.ensure_within(&(0..=power_of(updated_state.level)), ".power")?;
+			.ensure_within(&(0..=power_of(updated_state.level)), &format!("equipment[{:?}].power", slot))?;
 		//item.spirits //tolerating everything due to popularity
-		item.spirit_counter.ensure_within(&(0..=32), "")?;//normally only 2h weapons can have more than 16 (up to 32) spirits, but we're tolerating 32 on everyhting due to popularity
+		item.spirit_counter.ensure_within(&(0..=32), &format!("equipment[{:?}].spirit_counter", slot))?;//normally only 2h weapons can have more than 16 (up to 32) spirits, but we're tolerating 32 on everyhting due to popularity
 	}
 
 	Ok(())

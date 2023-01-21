@@ -1,10 +1,12 @@
 use std::ops::{Index, IndexMut};
 use std::slice::Iter;
 
+use strum_macros::EnumIter;
+
 use crate::packet::common::Item;
 use crate::packet::creature_update::Equipment;
 
-#[derive(Debug, PartialEq, Eq, Clone, Copy)]
+#[derive(Debug, PartialEq, Eq, Clone, Copy, EnumIter)]
 pub enum Slot {
 	Unknown,
 	Neck,
