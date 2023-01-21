@@ -434,8 +434,8 @@ pub(super) fn inspect_show_patch_time(show_patch_time: &i32, former_state: &Crea
 	Ok(())
 }
 pub(super) fn inspect_combat_class_major(combat_class_major: &CombatClassMajor, former_state: &Creature, updated_state: &Creature) -> anti_cheat::Result {
-	combat_class_major.ensure_one_of([Warrior, Ranger, Mage, Rogue].as_slice(), "combat_class_major")
-	//todo: recheck gear
+	combat_class_major.ensure_one_of([Warrior, Ranger, Mage, Rogue].as_slice(), "combat_class_major")?;
+	inspect_equipment(&updated_state.equipment, former_state, updated_state)
 }
 pub(super) fn inspect_combat_class_minor(combat_class_minor: &CombatClassMinor, former_state: &Creature, updated_state: &Creature) -> anti_cheat::Result {
 	combat_class_minor.ensure_one_of([Default, Alternative].as_slice(), "combat_class_minor")
