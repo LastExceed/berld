@@ -507,8 +507,8 @@ pub(super) fn inspect_level(level: &i32, former_state: &Creature, updated_state:
 	level.ensure_within(&(1..=500), "level")
 }
 pub(super) fn inspect_experience(experience: &i32, former_state: &Creature, updated_state: &Creature) -> anti_cheat::Result {
-	let max = 9999;//todo: calc max xp based on lvl
-	experience.ensure_within(&(0..=max), "experience")
+	let maximum = maximum_experience_of(updated_state.level);
+	experience.ensure_within(&(0..maximum), "experience")
 }
 pub(super) fn inspect_master(master: &CreatureId, former_state: &Creature, updated_state: &Creature) -> anti_cheat::Result {
 	master
