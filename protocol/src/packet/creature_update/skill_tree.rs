@@ -21,7 +21,7 @@ pub enum Skill {
 }
 
 impl SkillTree {
-	pub fn iter(&self) -> Iter<'_, i32> {
+	pub fn iter(&self) -> Iter<'_, <Self as Index<Skill>>::Output> {
 		self.0.iter()
 	}
 }

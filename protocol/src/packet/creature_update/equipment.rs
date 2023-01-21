@@ -22,7 +22,7 @@ pub enum Slot {
 }
 
 impl Equipment {
-	pub fn iter(&self) -> Iter<'_, Item> {
+	pub fn iter(&self) -> Iter<'_, <Self as Index<Slot>>::Output> {
 		self.0.iter()
 	}
 }
