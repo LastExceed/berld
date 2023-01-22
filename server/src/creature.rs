@@ -1,7 +1,11 @@
 use protocol::nalgebra::{Point3, Vector3};
 use protocol::packet::common::{CreatureId, EulerAngles, Item, Race};
 use protocol::packet::creature_update::*;
+use protocol::packet::creature_update::CombatClassMajor::*;
+use protocol::packet::creature_update::CombatClassMinor::Alternative;
+use protocol::packet::creature_update::multipliers::Multiplier::Health;
 use protocol::packet::CreatureUpdate;
+use protocol::utils::{level_scaling_factor2, rarity_scaling_factor};
 use protocol::utils::constants::CombatClass;
 use protocol::utils::flagset::{FlagSet16, FlagSet32};
 
@@ -229,5 +233,28 @@ impl Creature {
 			skill_tree        : Some(self.skill_tree.clone()),
 			mana_cubes        : Some(self.mana_cubes),
 		}
+	}
+
+	pub fn maximum_health(&self) -> f32 {
+		let combat_class_multiplier =
+			match self.combat_class_major {
+				Warrior => 1.3 * if self.combat_class_minor == Alternative { 1.25 } else { 1.0 },
+				Ranger  => 1.1,
+				Rogue   => 1.2,
+				_       => 1.0
+			};
+
+		let innate_health = [
+			level_scaling_factor2(self.level as f32),
+			rarity_scaling_factor(if self.affiliation == Affiliation::Player { 4 } else { self.power_base }),
+			combat_class_multiplier
+		].iter().fold(
+			self.multipliers[Health],
+			|accumulator, multiplier| accumulator * multiplier
+		);
+
+		let equipment_bonus = self.equipment.iter().map(|item| item.health()).sum::<f32>();
+
+		innate_health + equipment_bonus
 	}
 }

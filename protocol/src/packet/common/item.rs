@@ -7,8 +7,51 @@ use tokio::io::{self, AsyncRead, AsyncReadExt, AsyncWrite, AsyncWriteExt};
 use crate::CwSerializable;
 use crate::packet::common::{Item, Race};
 use crate::packet::common::item::kind::*;
+use crate::utils::{level_scaling_factor2, rarity_scaling_factor};
 
 pub mod kind;
+
+impl Item {
+	const BASE_HP: f32 = 5.0;
+
+	pub fn health(&self) -> f32 {
+		use Kind::*;
+		use Material::*;
+
+		let kind_multiplier =
+			match self.kind {
+				Chest     => 1.0,
+
+				Weapon(_) | //2h weapons get no bonus, probably an oversight
+				Shoulder  |
+				Gloves    |
+				Boots     => 0.5,
+
+				_         => 0.0
+			};
+
+		let material_multiplier =
+			match self.material {
+				Iron   => 2.0,
+				Linen  => 1.5,
+				Cotton => 1.75,
+				_      => 1.0 //silk has no bonus
+			};
+
+		let hp_roll = 20 - ((self.seed as u32 & 0x1FFFFFFF) * 8) % 21;
+		let hp_roll_quality = (hp_roll as f32) / 20.0;
+
+		[
+			level_scaling_factor2((self.level as f32) + (self.spirit_counter as f32) * 0.1f32),
+			rarity_scaling_factor(self.rarity as u8),
+			kind_multiplier,
+			material_multiplier + hp_roll_quality,
+		].iter().fold(
+			Self::BASE_HP,
+			|accumulator, multiplier| accumulator * multiplier
+		)
+	}
+}
 
 #[repr(u8)]
 #[derive(Debug, PartialEq, Eq, Clone, Copy, Default)]
