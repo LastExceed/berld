@@ -27,6 +27,11 @@ impl HandlePacket<CreatureUpdate> for Server {
 		enable_pvp(&mut packet);
 
 		if filter(&mut packet, &snapshot, &character) {
+			//todo: move somewhere else
+			if let Some(animation_time) = packet.animation_time && animation_time <= snapshot.animation_time {
+				packet.animation_time = Some(0); //starts all animations from the beginning to prevent cut-off animations, at the cost of some minimal delay
+			}
+
 			self.broadcast(&packet, Some(source)).await;
 		}
 	}
