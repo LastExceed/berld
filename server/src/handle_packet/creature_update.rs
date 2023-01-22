@@ -2,12 +2,12 @@ use async_trait::async_trait;
 
 use protocol::packet::CreatureUpdate;
 
-use crate::anti_cheat;
+use crate::addons::anti_cheat;
+use crate::addons::enable_pvp;
+use crate::addons::traffic_filter::filter;
 use crate::handle_packet::HandlePacket;
 use crate::player::Player;
-use crate::pvp::enable_pvp;
 use crate::server::Server;
-use crate::traffic_filter::filter;
 
 #[async_trait]
 impl HandlePacket<CreatureUpdate> for Server {

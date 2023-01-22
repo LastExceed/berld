@@ -27,12 +27,12 @@ use protocol::utils::constants::SIZE_ZONE;
 use protocol::utils::io_extensions::{ReadStruct, WriteStruct};
 use protocol::utils::sound_position_of;
 
-use crate::anti_cheat::inspect_creature_update;
+use crate::addons::anti_cheat::inspect_creature_update;
+use crate::addons::enable_pvp;
 use crate::creature::Creature;
 use crate::creature_id_pool::CreatureIdPool;
 use crate::handle_packet::HandlePacket;
 use crate::player::Player;
-use crate::pvp::enable_pvp;
 
 pub struct Server {
 	pub players: RwLock<Vec<Arc<Player>>>,

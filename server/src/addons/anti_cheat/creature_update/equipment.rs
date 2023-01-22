@@ -7,7 +7,7 @@ use protocol::packet::creature_update::CombatClassMajor;
 use protocol::packet::creature_update::CombatClassMajor::*;
 use protocol::utils::constants::materials;
 
-pub(super) fn allowed_materials(item_kind: item::Kind, combat_class_major: CombatClassMajor) -> &'static [Material] {
+pub(crate) fn allowed_materials(item_kind: item::Kind, combat_class_major: CombatClassMajor) -> &'static [Material] {
 	match item_kind {
 		Weapon(Sword)      => &materials::SWORD[..],
 		Weapon(Axe)        => &materials::AXE[..],

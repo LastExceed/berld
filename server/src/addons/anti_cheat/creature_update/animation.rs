@@ -8,9 +8,9 @@ use protocol::utils::constants::{animations, CombatClass};
 use protocol::utils::constants::animations::{abilities, m1, m2};
 use protocol::utils::constants::combat_classes::*;
 
-use crate::anti_cheat::PresentIn;
+use crate::addons::anti_cheat::PresentIn;
 
-pub(super) fn animations_avilable_with(combat_class: CombatClass, equipment: &Equipment) -> Vec<Animation> {
+pub(crate) fn animations_avilable_with(combat_class: CombatClass, equipment: &Equipment) -> Vec<Animation> {
 	let abilities = class_specific_animations(combat_class);
 	let (m1, m2) = weapon_specific_animations(combat_class, equipment);
 

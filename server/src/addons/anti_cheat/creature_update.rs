@@ -18,19 +18,19 @@ use protocol::utils::constants::combat_classes::*;
 use protocol::utils::constants::PLAYABLE_RACES;
 use protocol::utils::flagset::{FlagSet16, FlagSet32};
 
-use crate::anti_cheat;
-use crate::anti_cheat::*;
-use crate::anti_cheat::creature_update::animation::animations_avilable_with;
-use crate::anti_cheat::creature_update::equipment::allowed_materials;
+use crate::addons::anti_cheat;
+use crate::addons::anti_cheat::*;
+use crate::addons::anti_cheat::creature_update::animation::animations_avilable_with;
+use crate::addons::anti_cheat::creature_update::equipment::allowed_materials;
 use crate::creature::Creature;
 
 mod animation;
 mod equipment;
 
-pub(super) fn inspect_position(position: &Point3<i64>, former_state: &Creature, updated_state: &Creature) -> anti_cheat::Result {
+pub(crate) fn inspect_position(position: &Point3<i64>, former_state: &Creature, updated_state: &Creature) -> anti_cheat::Result {
 	Ok(())
 }
-pub(super) fn inspect_rotation(rotation: &EulerAngles, former_state: &Creature, updated_state: &Creature) -> anti_cheat::Result {
+pub(crate) fn inspect_rotation(rotation: &EulerAngles, former_state: &Creature, updated_state: &Creature) -> anti_cheat::Result {
 	//usually 0, except
 	//- rounding errors
 	//- 60f..=0 when swimming (or shortly afterwards)
@@ -44,10 +44,10 @@ pub(super) fn inspect_rotation(rotation: &EulerAngles, former_state: &Creature, 
 		.is_finite()
 		.ok_or("rotation.yaw wasn't finite".to_string())
 }
-pub(super) fn inspect_velocity(velocity: &Vector3<f32>, former_state: &Creature, updated_state: &Creature) -> anti_cheat::Result {
+pub(crate) fn inspect_velocity(velocity: &Vector3<f32>, former_state: &Creature, updated_state: &Creature) -> anti_cheat::Result {
 	Ok(())
 }
-pub(super) fn inspect_acceleration(acceleration: &Vector3<f32>, former_state: &Creature, updated_state: &Creature) -> anti_cheat::Result {
+pub(crate) fn inspect_acceleration(acceleration: &Vector3<f32>, former_state: &Creature, updated_state: &Creature) -> anti_cheat::Result {
 	let limit_xy = Vector3::<f32>::new(80.0, 80.0, 0.0).magnitude() + 0.00001; //113,1370849898476; //todo: would epsilon suffice?
 	let actual_xy = acceleration.xy().magnitude();
 	if !updated_state.flags.get(CreatureFlag::Gliding) {
@@ -61,7 +61,7 @@ pub(super) fn inspect_acceleration(acceleration: &Vector3<f32>, former_state: &C
 		acceleration.z.ensure_exact(&0.0, "acceleration.vertical")
 	}
 }
-pub(super) fn inspect_velocity_extra(velocity_extra: &Vector3<f32>, former_state: &Creature, updated_state: &Creature) -> anti_cheat::Result {
+pub(crate) fn inspect_velocity_extra(velocity_extra: &Vector3<f32>, former_state: &Creature, updated_state: &Creature) -> anti_cheat::Result {
 	let (max_xy, max_z): (f32, f32) =
 		match updated_state.combat_class_major {
 			Ranger => (35.0, 17.0),
@@ -74,27 +74,27 @@ pub(super) fn inspect_velocity_extra(velocity_extra: &Vector3<f32>, former_state
 	velocity_extra.z
 		.ensure_within(&(0.0..=max_z), "")
 }
-pub(super) fn inspect_head_tilt(head_tilt: &f32, former_state: &Creature, updated_state: &Creature) -> anti_cheat::Result {
+pub(crate) fn inspect_head_tilt(head_tilt: &f32, former_state: &Creature, updated_state: &Creature) -> anti_cheat::Result {
 	head_tilt
 		.ensure_within(&(-32.5..=45.0), "head_tilt")//negative when attacking downwards
 }
-pub(super) fn inspect_flags_physics(flags_physics: &FlagSet32<PhysicsFlag>, former_state: &Creature, updated_state: &Creature) -> anti_cheat::Result {
+pub(crate) fn inspect_flags_physics(flags_physics: &FlagSet32<PhysicsFlag>, former_state: &Creature, updated_state: &Creature) -> anti_cheat::Result {
 	Ok(())
 }
-pub(super) fn inspect_affiliation(affiliation: &Affiliation, former_state: &Creature, updated_state: &Creature) -> anti_cheat::Result {
+pub(crate) fn inspect_affiliation(affiliation: &Affiliation, former_state: &Creature, updated_state: &Creature) -> anti_cheat::Result {
 	affiliation
 		.ensure_exact(&Affiliation::Player, "affiliation")
 }
-pub(super) fn inspect_race(race: &Race, former_state: &Creature, updated_state: &Creature) -> anti_cheat::Result {
+pub(crate) fn inspect_race(race: &Race, former_state: &Creature, updated_state: &Creature) -> anti_cheat::Result {
 	race.ensure_one_of(PLAYABLE_RACES.as_slice(), "")
 }
-pub(super) fn inspect_animation(animation: &Animation, former_state: &Creature, updated_state: &Creature) -> anti_cheat::Result {
+pub(crate) fn inspect_animation(animation: &Animation, former_state: &Creature, updated_state: &Creature) -> anti_cheat::Result {
 	let allowed_animations = animations_avilable_with(updated_state.combat_class(), &updated_state.equipment);
 
 	animation
 		.ensure_one_of(&allowed_animations, "animation")
 }
-pub(super) fn inspect_animation_time(animation_time: &i32, former_state: &Creature, updated_state: &Creature) -> anti_cheat::Result {
+pub(crate) fn inspect_animation_time(animation_time: &i32, former_state: &Creature, updated_state: &Creature) -> anti_cheat::Result {
 	const TIMELESS_ANIMATIONS: [Animation; 6] = [
 		Idle,
 		Stealth,
@@ -116,10 +116,10 @@ pub(super) fn inspect_animation_time(animation_time: &i32, former_state: &Creatu
 
 	Ok(())
 }
-pub(super) fn inspect_combo(combo: &i32, former_state: &Creature, updated_state: &Creature) -> anti_cheat::Result {
+pub(crate) fn inspect_combo(combo: &i32, former_state: &Creature, updated_state: &Creature) -> anti_cheat::Result {
 	combo.ensure_not_negative("combo")
 }
-pub(super) fn inspect_hit_time_out(hit_time_out: &i32, former_state: &Creature, updated_state: &Creature) -> anti_cheat::Result {
+pub(crate) fn inspect_hit_time_out(hit_time_out: &i32, former_state: &Creature, updated_state: &Creature) -> anti_cheat::Result {
 	hit_time_out.ensure_not_negative("hit_time_out")
 	//todo: speedhack detection
 //	expectMinimum(0, "hitTimeOut")
@@ -131,7 +131,7 @@ pub(super) fn inspect_hit_time_out(hit_time_out: &i32, former_state: &Creature, 
 //		abs(delta).expectMaximum(2000, "hitTimeOut.clockdesync")
 //	}
 }
-pub(super) fn inspect_appearance(appearance: &Appearance, former_state: &Creature, updated_state: &Creature) -> anti_cheat::Result {
+pub(crate) fn inspect_appearance(appearance: &Appearance, former_state: &Creature, updated_state: &Creature) -> anti_cheat::Result {
 	appearance.flags.ensure_exact(&core::default::Default::default(), "appearance.flags")?;
 
 	appearance.tail_model.ensure_exact(&-1, "appearance.tail_model")?;
@@ -400,7 +400,7 @@ pub(super) fn inspect_appearance(appearance: &Appearance, former_state: &Creatur
 	appearance.weapon_size  .ensure_exact (&allowed_weapon_size  , "appearance.weaponSize")
 
 }
-pub(super) fn inspect_flags(flags: &FlagSet16<CreatureFlag>, former_state: &Creature, updated_state: &Creature) -> anti_cheat::Result {
+pub(crate) fn inspect_flags(flags: &FlagSet16<CreatureFlag>, former_state: &Creature, updated_state: &Creature) -> anti_cheat::Result {
 	flags.get(CreatureFlag::FriendlyFire)
 		.ensure_exact(&false, "flags[FriendlyFire]")?;
 
@@ -415,52 +415,52 @@ pub(super) fn inspect_flags(flags: &FlagSet16<CreatureFlag>, former_state: &Crea
 	}
 	Ok(())
 }
-pub(super) fn inspect_effect_time_dodge(effect_time_dodge: &i32, former_state: &Creature, updated_state: &Creature) -> anti_cheat::Result {
+pub(crate) fn inspect_effect_time_dodge(effect_time_dodge: &i32, former_state: &Creature, updated_state: &Creature) -> anti_cheat::Result {
 	effect_time_dodge.ensure_within(&(0..=600), "effect_time_dodge")
 }
-pub(super) fn inspect_effect_time_stun(effect_time_stun: &i32, former_state: &Creature, updated_state: &Creature) -> anti_cheat::Result {
+pub(crate) fn inspect_effect_time_stun(effect_time_stun: &i32, former_state: &Creature, updated_state: &Creature) -> anti_cheat::Result {
 	if *effect_time_stun > former_state.effect_time_stun {
 		effect_time_stun.ensure_not_negative("effect_time_stun")?;
 	}
 	Ok(())
 }
-pub(super) fn inspect_effect_time_fear(effect_time_fear: &i32, former_state: &Creature, updated_state: &Creature) -> anti_cheat::Result {
+pub(crate) fn inspect_effect_time_fear(effect_time_fear: &i32, former_state: &Creature, updated_state: &Creature) -> anti_cheat::Result {
 	effect_time_fear.ensure_not_negative("effect_time_fear")
 }
-pub(super) fn inspect_effect_time_chill(effect_time_chill: &i32, former_state: &Creature, updated_state: &Creature) -> anti_cheat::Result {
+pub(crate) fn inspect_effect_time_chill(effect_time_chill: &i32, former_state: &Creature, updated_state: &Creature) -> anti_cheat::Result {
 	effect_time_chill.ensure_not_negative("effect_time_chill")
 }
-pub(super) fn inspect_effect_time_wind(effect_time_wind: &i32, former_state: &Creature, updated_state: &Creature) -> anti_cheat::Result {
+pub(crate) fn inspect_effect_time_wind(effect_time_wind: &i32, former_state: &Creature, updated_state: &Creature) -> anti_cheat::Result {
 	effect_time_wind.ensure_within(&(0..=5000), "effect_time_wind")
 }
-pub(super) fn inspect_show_patch_time(show_patch_time: &i32, former_state: &Creature, updated_state: &Creature) -> anti_cheat::Result {
+pub(crate) fn inspect_show_patch_time(show_patch_time: &i32, former_state: &Creature, updated_state: &Creature) -> anti_cheat::Result {
 	Ok(())
 }
-pub(super) fn inspect_combat_class_major(combat_class_major: &CombatClassMajor, former_state: &Creature, updated_state: &Creature) -> anti_cheat::Result {
+pub(crate) fn inspect_combat_class_major(combat_class_major: &CombatClassMajor, former_state: &Creature, updated_state: &Creature) -> anti_cheat::Result {
 	combat_class_major.ensure_one_of([Warrior, Ranger, Mage, Rogue].as_slice(), "combat_class_major")?;
 	inspect_equipment(&updated_state.equipment, former_state, updated_state)
 }
-pub(super) fn inspect_combat_class_minor(combat_class_minor: &CombatClassMinor, former_state: &Creature, updated_state: &Creature) -> anti_cheat::Result {
+pub(crate) fn inspect_combat_class_minor(combat_class_minor: &CombatClassMinor, former_state: &Creature, updated_state: &Creature) -> anti_cheat::Result {
 	combat_class_minor.ensure_one_of([Default, Alternative].as_slice(), "combat_class_minor")
 }
-pub(super) fn inspect_mana_charge(mana_charge: &f32, former_state: &Creature, updated_state: &Creature) -> anti_cheat::Result {
+pub(crate) fn inspect_mana_charge(mana_charge: &f32, former_state: &Creature, updated_state: &Creature) -> anti_cheat::Result {
 	mana_charge.ensure_at_most(updated_state.mana, "mana_charge")
 }
-pub(super) fn inspect_unknown24(unknown24: &[f32; 3], former_state: &Creature, updated_state: &Creature) -> anti_cheat::Result {
+pub(crate) fn inspect_unknown24(unknown24: &[f32; 3], former_state: &Creature, updated_state: &Creature) -> anti_cheat::Result {
 	Ok(())
 }
-pub(super) fn inspect_unknown25(unknown25: &[f32; 3], former_state: &Creature, updated_state: &Creature) -> anti_cheat::Result {
+pub(crate) fn inspect_unknown25(unknown25: &[f32; 3], former_state: &Creature, updated_state: &Creature) -> anti_cheat::Result {
 	Ok(())
 }
-pub(super) fn inspect_aim_offset(aim_offset: &Point3<f32>, former_state: &Creature, updated_state: &Creature) -> anti_cheat::Result {
+pub(crate) fn inspect_aim_offset(aim_offset: &Point3<f32>, former_state: &Creature, updated_state: &Creature) -> anti_cheat::Result {
 	//aim_offset.magnitude().ensure_at_most(60.0, "aim_offset_distance") //todo: account for rounding errors and movement
 	Ok(())
 }
-pub(super) fn inspect_health(health: &f32, former_state: &Creature, updated_state: &Creature) -> anti_cheat::Result {
+pub(crate) fn inspect_health(health: &f32, former_state: &Creature, updated_state: &Creature) -> anti_cheat::Result {
 	let maximum = updated_state.maximum_health() + 0.001; //add some tolerance for rounding errors
 	health.ensure_within(&(0.0..=maximum), "health")
 }
-pub(super) fn inspect_mana(mana: &f32, former_state: &Creature, updated_state: &Creature) -> anti_cheat::Result {
+pub(crate) fn inspect_mana(mana: &f32, former_state: &Creature, updated_state: &Creature) -> anti_cheat::Result {
 	mana.ensure_within(&(0.0..=1.0), "mana")
 	//todo: mana can only increase via:
 	//- m1
@@ -472,7 +472,7 @@ pub(super) fn inspect_mana(mana: &f32, former_state: &Creature, updated_state: &
 	//- stealth (leaving stealth keeps generating mp for a while)
 	//- intercept (1 frame to 1.0, then back to 0.0)
 }
-pub(super) fn inspect_blocking_gauge(blocking_gauge: &f32, former_state: &Creature, updated_state: &Creature) -> anti_cheat::Result {
+pub(crate) fn inspect_blocking_gauge(blocking_gauge: &f32, former_state: &Creature, updated_state: &Creature) -> anti_cheat::Result {
 	let blocking_via_shield =//check against former state as the blocking gauge updates with 1 frame delay
 		former_state.animation == ShieldM2Charging;
 
@@ -493,53 +493,53 @@ pub(super) fn inspect_blocking_gauge(blocking_gauge: &f32, former_state: &Creatu
 	blocking_gauge
 		.ensure_within(&(0.0..=max), "blocking_gauge") //todo: negative gauge glitch?
 }
-pub(super) fn inspect_multipliers(multipliers: &Multipliers, former_state: &Creature, updated_state: &Creature) -> anti_cheat::Result {
+pub(crate) fn inspect_multipliers(multipliers: &Multipliers, former_state: &Creature, updated_state: &Creature) -> anti_cheat::Result {
 	multipliers[Health]     .ensure_exact(&100.0, "multipliers.health")?;
 	multipliers[AttackSpeed].ensure_exact(&  1.0, "multipliers.attack_speed")?;
 	multipliers[Damage]     .ensure_exact(&  1.0, "multipliers.damage")?;
 	multipliers[Resi]       .ensure_exact(&  1.0, "multipliers.resi")?;
 	multipliers[Armor]      .ensure_exact(&  1.0, "multipliers.armor")
 }
-pub(super) fn inspect_unknown31(unknown31: &i8, former_state: &Creature, updated_state: &Creature) -> anti_cheat::Result {
+pub(crate) fn inspect_unknown31(unknown31: &i8, former_state: &Creature, updated_state: &Creature) -> anti_cheat::Result {
 	Ok(())
 }
-pub(super) fn inspect_unknown32(unknown32: &i8, former_state: &Creature, updated_state: &Creature) -> anti_cheat::Result {
+pub(crate) fn inspect_unknown32(unknown32: &i8, former_state: &Creature, updated_state: &Creature) -> anti_cheat::Result {
 	Ok(())
 }
-pub(super) fn inspect_level(level: &i32, former_state: &Creature, updated_state: &Creature) -> anti_cheat::Result {
+pub(crate) fn inspect_level(level: &i32, former_state: &Creature, updated_state: &Creature) -> anti_cheat::Result {
 	level.ensure_within(&(1..=500), "level")
 }
-pub(super) fn inspect_experience(experience: &i32, former_state: &Creature, updated_state: &Creature) -> anti_cheat::Result {
+pub(crate) fn inspect_experience(experience: &i32, former_state: &Creature, updated_state: &Creature) -> anti_cheat::Result {
 	let maximum = maximum_experience_of(updated_state.level);
 	experience.ensure_within(&(0..maximum), "experience")
 }
-pub(super) fn inspect_master(master: &CreatureId, former_state: &Creature, updated_state: &Creature) -> anti_cheat::Result {
+pub(crate) fn inspect_master(master: &CreatureId, former_state: &Creature, updated_state: &Creature) -> anti_cheat::Result {
 	master
 		.ensure_exact(&CreatureId(0), "master")
 }
-pub(super) fn inspect_unknown36(unknown36: &i64, former_state: &Creature, updated_state: &Creature) -> anti_cheat::Result {
+pub(crate) fn inspect_unknown36(unknown36: &i64, former_state: &Creature, updated_state: &Creature) -> anti_cheat::Result {
 	Ok(())
 }
-pub(super) fn inspect_power_base(power_base: &u8, former_state: &Creature, updated_state: &Creature) -> anti_cheat::Result {
+pub(crate) fn inspect_power_base(power_base: &u8, former_state: &Creature, updated_state: &Creature) -> anti_cheat::Result {
 	power_base
 		.ensure_exact(&0, "power_base")
 }
-pub(super) fn inspect_unknown38(unknown38: &i32, former_state: &Creature, updated_state: &Creature) -> anti_cheat::Result {
+pub(crate) fn inspect_unknown38(unknown38: &i32, former_state: &Creature, updated_state: &Creature) -> anti_cheat::Result {
 	Ok(())
 }
-pub(super) fn inspect_home_zone(home_zone: &Point3<i32>, former_state: &Creature, updated_state: &Creature) -> anti_cheat::Result {
+pub(crate) fn inspect_home_zone(home_zone: &Point3<i32>, former_state: &Creature, updated_state: &Creature) -> anti_cheat::Result {
 	Ok(())
 }
-pub(super) fn inspect_home(home: &Point3<i64>, former_state: &Creature, updated_state: &Creature) -> anti_cheat::Result {
+pub(crate) fn inspect_home(home: &Point3<i64>, former_state: &Creature, updated_state: &Creature) -> anti_cheat::Result {
 	Ok(())
 }
-pub(super) fn inspect_zone_to_reveal(zone_to_reveal: &Point3<i32>, former_state: &Creature, updated_state: &Creature) -> anti_cheat::Result {
+pub(crate) fn inspect_zone_to_reveal(zone_to_reveal: &Point3<i32>, former_state: &Creature, updated_state: &Creature) -> anti_cheat::Result {
 	Ok(())
 }
-pub(super) fn inspect_unknown42(unknown42: &i8, former_state: &Creature, updated_state: &Creature) -> anti_cheat::Result {
+pub(crate) fn inspect_unknown42(unknown42: &i8, former_state: &Creature, updated_state: &Creature) -> anti_cheat::Result {
 	Ok(())
 }
-pub(super) fn inspect_consumable(consumable: &Item, former_state: &Creature, updated_state: &Creature) -> anti_cheat::Result {
+pub(crate) fn inspect_consumable(consumable: &Item, former_state: &Creature, updated_state: &Creature) -> anti_cheat::Result {
 	if consumable.kind == Void {
 		return Ok(());
 	}
@@ -550,7 +550,7 @@ pub(super) fn inspect_consumable(consumable: &Item, former_state: &Creature, upd
 	power_of(consumable.level as i32)
 		.ensure_within(&(0..=power_of(updated_state.level)), "consumable.power")
 }
-pub(super) fn inspect_equipment(equipment: &Equipment, former_state: &Creature, updated_state: &Creature) -> anti_cheat::Result {
+pub(crate) fn inspect_equipment(equipment: &Equipment, former_state: &Creature, updated_state: &Creature) -> anti_cheat::Result {
 	//todo: copypasta
 	let invariant_slots = [
 		(Slot::Unknown  , item::Kind::Void),
@@ -617,16 +617,16 @@ pub(super) fn inspect_equipment(equipment: &Equipment, former_state: &Creature, 
 
 	Ok(())
 }
-pub(super) fn inspect_name(name: &String, former_state: &Creature, updated_state: &Creature) -> anti_cheat::Result {
+pub(crate) fn inspect_name(name: &String, former_state: &Creature, updated_state: &Creature) -> anti_cheat::Result {
 	name.as_bytes().len().ensure_within(&(1..=15), "name.length")
 	//todo: limit characters to what the default font can display
 }
-pub(super) fn inspect_skill_tree(skill_tree: &SkillTree, former_state: &Creature, updated_state: &Creature) -> anti_cheat::Result {
+pub(crate) fn inspect_skill_tree(skill_tree: &SkillTree, former_state: &Creature, updated_state: &Creature) -> anti_cheat::Result {
 	for skill in Skill::iter() {
 		skill_tree[skill].ensure_not_negative(&format!("skill_tree.{:?}", skill))?;
 	}
 	skill_tree.iter().sum::<i32>().ensure_at_most((updated_state.level - 1) * 2, "skill_tree.total")
 }
-pub(super) fn inspect_mana_cubes(mana_cubes: &i32, former_state: &Creature, updated_state: &Creature) -> anti_cheat::Result {
+pub(crate) fn inspect_mana_cubes(mana_cubes: &i32, former_state: &Creature, updated_state: &Creature) -> anti_cheat::Result {
 	mana_cubes.ensure_not_negative("mana_cubes")
 }
