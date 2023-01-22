@@ -40,7 +40,7 @@ mod handle_packet;
 pub mod creature;
 
 pub struct Server {
-	pub players: RwLock<Vec<Arc<Player>>>,
+	players: RwLock<Vec<Arc<Player>>>,
 	id_pool: RwLock<CreatureIdPool>,
 	drops: RwLock<HashMap<Point2<i32>, Vec<Drop>>>
 }
