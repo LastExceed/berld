@@ -2,7 +2,7 @@ use async_trait::async_trait;
 
 use protocol::packet::CreatureUpdate;
 
-use crate::addons::anti_cheat;
+use crate::addons::{anti_cheat, fix_cutoff_animations};
 use crate::addons::enable_pvp;
 use crate::addons::traffic_filter::filter;
 use crate::handle_packet::HandlePacket;
@@ -27,11 +27,7 @@ impl HandlePacket<CreatureUpdate> for Server {
 		enable_pvp(&mut packet);
 
 		if filter(&mut packet, &snapshot, &character) {
-			//todo: move somewhere else
-			if let Some(animation_time) = packet.animation_time && animation_time <= snapshot.animation_time {
-				packet.animation_time = Some(0); //starts all animations from the beginning to prevent cut-off animations, at the cost of some minimal delay
-			}
-
+			fix_cutoff_animations(&mut packet, &snapshot);
 			self.broadcast(&packet, Some(source)).await;
 		}
 	}
