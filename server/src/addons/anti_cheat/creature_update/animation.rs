@@ -54,7 +54,7 @@ fn weapon_specific_animations(combat_class: CombatClass, equipment: &Equipment) 
 		Weapon(Greatmace)  |
 		Weapon(Pitchfork) => (&m1::GREATWEAPON[..], &m2::GREATWEAPON[..]),
 		Weapon(Dagger)    => (&m1::DAGGER[..]     , &m2::DAGGER[..]),
-		Weapon(Fist)      => (&m1::UNARMED[..]    , &m2::UNARMED[..]),//use redirecting constants?
+		Weapon(Fist)      => (&m1::UNARMED[..]    , &m2::FIST[..]),//use redirecting constant?
 		Weapon(Longsword) => (&m1::LONGSWORD[..]  , &m2::LONGSWORD[..]),
 		Weapon(Bow)       => (&m1::BOW[..]        , &m2::BOW[..]),
 		Weapon(Crossbow)  => (&m1::CROSSBOW[..]   , &m2::CROSSBOW[..]),
