@@ -49,7 +49,7 @@ pub struct Creature {
 	pub master: CreatureId,
 	pub unknown36: i64,
 	/**this is the '+#' that monsters in some dungeons have next to their [race]*/
-	pub power_base: i8,
+	pub power_base: u8,
 	pub unknown38: i32,
 	pub home_zone: Point3<i32>,
 	pub home: Point3<i64>,

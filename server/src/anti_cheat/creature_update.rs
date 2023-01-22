@@ -520,7 +520,7 @@ pub(super) fn inspect_master(master: &CreatureId, former_state: &Creature, updat
 pub(super) fn inspect_unknown36(unknown36: &i64, former_state: &Creature, updated_state: &Creature) -> anti_cheat::Result {
 	Ok(())
 }
-pub(super) fn inspect_power_base(power_base: &i8, former_state: &Creature, updated_state: &Creature) -> anti_cheat::Result {
+pub(super) fn inspect_power_base(power_base: &u8, former_state: &Creature, updated_state: &Creature) -> anti_cheat::Result {
 	power_base
 		.ensure_exact(&0, "power_base")
 }

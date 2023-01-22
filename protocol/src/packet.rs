@@ -70,7 +70,7 @@ pub struct CreatureUpdate {
 	pub master: Option<CreatureId>,
 	pub unknown36: Option<i64>,
 	///this is the '+#' that monsters in some dungeons have next to their [race]
-	pub power_base: Option<i8>,
+	pub power_base: Option<u8>,
 	pub unknown38: Option<i32>,
 	pub home_zone: Option<Point3<i32>>,
 	pub home: Option<Point3<i64>>,
