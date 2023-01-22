@@ -76,5 +76,7 @@ pub fn adjust_hit(hit: &mut Hit, source: &Creature, target: &Creature) {
 			+ class_stun_bonus;
 
 	hit.damage *= effective_damage_multiplier;
-	hit.stuntime += effective_stun_bonus;
+	if hit.stuntime > 0 {
+		hit.stuntime += effective_stun_bonus;
+	}
 }
