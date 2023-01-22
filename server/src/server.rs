@@ -110,7 +110,9 @@ impl Server {
 		new_player.notify("welcome to berld").await;
 
 		for existing_player in self.players.read().await.iter() {
-			new_player.send(&existing_player.creature.read().await.to_update(existing_player.id)).await?;
+			let mut creature_update = existing_player.creature.read().await.to_update(existing_player.id);
+			enable_pvp(&mut creature_update);
+			new_player.send(&creature_update).await?;
 		}
 
 		new_player.send(&WorldUpdate {
