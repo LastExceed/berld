@@ -20,7 +20,7 @@ impl HandlePacket<CreatureUpdate> for Server {
 
 		if let Err(message) = anti_cheat::inspect_creature_update(&packet, &snapshot, &character) {
 			dbg!(&message);
-			self.kick(&source, message).await;
+			self.kick(source, message).await;
 			return;
 		}
 
