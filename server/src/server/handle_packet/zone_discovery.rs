@@ -2,8 +2,8 @@ use async_trait::async_trait;
 
 use protocol::packet::ZoneDiscovery;
 
-use crate::handle_packet::HandlePacket;
-use crate::player::Player;
+use crate::server::handle_packet::HandlePacket;
+use crate::server::player::Player;
 use crate::server::Server;
 
 #[async_trait]

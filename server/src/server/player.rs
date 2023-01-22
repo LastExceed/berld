@@ -9,7 +9,7 @@ use tokio::sync::RwLock;
 use protocol::packet::{ChatMessageFromServer, FromServer};
 use protocol::packet::common::CreatureId;
 
-use crate::creature::Creature;
+use crate::server::creature::Creature;
 
 pub struct Player {
 	pub id: CreatureId,

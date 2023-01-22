@@ -6,7 +6,7 @@ use boolinator::Boolinator;
 
 use protocol::packet::CreatureUpdate;
 
-use crate::creature::Creature;
+use crate::server::creature::Creature;
 
 use self::creature_update::*;
 

@@ -22,7 +22,7 @@ use crate::addons::anti_cheat;
 use crate::addons::anti_cheat::*;
 use crate::addons::anti_cheat::creature_update::animation::animations_avilable_with;
 use crate::addons::anti_cheat::creature_update::equipment::allowed_materials;
-use crate::creature::Creature;
+use crate::server::creature::Creature;
 
 mod animation;
 mod equipment;

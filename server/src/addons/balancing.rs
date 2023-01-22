@@ -7,7 +7,7 @@ use protocol::packet::creature_update::equipment::Slot::RightWeapon;
 use protocol::packet::status_effect::StatusEffectType::Swiftness;
 use protocol::utils::constants::combat_classes::*;
 
-use crate::creature::Creature;
+use crate::server::creature::Creature;
 use crate::server::Server;
 
 pub async fn buff_warfrenzy(warfrenzy: &StatusEffect, server: &Server) {

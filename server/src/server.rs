@@ -29,10 +29,15 @@ use protocol::utils::sound_position_of;
 
 use crate::addons::anti_cheat::inspect_creature_update;
 use crate::addons::enable_pvp;
-use crate::creature::Creature;
-use crate::creature_id_pool::CreatureIdPool;
-use crate::handle_packet::HandlePacket;
-use crate::player::Player;
+use crate::server::creature::Creature;
+use crate::server::creature_id_pool::CreatureIdPool;
+use crate::server::handle_packet::HandlePacket;
+use crate::server::player::Player;
+
+mod creature_id_pool;
+mod player;
+mod handle_packet;
+pub mod creature;
 
 pub struct Server {
 	pub players: RwLock<Vec<Arc<Player>>>,

@@ -6,8 +6,8 @@ use protocol::packet::common::CreatureId;
 use protocol::packet::creature_update::Affiliation;
 use protocol::packet::world_update::Kill;
 
-use crate::handle_packet::HandlePacket;
-use crate::player::Player;
+use crate::server::handle_packet::HandlePacket;
+use crate::server::player::Player;
 use crate::server::Server;
 
 #[async_trait]

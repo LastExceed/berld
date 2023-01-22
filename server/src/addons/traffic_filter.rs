@@ -3,7 +3,7 @@ use protocol::packet::creature_update::{Animation, CreatureFlag, PhysicsFlag};
 use protocol::packet::CreatureUpdate;
 use protocol::utils::constants::SIZE_BLOCK;
 
-use crate::creature::Creature;
+use crate::server::creature::Creature;
 
 pub fn filter(packet: &mut CreatureUpdate, former_state: &Creature, updated_state: &Creature) -> bool {
 	packet.rotation              = None;

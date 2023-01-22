@@ -1,7 +1,7 @@
 use protocol::packet::creature_update::CreatureFlag;
 use protocol::packet::CreatureUpdate;
 
-use crate::creature::Creature;
+use crate::server::creature::Creature;
 
 pub mod anti_cheat;
 pub mod traffic_filter;

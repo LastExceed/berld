@@ -13,8 +13,8 @@ use protocol::packet::world_update::SoundEffect;
 use protocol::utils::sound_position_of;
 
 use crate::addons::balancing;
-use crate::handle_packet::HandlePacket;
-use crate::player::Player;
+use crate::server::handle_packet::HandlePacket;
+use crate::server::player::Player;
 use crate::server::Server;
 
 #[async_trait]

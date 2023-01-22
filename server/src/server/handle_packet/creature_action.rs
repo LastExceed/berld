@@ -8,8 +8,8 @@ use protocol::packet::world_update::sound_effect::Sound;
 use protocol::utils::constants::SIZE_BLOCK;
 use protocol::utils::sound_position_of;
 
-use crate::handle_packet::HandlePacket;
-use crate::player::Player;
+use crate::server::handle_packet::HandlePacket;
+use crate::server::player::Player;
 use crate::server::Server;
 
 #[async_trait]

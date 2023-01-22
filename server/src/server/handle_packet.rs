@@ -2,7 +2,7 @@ use async_trait::async_trait;
 
 use protocol::packet::FromClient;
 
-use crate::player::Player;
+use crate::server::player::Player;
 
 mod creature_update;
 mod creature_action;

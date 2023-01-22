@@ -5,8 +5,8 @@ use protocol::packet::CreatureUpdate;
 use crate::addons::{anti_cheat, fix_cutoff_animations};
 use crate::addons::enable_pvp;
 use crate::addons::traffic_filter::filter;
-use crate::handle_packet::HandlePacket;
-use crate::player::Player;
+use crate::server::handle_packet::HandlePacket;
+use crate::server::player::Player;
 use crate::server::Server;
 
 #[async_trait]
