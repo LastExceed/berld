@@ -457,8 +457,8 @@ pub(super) fn inspect_aim_offset(aim_offset: &Point3<f32>, former_state: &Creatu
 	Ok(())
 }
 pub(super) fn inspect_health(health: &f32, former_state: &Creature, updated_state: &Creature) -> anti_cheat::Result {
-	//todo: calculate max hp
-	Ok(())
+	let maximum = updated_state.maximum_health() + 0.001; //add some tolerance for rounding errors
+	health.ensure_within(&(0.0..=maximum), "health")
 }
 pub(super) fn inspect_mana(mana: &f32, former_state: &Creature, updated_state: &Creature) -> anti_cheat::Result {
 	mana.ensure_within(&(0.0..=1.0), "mana")
