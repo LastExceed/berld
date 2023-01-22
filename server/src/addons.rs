@@ -5,6 +5,7 @@ use crate::creature::Creature;
 
 pub mod anti_cheat;
 pub mod traffic_filter;
+pub mod balancing;
 
 pub fn enable_pvp(creature_update: &mut CreatureUpdate) {
 	if let Some(ref mut flags) = creature_update.flags {

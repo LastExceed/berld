@@ -12,6 +12,7 @@ use protocol::packet::world_update::sound_effect::Sound;
 use protocol::packet::world_update::SoundEffect;
 use protocol::utils::sound_position_of;
 
+use crate::addons::balancing;
 use crate::handle_packet::HandlePacket;
 use crate::player::Player;
 use crate::server::Server;
@@ -32,9 +33,12 @@ impl HandlePacket<StatusEffect> for Server {
 					apply_poison(&target_owned, &packet_clone).await;
 				});
 			}
-
+			StatusEffectType::WarFrenzy => {
+				balancing::buff_warfrenzy(&packet, self).await;
+			}
 			_ => ()
 		}
+
 
 		self.broadcast(&WorldUpdate::from(packet), Some(source)).await;
 	}
