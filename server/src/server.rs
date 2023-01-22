@@ -54,15 +54,12 @@ impl Server {
 
 		let listener = TcpListener::bind("0.0.0.0:12345").await.expect("unable to bind listening socket");
 
-		let self_arc = Arc::new(self);
-
 		loop {
 			let (stream, _) = listener.accept().await.unwrap();
-			stream.set_nodelay(true).unwrap();
 
-			let self_arc_clone = self_arc.clone();
+			let self_static: &'static Server = unsafe { transmute(&self) }; //todo: scoped task
 			tokio::spawn(async move {
-				if let Err(_) = self_arc_clone.handle_new_connection(stream).await {
+				if let Err(_) = self_static.handle_new_connection(stream).await {
 					//TODO: error logging
 				}
 			});
@@ -70,6 +67,8 @@ impl Server {
 	}
 
 	async fn handle_new_connection(&self, mut stream: TcpStream) -> io::Result<()> {
+		stream.set_nodelay(true).unwrap();
+
 		if stream.read_struct::<packet::Id>().await? != ProtocolVersion::ID
 			|| ProtocolVersion::read_from(&mut stream).await?.0 != 3 {
 			return Err(io::Error::from(ErrorKind::InvalidData));
