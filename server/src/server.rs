@@ -110,7 +110,7 @@ impl Server {
 			character,
 			write_half,
 		);
-		new_player.send(&MapSeed(225)).await?;
+		new_player.send(&MapSeed(56345)).await?;
 		new_player.notify("welcome to berld").await;
 
 		for existing_player in self.players.read().await.iter() {
