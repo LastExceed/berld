@@ -1,3 +1,4 @@
+use strum_macros::EnumIter;
 use crate::utils::flagset::FlagSet8;
 
 use self::item::*;
@@ -8,7 +9,7 @@ pub mod item;
 pub struct CreatureId(pub i64);
 
 #[repr(u8)]
-#[derive(Debug, PartialEq, Eq, Clone, Copy)]
+#[derive(Debug, PartialEq, Eq, Clone, Copy, EnumIter)]
 pub enum Race {
 	ElfMale,
 	ElfFemale,

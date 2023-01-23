@@ -7,6 +7,7 @@ use async_trait::async_trait;
 use nalgebra::Point3;
 use rgb::RGB;
 use strum::EnumCount;
+use strum_macros::EnumIter;
 use tokio::io;
 use tokio::io::{AsyncRead, AsyncReadExt, AsyncWrite, AsyncWriteExt};
 
@@ -250,7 +251,7 @@ impl From<PhysicsFlag> for u32 {
 }
 
 #[repr(u8)]
-#[derive(Debug, PartialEq, Eq, Clone, Copy)]
+#[derive(Debug, PartialEq, Eq, Clone, Copy, EnumIter)]
 pub enum Affiliation {
 	Player,
 	Enemy,
@@ -262,7 +263,7 @@ pub enum Affiliation {
 }
 
 #[repr(u8)]
-#[derive(Debug, PartialEq, Eq, Clone, Copy)]
+#[derive(Debug, PartialEq, Eq, Clone, Copy, EnumIter)]
 pub enum Animation {
 	Idle,
 	DualWieldM1a,

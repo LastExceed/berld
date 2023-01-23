@@ -2,6 +2,7 @@ use std::mem::{size_of, transmute};
 
 use async_trait::async_trait;
 use nalgebra::Point3;
+use strum_macros::EnumIter;
 use tokio::io::{self, AsyncRead, AsyncReadExt, AsyncWrite, AsyncWriteExt};
 
 use crate::CwSerializable;
@@ -86,7 +87,7 @@ pub enum Kind {
 }
 
 #[repr(u8)]
-#[derive(Debug, PartialEq, Eq, Clone, Copy, Default)]
+#[derive(Debug, PartialEq, Eq, Clone, Copy, Default, EnumIter)]
 pub enum Rarity {
 	#[default]
 	Normal,
@@ -98,7 +99,7 @@ pub enum Rarity {
 }
 
 #[repr(i8)]
-#[derive(Debug, PartialEq, Eq, Clone, Copy, Default)]
+#[derive(Debug, PartialEq, Eq, Clone, Copy, Default, EnumIter)]
 pub enum Material {
 	#[default]
 	None,
