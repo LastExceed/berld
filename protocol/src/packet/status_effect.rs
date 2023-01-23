@@ -1,7 +1,6 @@
 #[repr(u8)]
 #[derive(Debug, PartialEq, Eq, Clone, Copy)]
 pub enum StatusEffectType {
-
 	Bulwalk = 1,
 	WarFrenzy,
 	Camouflage,
@@ -9,8 +8,7 @@ pub enum StatusEffectType {
 
 	ManaShield = 6,
 	Taming,
-	///unused, name guessed
-	Confusion,
+	Anger,
 	FireSpark,
 	Intuition,
 	Elusiveness,
