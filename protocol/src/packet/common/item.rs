@@ -8,7 +8,7 @@ use tokio::io::{self, AsyncRead, AsyncReadExt, AsyncWrite, AsyncWriteExt};
 use crate::CwSerializable;
 use crate::packet::common::{Item, Race};
 use crate::packet::common::item::kind::*;
-use crate::utils::{level_scaling_factor2, rarity_scaling_factor};
+use crate::utils::{level_scaling_factor, rarity_scaling_factor};
 
 pub mod kind;
 
@@ -43,7 +43,7 @@ impl Item {
 		let hp_roll_quality = (hp_roll as f32) / 20.0;
 
 		[
-			level_scaling_factor2((self.level as f32) + (self.spirit_counter as f32) * 0.1f32),
+			level_scaling_factor((self.level as f32) + (self.spirit_counter as f32) * 0.1f32),
 			rarity_scaling_factor(self.rarity as u8),
 			kind_multiplier,
 			material_multiplier + hp_roll_quality,

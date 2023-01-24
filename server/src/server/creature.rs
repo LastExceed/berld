@@ -5,7 +5,7 @@ use protocol::packet::creature_update::CombatClassMajor::*;
 use protocol::packet::creature_update::CombatClassMinor::Alternative;
 use protocol::packet::creature_update::multipliers::Multiplier::Health;
 use protocol::packet::CreatureUpdate;
-use protocol::utils::{level_scaling_factor2, rarity_scaling_factor};
+use protocol::utils::{level_scaling_factor, rarity_scaling_factor};
 use protocol::utils::constants::CombatClass;
 use protocol::utils::flagset::{FlagSet16, FlagSet32};
 
@@ -245,7 +245,7 @@ impl Creature {
 			};
 
 		let innate_health = [
-			level_scaling_factor2(self.level as f32),
+			level_scaling_factor(self.level as f32),
 			rarity_scaling_factor(if self.affiliation == Affiliation::Player { 4 } else { self.power_base }),
 			combat_class_multiplier
 		].iter().fold(

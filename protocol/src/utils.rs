@@ -17,12 +17,12 @@ pub mod io_extensions;
 pub mod flagset;
 pub mod constants;
 
-pub fn level_scaling_factor(level: f32) -> f32 {
+fn something(level: f32) -> f32 {
 	1f32 / (0.05f32 * (level - 1f32) + 1f32)
 }
 
-pub fn level_scaling_factor2(level: f32) -> f32 {
-	2f32.powf((1f32 - level_scaling_factor(level)) * 3f32)
+pub fn level_scaling_factor(level: f32) -> f32 {
+	2f32.powf((1f32 - something(level)) * 3f32)
 }
 
 pub fn rarity_scaling_factor(rarity: u8) -> f32 {
@@ -30,11 +30,11 @@ pub fn rarity_scaling_factor(rarity: u8) -> f32 {
 }
 
 pub fn power_of(level: i32) -> i32 {
-	(101f32 - 100f32 * level_scaling_factor(level as f32)) as i32
+	(101f32 - 100f32 * something(level as f32)) as i32
 }
 
 pub fn maximum_experience_of(level: i32) -> i32 {
-	1050 - 1000 * level_scaling_factor(level as f32) as i32
+	1050 - 1000 * something(level as f32) as i32
 }
 
 pub fn sound_position_of(position: Point3<i64>) -> Point3<f32> { //todo: move to SoundEffect ?
