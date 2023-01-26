@@ -7,7 +7,7 @@ pub enum StatusEffectType {
 	Poison,
 
 	ManaShield = 6,
-	Taming,
+	Affection,
 	Anger,
 	FireSpark,
 	Intuition,
