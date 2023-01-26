@@ -3,11 +3,11 @@ use protocol::packet::common::item::Kind::*;
 use protocol::packet::common::item::kind::Weapon::*;
 use protocol::packet::common::item::Material;
 use protocol::packet::common::item::Material::*;
-use protocol::packet::creature_update::CombatClassMajor;
-use protocol::packet::creature_update::CombatClassMajor::*;
+use protocol::packet::creature_update::Occupation;
+use protocol::packet::creature_update::Occupation::*;
 use protocol::utils::constants::materials;
 
-pub(crate) fn allowed_materials(item_kind: item::Kind, combat_class_major: CombatClassMajor) -> &'static [Material] {
+pub(crate) fn allowed_materials(item_kind: item::Kind, occupation: Occupation) -> &'static [Material] {
 	match item_kind {
 		Weapon(Sword)      => &materials::SWORD[..],
 		Weapon(Axe)        => &materials::AXE[..],
@@ -34,7 +34,7 @@ pub(crate) fn allowed_materials(item_kind: item::Kind, combat_class_major: Comba
 		Chest    |
 		Boots    |
 		Gloves   |
-		Shoulder => match combat_class_major {
+		Shoulder => match occupation {
 			Warrior => &[Bone, Mammoth, Gold, Iron, Obsidian, Saurian, Ice][..],
 			Ranger  => &[Bone, Mammoth, Gold, Parrot, Linen][..],
 			Mage    => &[Bone, Mammoth, Gold, Licht, Silk][..],

@@ -35,8 +35,8 @@ pub fn inspect_creature_update(packet: &CreatureUpdate, former_state: &Creature,
 	packet.effect_time_chill .map_or_ok(|value| inspect_effect_time_chill( value, &former_state, &updated_state))?;
 	packet.effect_time_wind  .map_or_ok(|value| inspect_effect_time_wind(  value, &former_state, &updated_state))?;
 	packet.show_patch_time   .map_or_ok(|value| inspect_show_patch_time(   value, &former_state, &updated_state))?;
-	packet.combat_class_major.map_or_ok(|value| inspect_combat_class_major(value, &former_state, &updated_state))?;
-	packet.combat_class_minor.map_or_ok(|value| inspect_combat_class_minor(value, &former_state, &updated_state))?;
+	packet.occupation        .map_or_ok(|value| inspect_occupation(        value, &former_state, &updated_state))?;
+	packet.specialization    .map_or_ok(|value| inspect_specialization(    value, &former_state, &updated_state))?;
 	packet.mana_charge       .map_or_ok(|value| inspect_mana_charge(       value, &former_state, &updated_state))?;
 	packet.unknown24         .map_or_ok(|value| inspect_unknown24(         value, &former_state, &updated_state))?;
 	packet.unknown25         .map_or_ok(|value| inspect_unknown25(         value, &former_state, &updated_state))?;

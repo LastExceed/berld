@@ -1,43 +1,43 @@
-use crate::packet::creature_update::CombatClassMajor::*;
-use crate::packet::creature_update::CombatClassMinor::*;
+use crate::packet::creature_update::Occupation::*;
+use crate::packet::creature_update::Specialization::*;
 use crate::utils::constants::CombatClass;
 
 pub const BERSERKER: CombatClass = CombatClass {
-	major: Warrior,
-	minor: Default
+	occupation: Warrior,
+	specialization: Default
 };
 
 pub const GUARDIAN: CombatClass = CombatClass {
-	major: Warrior,
-	minor: Alternative
+	occupation: Warrior,
+	specialization: Alternative
 };
 
 pub const SNIPER: CombatClass = CombatClass {
-	major: Ranger,
-	minor: Default
+	occupation: Ranger,
+	specialization: Default
 };
 
 pub const SCOUT: CombatClass = CombatClass {
-	major: Ranger,
-	minor: Default
+	occupation: Ranger,
+	specialization: Default
 };
 
 pub const FIRE_MAGE: CombatClass = CombatClass {
-	major: Mage,
-	minor: Default
+	occupation: Mage,
+	specialization: Default
 };
 
 pub const WATER_MAGE: CombatClass = CombatClass {
-	major: Mage,
-	minor: Alternative
+	occupation: Mage,
+	specialization: Alternative
 };
 
 pub const ASSASSIN: CombatClass = CombatClass {
-	major: Rogue,
-	minor: Default
+	occupation: Rogue,
+	specialization: Default
 };
 
 pub const NINJA: CombatClass = CombatClass {
-	major: Rogue,
-	minor: Alternative
+	occupation: Rogue,
+	specialization: Alternative
 };

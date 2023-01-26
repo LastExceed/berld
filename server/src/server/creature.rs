@@ -2,9 +2,9 @@ use protocol::nalgebra::{Point3, Vector3};
 use protocol::packet::common::{CreatureId, EulerAngles, Item, Race};
 use protocol::packet::common::item::Stat;
 use protocol::packet::creature_update::*;
-use protocol::packet::creature_update::CombatClassMajor::*;
-use protocol::packet::creature_update::CombatClassMinor::Alternative;
 use protocol::packet::creature_update::multipliers::Multiplier::Health;
+use protocol::packet::creature_update::Occupation::*;
+use protocol::packet::creature_update::Specialization::Alternative;
 use protocol::packet::CreatureUpdate;
 use protocol::utils::{level_scaling_factor, rarity_scaling_factor};
 use protocol::utils::constants::CombatClass;
@@ -35,8 +35,8 @@ pub struct Creature {
 	pub effect_time_wind: i32,
 	/**unknown purpose, name adopted from cuwo*/
 	pub show_patch_time: i32,
-	pub combat_class_major: CombatClassMajor,
-	pub combat_class_minor: CombatClassMinor,
+	pub occupation: Occupation,
+	pub specialization: Specialization,
 	pub mana_charge: f32,
 	pub unknown24: [f32; 3],
 	pub unknown25: [f32; 3],
@@ -71,8 +71,8 @@ pub struct Creature {
 impl Creature {
 	pub fn combat_class(&self) -> CombatClass {
 		CombatClass {
-			major: self.combat_class_major,
-			minor: self.combat_class_minor
+			occupation: self.occupation,
+			specialization: self.specialization
 		}
 	}
 
@@ -100,8 +100,8 @@ impl Creature {
 			effect_time_chill    : creature_update.effect_time_chill?,
 			effect_time_wind     : creature_update.effect_time_wind?,
 			show_patch_time      : creature_update.show_patch_time?,
-			combat_class_major   : creature_update.combat_class_major?,
-			combat_class_minor   : creature_update.combat_class_minor?,
+			occupation           : creature_update.occupation?,
+			specialization       : creature_update.specialization?,
 			mana_charge          : creature_update.mana_charge?,
 			unknown24            : creature_update.unknown24?,
 			unknown25            : creature_update.unknown25?,
@@ -153,8 +153,8 @@ impl Creature {
 		if let Some(it) = packet.effect_time_chill     { self.effect_time_chill     = it }
 		if let Some(it) = packet.effect_time_wind      { self.effect_time_wind      = it }
 		if let Some(it) = packet.show_patch_time       { self.show_patch_time       = it }
-		if let Some(it) = packet.combat_class_major    { self.combat_class_major    = it }
-		if let Some(it) = packet.combat_class_minor    { self.combat_class_minor    = it }
+		if let Some(it) = packet.occupation            { self.occupation = it }
+		if let Some(it) = packet.specialization        { self.specialization = it }
 		if let Some(it) = packet.mana_charge           { self.mana_charge           = it }
 		if let Some(it) = packet.unknown24             { self.unknown24             = it }
 		if let Some(it) = packet.unknown25             { self.unknown25             = it }
@@ -206,8 +206,8 @@ impl Creature {
 			effect_time_chill : Some(self.effect_time_chill),
 			effect_time_wind  : Some(self.effect_time_wind),
 			show_patch_time   : Some(self.show_patch_time),
-			combat_class_major: Some(self.combat_class_major),
-			combat_class_minor: Some(self.combat_class_minor),
+			occupation        : Some(self.occupation),
+			specialization    : Some(self.specialization),
 			mana_charge       : Some(self.mana_charge),
 			unknown24         : Some(self.unknown24),
 			unknown25         : Some(self.unknown25),
@@ -238,8 +238,8 @@ impl Creature {
 
 	pub fn maximum_health(&self) -> f32 {
 		let combat_class_multiplier =
-			match self.combat_class_major {
-				Warrior => 1.3 * if self.combat_class_minor == Alternative { 1.25 } else { 1.0 },
+			match self.occupation {
+				Warrior => 1.3 * if self.specialization == Alternative { 1.25 } else { 1.0 },
 				Ranger  => 1.1,
 				Rogue   => 1.2,
 				_       => 1.0

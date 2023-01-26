@@ -129,8 +129,8 @@ pub fn filter(packet: &mut CreatureUpdate, former_state: &Creature, updated_stat
 	packet.effect_time_chill .is_some() ||
 	packet.effect_time_wind  .is_some() ||
 	packet.show_patch_time   .is_some() ||
-	packet.combat_class_major.is_some() ||
-	packet.combat_class_minor.is_some() ||
+	packet.occupation        .is_some() ||
+	packet.specialization    .is_some() ||
 	packet.mana_charge       .is_some() ||
 	packet.unknown24         .is_some() ||
 	packet.unknown25         .is_some() ||

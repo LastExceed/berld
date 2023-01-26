@@ -51,8 +51,8 @@ pub struct CreatureUpdate {
 	pub effect_time_wind: Option<i32>,
 	///unknown purpose, name adopted from cuwo
 	pub show_patch_time: Option<i32>,
-	pub combat_class_major: Option<CombatClassMajor>,
-	pub combat_class_minor: Option<CombatClassMinor>,
+	pub occupation: Option<Occupation>,
+	pub specialization: Option<Specialization>,
 	pub mana_charge: Option<f32>,
 	pub unknown24: Option<[f32; 3]>,
 	pub unknown25: Option<[f32; 3]>,

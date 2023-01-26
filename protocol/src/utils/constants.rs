@@ -1,6 +1,6 @@
 use crate::packet::common::Race;
 use crate::packet::common::Race::*;
-use crate::packet::creature_update::{CombatClassMajor, CombatClassMinor};
+use crate::packet::creature_update::{Occupation, Specialization};
 
 pub mod combat_classes;
 pub mod animations;
@@ -17,8 +17,8 @@ pub const SIZE_UNIVERSE: i64 = SIZE_WORLD * 256;
 
 #[derive(Clone, PartialEq, Eq, Copy)]
 pub struct CombatClass {
-	pub major: CombatClassMajor,
-	pub minor: CombatClassMinor
+	pub occupation: Occupation,
+	pub specialization: Specialization
 }
 
 pub const PLAYABLE_RACES: [Race; 16] = [

@@ -3,17 +3,17 @@ use strum::IntoEnumIterator;
 
 use protocol::nalgebra::{Point3, Vector3};
 use protocol::packet::common::{CreatureId, EulerAngles, Hitbox, Item, item, Race};
-use protocol::packet::common::item::Kind::*;
 use protocol::packet::common::item::{Material, Rarity};
+use protocol::packet::common::item::Kind::*;
 use protocol::packet::common::item::Rarity::*;
 use protocol::packet::common::Race::*;
-use protocol::packet::creature_update::{Affiliation, Animation, Appearance, CombatClassMajor, CombatClassMinor, CreatureFlag, Equipment, Multipliers, PhysicsFlag, SkillTree};
+use protocol::packet::creature_update::{Affiliation, Animation, Appearance, CreatureFlag, Equipment, Multipliers, Occupation, PhysicsFlag, SkillTree, Specialization};
 use protocol::packet::creature_update::Animation::*;
-use protocol::packet::creature_update::CombatClassMajor::*;
-use protocol::packet::creature_update::CombatClassMinor::*;
 use protocol::packet::creature_update::equipment::Slot;
 use protocol::packet::creature_update::multipliers::Multiplier::*;
+use protocol::packet::creature_update::Occupation::*;
 use protocol::packet::creature_update::skill_tree::Skill;
+use protocol::packet::creature_update::Specialization::*;
 use protocol::utils::{maximum_experience_of, power_of};
 use protocol::utils::constants::combat_classes::*;
 use protocol::utils::constants::PLAYABLE_RACES;
@@ -64,7 +64,7 @@ pub(crate) fn inspect_acceleration(acceleration: &Vector3<f32>, former_state: &C
 }
 pub(crate) fn inspect_velocity_extra(velocity_extra: &Vector3<f32>, former_state: &Creature, updated_state: &Creature) -> anti_cheat::Result {
 	let (max_xy, max_z): (f32, f32) =
-		match updated_state.combat_class_major {
+		match updated_state.occupation {
 			Ranger => (35.0, 17.0),
 			_      => ( 0.1,  0.0)//0.1 because the game doesnt reset all the way to 0
 		};
@@ -440,14 +440,14 @@ pub(crate) fn inspect_effect_time_wind(effect_time_wind: &i32, former_state: &Cr
 pub(crate) fn inspect_show_patch_time(show_patch_time: &i32, former_state: &Creature, updated_state: &Creature) -> anti_cheat::Result {
 	Ok(())
 }
-pub(crate) fn inspect_combat_class_major(combat_class_major: &CombatClassMajor, former_state: &Creature, updated_state: &Creature) -> anti_cheat::Result {
-	combat_class_major.present_in(&[Warrior, Ranger, Mage, Rogue]).ok_or("invalid combat_class_major".to_string())?;//todo: safety measure until data validation is implemented
-	combat_class_major.ensure_one_of([Warrior, Ranger, Mage, Rogue].as_slice(), "combat_class_major")?;
+pub(crate) fn inspect_occupation(occupation: &Occupation, former_state: &Creature, updated_state: &Creature) -> anti_cheat::Result {
+	occupation.present_in(&[Warrior, Ranger, Mage, Rogue]).ok_or("invalid combat_class_major".to_string())?;//todo: safety measure until data validation is implemented
+	occupation.ensure_one_of([Warrior, Ranger, Mage, Rogue].as_slice(), "combat_class_major")?;
 	inspect_equipment(&updated_state.equipment, former_state, updated_state)
 }
-pub(crate) fn inspect_combat_class_minor(combat_class_minor: &CombatClassMinor, former_state: &Creature, updated_state: &Creature) -> anti_cheat::Result {
-	combat_class_minor.present_in(&[Default, Alternative]).ok_or("invalid combat_class_minor".to_string())?;//todo: safety measure until data validation is implemented
-	combat_class_minor.ensure_one_of([Default, Alternative].as_slice(), "combat_class_minor")
+pub(crate) fn inspect_specialization(specialization: &Specialization, former_state: &Creature, updated_state: &Creature) -> anti_cheat::Result {
+	specialization.present_in(&[Default, Alternative]).ok_or("invalid combat_class_minor".to_string())?;//todo: safety measure until data validation is implemented
+	specialization.ensure_one_of([Default, Alternative].as_slice(), "combat_class_minor")
 }
 pub(crate) fn inspect_mana_charge(mana_charge: &f32, former_state: &Creature, updated_state: &Creature) -> anti_cheat::Result {
 	mana_charge.ensure_at_most(updated_state.mana, "mana_charge")
@@ -627,7 +627,7 @@ pub(crate) fn inspect_equipment(equipment: &Equipment, former_state: &Creature, 
 		item.recipe.ensure_exact(&Void, &format!("equipment[{:?}].recipe", slot))?;
 		//item.minus_modifier
 		item.rarity.ensure_one_of(&[Normal, Uncommon, Rare, Epic, Legendary], &format!("equipment[{:?}].rarity", slot))?; //todo: crashes for rarity 6+
-		let allowed_materials = allowed_materials(item.kind, updated_state.combat_class_major);
+		let allowed_materials = allowed_materials(item.kind, updated_state.occupation);
 		item.material.ensure_one_of(allowed_materials, &format!("equipment[{:?}].material", slot))?;
 		//item.flags
 		power_of(item.level as i32)

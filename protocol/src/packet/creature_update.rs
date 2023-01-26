@@ -68,8 +68,8 @@ impl CwSerializable for CreatureUpdate {
 			effect_time_chill : if bitfield & (1 << 18) > 0 { Some(decoder.read_struct().await?) } else { None },
 			effect_time_wind  : if bitfield & (1 << 19) > 0 { Some(decoder.read_struct().await?) } else { None },
 			show_patch_time   : if bitfield & (1 << 20) > 0 { Some(decoder.read_struct().await?) } else { None },
-			combat_class_major: if bitfield & (1 << 21) > 0 { Some(decoder.read_struct().await?) } else { None },
-			combat_class_minor: if bitfield & (1 << 22) > 0 { Some(decoder.read_struct().await?) } else { None },
+			occupation        : if bitfield & (1 << 21) > 0 { Some(decoder.read_struct().await?) } else { None },
+			specialization    : if bitfield & (1 << 22) > 0 { Some(decoder.read_struct().await?) } else { None },
 			mana_charge       : if bitfield & (1 << 23) > 0 { Some(decoder.read_struct().await?) } else { None },
 			unknown24         : if bitfield & (1 << 24) > 0 { Some(decoder.read_struct().await?) } else { None },
 			unknown25         : if bitfield & (1 << 25) > 0 { Some(decoder.read_struct().await?) } else { None },
@@ -134,8 +134,8 @@ impl CwSerializable for CreatureUpdate {
 		bitfield |= (self.effect_time_chill .is_some() as u64) << 18;
 		bitfield |= (self.effect_time_wind  .is_some() as u64) << 19;
 		bitfield |= (self.show_patch_time   .is_some() as u64) << 20;
-		bitfield |= (self.combat_class_major.is_some() as u64) << 21;
-		bitfield |= (self.combat_class_minor.is_some() as u64) << 22;
+		bitfield |= (self.occupation        .is_some() as u64) << 21;
+		bitfield |= (self.specialization    .is_some() as u64) << 22;
 		bitfield |= (self.mana_charge       .is_some() as u64) << 23;
 		bitfield |= (self.unknown24         .is_some() as u64) << 24;
 		bitfield |= (self.unknown25         .is_some() as u64) << 25;
@@ -191,8 +191,8 @@ impl CwSerializable for CreatureUpdate {
 			if let Some(it) = &self.effect_time_chill  { encoder.write_struct(it).await?; }
 			if let Some(it) = &self.effect_time_wind   { encoder.write_struct(it).await?; }
 			if let Some(it) = &self.show_patch_time    { encoder.write_struct(it).await?; }
-			if let Some(it) = &self.combat_class_major { encoder.write_struct(it).await?; }
-			if let Some(it) = &self.combat_class_minor { encoder.write_struct(it).await?; }
+			if let Some(it) = &self.occupation         { encoder.write_struct(it).await?; }
+			if let Some(it) = &self.specialization     { encoder.write_struct(it).await?; }
 			if let Some(it) = &self.mana_charge        { encoder.write_struct(it).await?; }
 			if let Some(it) = &self.unknown24          { encoder.write_struct(it).await?; }
 			if let Some(it) = &self.unknown25          { encoder.write_struct(it).await?; }
@@ -463,7 +463,7 @@ impl From<CreatureFlag> for u16 {
 
 #[repr(i8)]
 #[derive(Debug, PartialEq, Eq, Clone, Copy)]
-pub enum CombatClassMajor {
+pub enum Occupation {
 	None,
 	Warrior,
 	Ranger,
@@ -484,7 +484,7 @@ pub enum CombatClassMajor {
 
 #[repr(u8)]
 #[derive(Debug, PartialEq, Eq, Clone, Copy)]
-pub enum CombatClassMinor {
+pub enum Specialization {
 	Default,
 	Alternative,
 	Witch
