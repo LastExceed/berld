@@ -1,5 +1,6 @@
 use protocol::nalgebra::{Point3, Vector3};
 use protocol::packet::common::{CreatureId, EulerAngles, Item, Race};
+use protocol::packet::common::item::Stat;
 use protocol::packet::creature_update::*;
 use protocol::packet::creature_update::CombatClassMajor::*;
 use protocol::packet::creature_update::CombatClassMinor::Alternative;
@@ -253,7 +254,7 @@ impl Creature {
 			|accumulator, multiplier| accumulator * multiplier
 		);
 
-		let equipment_bonus = self.equipment.iter().map(|item| item.health()).sum::<f32>();
+		let equipment_bonus = self.equipment.iter().map(|item| item.stats()[Stat::Health]).sum::<f32>();
 
 		innate_health + equipment_bonus
 	}
