@@ -102,3 +102,11 @@ impl<Idx: Into<usize> + EnumCount, Element> IndexMut<Idx> for ArrayWrapper<Idx, 
 		&mut self.0[index.into()]
 	}
 }
+
+impl<Idx: Into<usize> + EnumCount, Element> From<[Element; Idx::COUNT]> for ArrayWrapper<Idx, Element>
+	where [(); Idx::COUNT]:
+{
+	fn from(value: [Element; Idx::COUNT]) -> Self {
+		Self(value, PhantomData::default())
+	}
+}
