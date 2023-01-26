@@ -450,7 +450,8 @@ pub enum CreatureFlag {
 	Gliding = 4,
 	FriendlyFire,
 	Sprinting,
-
+	///causes all incoming hits to "miss". only works when this creature is [Affiliation::Enemy]
+	Unreachable,
 
 	Lamp = 9,
 	Sniping,
