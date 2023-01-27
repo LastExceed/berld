@@ -26,9 +26,11 @@ impl HandlePacket<CreatureUpdate> for Server {
 
 		enable_pvp(&mut packet);
 
-		if filter(&mut packet, &snapshot, &character) {
-			fix_cutoff_animations(&mut packet, &snapshot);
-			self.broadcast(&packet, Some(source)).await;
+		if !filter(&mut packet, &snapshot, &character) {
+			return;
 		}
+
+		fix_cutoff_animations(&mut packet, &snapshot);
+		self.broadcast(&packet, Some(source)).await;
 	}
 }
