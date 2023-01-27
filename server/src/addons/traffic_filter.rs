@@ -9,7 +9,7 @@ pub fn filter(packet: &mut CreatureUpdate, former_state: &Creature, updated_stat
 	packet.rotation              = None;
 	packet.head_tilt             = None;
 	packet.flags_physics         = None;
-	packet.hit_time_out          = None;
+	packet.combo_timeout         = None;
 	packet.mana                  = None;
 	packet.blocking_gauge        = None;
 	packet.experience            = None;
@@ -120,7 +120,7 @@ pub fn filter(packet: &mut CreatureUpdate, former_state: &Creature, updated_stat
 	packet.animation         .is_some() ||
 	packet.animation_time    .is_some() ||
 	packet.combo             .is_some() ||
-	packet.hit_time_out      .is_some() ||
+	packet.combo_timeout     .is_some() ||
 	packet.appearance        .is_some() ||
 	packet.flags             .is_some() ||
 	packet.effect_time_dodge .is_some() ||

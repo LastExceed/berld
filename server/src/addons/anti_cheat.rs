@@ -26,7 +26,7 @@ pub fn inspect_creature_update(packet: &CreatureUpdate, former_state: &Creature,
 	packet.animation         .map_or_ok(|value| inspect_animation(         value, &former_state, &updated_state))?;
 	packet.animation_time    .map_or_ok(|value| inspect_animation_time(    value, &former_state, &updated_state))?;
 	packet.combo             .map_or_ok(|value| inspect_combo(             value, &former_state, &updated_state))?;
-	packet.hit_time_out      .map_or_ok(|value| inspect_hit_time_out(      value, &former_state, &updated_state))?;
+	packet.combo_timeout     .map_or_ok(|value| inspect_combo_timeout(     value, &former_state, &updated_state))?;
 	packet.appearance        .map_or_ok(|value| inspect_appearance(        value, &former_state, &updated_state))?;
 	packet.flags             .map_or_ok(|value| inspect_flags(             value, &former_state, &updated_state))?;
 	packet.effect_time_dodge .map_or_ok(|value| inspect_effect_time_dodge( value, &former_state, &updated_state))?;

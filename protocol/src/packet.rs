@@ -41,7 +41,7 @@ pub struct CreatureUpdate {
 	pub animation: Option<Animation>,
 	pub animation_time: Option<i32>,
 	pub combo: Option<i32>,
-	pub hit_time_out: Option<i32>,
+	pub combo_timeout: Option<i32>,
 	pub appearance: Option<Appearance>,
 	pub flags: Option<FlagSet16<CreatureFlag>>,
 	pub effect_time_dodge: Option<i32>,

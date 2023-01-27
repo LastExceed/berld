@@ -123,8 +123,8 @@ pub(crate) fn inspect_animation_time(animation_time: &i32, former_state: &Creatu
 pub(crate) fn inspect_combo(combo: &i32, former_state: &Creature, updated_state: &Creature) -> anti_cheat::Result {
 	combo.ensure_not_negative("combo")
 }
-pub(crate) fn inspect_hit_time_out(hit_time_out: &i32, former_state: &Creature, updated_state: &Creature) -> anti_cheat::Result {
-	hit_time_out.ensure_not_negative("hit_time_out")
+pub(crate) fn inspect_combo_timeout(combo_timeout: &i32, former_state: &Creature, updated_state: &Creature) -> anti_cheat::Result {
+	combo_timeout.ensure_not_negative("hit_time_out")
 	//todo: speedhack detection
 //	expectMinimum(0, "hitTimeOut")
 //

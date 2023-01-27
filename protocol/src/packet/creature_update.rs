@@ -59,7 +59,7 @@ impl CwSerializable for CreatureUpdate {
 			animation         : if bitfield & (1 <<  9) > 0 { Some(decoder.read_struct().await?) } else { None },
 			animation_time    : if bitfield & (1 << 10) > 0 { Some(decoder.read_struct().await?) } else { None },
 			combo             : if bitfield & (1 << 11) > 0 { Some(decoder.read_struct().await?) } else { None },
-			hit_time_out      : if bitfield & (1 << 12) > 0 { Some(decoder.read_struct().await?) } else { None },
+			combo_timeout     : if bitfield & (1 << 12) > 0 { Some(decoder.read_struct().await?) } else { None },
 			appearance        : if bitfield & (1 << 13) > 0 { Some(decoder.read_struct().await?) } else { None },
 			flags             : if bitfield & (1 << 14) > 0 { Some(decoder.read_struct().await?) } else { None },
 			effect_time_dodge : if bitfield & (1 << 15) > 0 { Some(decoder.read_struct().await?) } else { None },
@@ -125,7 +125,7 @@ impl CwSerializable for CreatureUpdate {
 		bitfield |= (self.animation         .is_some() as u64) <<  9;
 		bitfield |= (self.animation_time    .is_some() as u64) << 10;
 		bitfield |= (self.combo             .is_some() as u64) << 11;
-		bitfield |= (self.hit_time_out      .is_some() as u64) << 12;
+		bitfield |= (self.combo_timeout     .is_some() as u64) << 12;
 		bitfield |= (self.appearance        .is_some() as u64) << 13;
 		bitfield |= (self.flags             .is_some() as u64) << 14;
 		bitfield |= (self.effect_time_dodge .is_some() as u64) << 15;
@@ -182,7 +182,7 @@ impl CwSerializable for CreatureUpdate {
 			if let Some(it) = &self.animation          { encoder.write_struct(it).await?; }
 			if let Some(it) = &self.animation_time     { encoder.write_struct(it).await?; }
 			if let Some(it) = &self.combo              { encoder.write_struct(it).await?; }
-			if let Some(it) = &self.hit_time_out       { encoder.write_struct(it).await?; }
+			if let Some(it) = &self.combo_timeout      { encoder.write_struct(it).await?; }
 			if let Some(it) = &self.appearance         { encoder.write_struct(it).await?; }
 			if let Some(it) = &self.flags              { encoder.write_struct(it).await?; }
 			if let Some(it) = &self.effect_time_dodge  { encoder.write_struct(it).await?; }
