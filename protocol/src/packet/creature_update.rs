@@ -425,7 +425,7 @@ pub enum AppearanceFlag {
 
 
 
-
+	Trainer = 6,
 
 	Immovable = 8, //found on dummies
 	BossGlow,
