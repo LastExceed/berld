@@ -1,10 +1,9 @@
 use async_trait::async_trait;
 
 use protocol::nalgebra::Vector3;
-use protocol::packet::{CreatureAction, WorldUpdate};
-use protocol::packet::creature_action::CreatureActionType;
-use protocol::packet::world_update::{Pickup, SoundEffect};
-use protocol::packet::world_update::sound_effect::Sound;
+use protocol::packet::{creature_action, CreatureAction, WorldUpdate};
+use protocol::packet::creature_action::Kind::*;
+use protocol::packet::world_update::{Pickup, sound_effect, SoundEffect};
 use protocol::utils::constants::SIZE_BLOCK;
 use protocol::utils::sound_position_of;
 
@@ -15,8 +14,8 @@ use crate::server::Server;
 #[async_trait]
 impl HandlePacket<CreatureAction> for Server {
 	async fn handle_packet(&self, source: &Player, packet: CreatureAction) {
-		match packet.type_ {
-			CreatureActionType::Bomb => {
+		match packet.kind {
+			creature_action::Kind::Bomb => {
 				source.notify("bombs are disabled").await;
 
 				//the player consumed a bomb, so we need to reimburse it
@@ -26,13 +25,13 @@ impl HandlePacket<CreatureAction> for Server {
 				};
 				source.send_ignoring(&WorldUpdate::from(pickup)).await;
 			}
-			CreatureActionType::Talk => {
+			Talk => {
 				source.notify("quests coming soon(tm)").await;
 			}
-			CreatureActionType::ObjectInteraction => {
+			ObjectInteraction => {
 				source.notify("object interactions are disabled").await;
 			}
-			CreatureActionType::PickUp => {
+			PickUp => {
 				if let Some(item) = self.remove_drop(packet.zone, packet.item_index as usize).await {
 					let pickup = Pickup {
 						interactor: source.id,
@@ -40,7 +39,7 @@ impl HandlePacket<CreatureAction> for Server {
 					};
 					let sound_effect = SoundEffect {
 						position: sound_position_of(source.creature.read().await.position),
-						sound: Sound::Pickup,
+						kind: sound_effect::Kind::Pickup,
 						pitch: 1f32,
 						volume: 1f32
 					};
@@ -52,7 +51,7 @@ impl HandlePacket<CreatureAction> for Server {
 					source.send_ignoring(&world_update).await;
 				}
 			}
-			CreatureActionType::Drop => {
+			Drop => {
 				let creature_guard = source.creature.read().await;
 
 				self.add_drop(
@@ -61,7 +60,7 @@ impl HandlePacket<CreatureAction> for Server {
 					creature_guard.rotation.yaw
 				).await;
 			}
-			CreatureActionType::CallPet => {
+			CallPet => {
 				//source.notify("pets are disabled".to_owned());
 			}
 		}

@@ -6,9 +6,9 @@ use tokio::time::sleep;
 
 use protocol::nalgebra::Vector3;
 use protocol::packet::{Hit, StatusEffect, WorldUpdate};
-use protocol::packet::hit::HitType;
-use protocol::packet::status_effect::StatusEffectType;
-use protocol::packet::world_update::sound_effect::Sound;
+use protocol::packet::hit::Kind::*;
+use protocol::packet::status_effect::Kind::*;
+use protocol::packet::world_update::sound_effect::Kind::*;
 use protocol::packet::world_update::SoundEffect;
 use protocol::utils::sound_position_of;
 
@@ -20,8 +20,8 @@ use crate::server::Server;
 #[async_trait]
 impl HandlePacket<StatusEffect> for Server {
 	async fn handle_packet(&self, source: &Player, packet: StatusEffect) {
-		match packet.type_ {
-			StatusEffectType::Poison => {
+		match packet.kind {
+			Poison => {
 				let players_guard = self.players.read().await; //todo: do i really have to do this?
 
 				let Some(target) = players_guard.iter().find(|player| { player.id == packet.target }) else {
@@ -29,7 +29,7 @@ impl HandlePacket<StatusEffect> for Server {
 				};
 				apply_poison(source, target.to_owned(), &packet).await;
 			}
-			StatusEffectType::WarFrenzy => {
+			WarFrenzy => {
 				balancing::buff_warfrenzy(&packet, self).await;
 			}
 			_ => ()
@@ -53,7 +53,7 @@ async fn apply_poison(source: &Player, target: Arc<Player>, status_effect: &Stat
 		position: target_creature_guard.position,
 		direction: Vector3::zeros(),
 		is_yellow: false,
-		type_: HitType::Normal,
+		kind: Normal,
 		flash: true,
 	};
 
@@ -63,7 +63,7 @@ async fn apply_poison(source: &Player, target: Arc<Player>, status_effect: &Stat
 
 	let sound_effect = SoundEffect {
 		position: sound_position_of(hit.position),
-		sound: Sound::SlimeGroan,
+		kind: SlimeGroan,
 		pitch: 1.0,
 		volume: 1.0
 	};

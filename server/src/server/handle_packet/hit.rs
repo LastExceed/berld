@@ -2,8 +2,11 @@ use async_trait::async_trait;
 
 use protocol::packet::{Hit, WorldUpdate};
 use protocol::packet::common::Race;
-use protocol::packet::hit::HitType;
-use protocol::packet::world_update::sound_effect::Sound;
+use protocol::packet::common::Race::*;
+use protocol::packet::hit;
+use protocol::packet::hit::Kind::{*, Absorb, Block};
+use protocol::packet::world_update::sound_effect;
+use protocol::packet::world_update::sound_effect::Kind::*;
 use protocol::packet::world_update::SoundEffect;
 use protocol::utils::sound_position_of;
 
@@ -26,11 +29,11 @@ impl HandlePacket<Hit> for Server {
 		packet.flash = true;
 
 		let sound_effects =
-			impact_sounds(packet.type_, target_creature_guard.race)
+			impact_sounds(packet.kind, target_creature_guard.race)
 				.iter()
 				.map(|sound| SoundEffect {
 					position: sound_position_of(packet.position),
-					sound: *sound,
+					kind: *sound,
 					volume: 1.0,
 					pitch: 1.0
 				})
@@ -45,44 +48,44 @@ impl HandlePacket<Hit> for Server {
 	}
 }
 
-fn impact_sounds(hit_type: HitType, target_race: Race) -> Vec<Sound> {
-	match hit_type {
-		HitType::Block |
-		HitType::Miss => vec![Sound::Block],
+fn impact_sounds(hit_kind: hit::Kind, target_race: Race) -> Vec<sound_effect::Kind> {
+	match hit_kind {
+		Block |
+		Miss => vec![sound_effect::Kind::Block],
 
-		HitType::Absorb => vec![Sound::Absorb],
+		Absorb => vec![sound_effect::Kind::Absorb],
 
-		HitType::Dodge |
-		HitType::Invisible => vec![],
+		Dodge |
+		Invisible => vec![],
 
-		HitType::Normal => {
+		Normal => {
 			if let Some(groan) = groan_of(target_race) {
-				vec![Sound::Punch1, groan]
+				vec![Punch1, groan]
 			} else {
-				vec![Sound::Punch1]
+				vec![Punch1]
 			}
 		},
 	}
 }
 
-fn groan_of(race: Race) -> Option<Sound> {
+fn groan_of(race: Race) -> Option<sound_effect::Kind> {
 	match race {
-		Race::ElfMale         => Some(Sound::MaleGroan),
-		Race::ElfFemale       => Some(Sound::FemaleGroan),
-		Race::HumanMale       => Some(Sound::MaleGroan2),
-		Race::HumanFemale     => Some(Sound::FemaleGroan2),
-		Race::GoblinMale      => Some(Sound::GoblinMaleGroan),
-		Race::GoblinFemale    => Some(Sound::GoblinFemaleGroan),
-		Race::LizardmanMale   => Some(Sound::LizardMaleGroan),
-		Race::LizardmanFemale => Some(Sound::LizardFemaleGroan),
-		Race::DwarfMale       => Some(Sound::DwarfMaleGroan),
-		Race::DwarfFemale     => Some(Sound::DwarfFemaleGroan),
-		Race::OrcMale         => Some(Sound::OrcMaleGroan),
-		Race::OrcFemale       => Some(Sound::OrcFemaleGroan),
-		Race::FrogmanMale     => Some(Sound::FrogmanMaleGroan),
-		Race::FrogmanFemale   => Some(Sound::FrogmanFemaleGroan),
-		Race::UndeadMale      => Some(Sound::UndeadMaleGroan),
-		Race::UndeadFemale    => Some(Sound::UndeadFemaleGroan),
+		ElfMale         => Some(MaleGroan),
+		ElfFemale       => Some(FemaleGroan),
+		HumanMale       => Some(MaleGroan2),
+		HumanFemale     => Some(FemaleGroan2),
+		GoblinMale      => Some(GoblinMaleGroan),
+		GoblinFemale    => Some(GoblinFemaleGroan),
+		LizardmanMale   => Some(LizardMaleGroan),
+		LizardmanFemale => Some(LizardFemaleGroan),
+		DwarfMale       => Some(DwarfMaleGroan),
+		DwarfFemale     => Some(DwarfFemaleGroan),
+		OrcMale         => Some(OrcMaleGroan),
+		OrcFemale       => Some(OrcFemaleGroan),
+		FrogmanMale     => Some(FrogmanMaleGroan),
+		FrogmanFemale   => Some(FrogmanFemaleGroan),
+		UndeadMale      => Some(UndeadMaleGroan),
+		UndeadFemale    => Some(UndeadFemaleGroan),
 		_ => None
 	}
 }

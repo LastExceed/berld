@@ -1,6 +1,6 @@
 #[repr(u8)]
 #[derive(Debug, PartialEq, Eq, Clone, Copy, Default)]
-pub enum HitType {
+pub enum Kind {
 	#[default]
 	Normal,
 	Block,

@@ -1,6 +1,6 @@
 #[repr(i32)]
 #[derive(Debug, PartialEq, Eq, Clone, Copy)]
-pub enum ParticleType {
+pub enum Kind {
 	Normal,
 	Spark,
 

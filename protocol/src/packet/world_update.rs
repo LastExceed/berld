@@ -14,10 +14,6 @@ use crate::utils::io_extensions::{ReadStruct, WriteStruct};
 
 use self::mission::*;
 use self::p48::*;
-use self::particle::*;
-use self::sound_effect::*;
-use self::world_edit::*;
-use self::world_object::*;
 
 pub mod world_edit;
 pub mod particle;
@@ -86,7 +82,7 @@ impl CwSerializable for WorldUpdate {
 pub struct WorldEdit {
 	pub position: Point3<i32>,
 	pub color: RGB<u8>,
-	pub block_type: BlockType,
+	pub kind: world_edit::Kind,
 	pub padding: i32
 }
 
@@ -98,7 +94,7 @@ pub struct Particle {
 	pub color: RGBA<f32>,
 	pub size: f32,
 	pub count: i32,
-	pub type_: ParticleType,
+	pub kind: particle::Kind,
 	pub spread: f32,
 	//pad4
 }
@@ -107,7 +103,7 @@ pub struct Particle {
 #[derive(Debug, PartialEq, Clone)]
 pub struct SoundEffect {
 	pub position: Point3<f32>,
-	pub sound: Sound,
+	pub kind: sound_effect::Kind,
 	pub pitch: f32,
 	pub volume: f32
 }
@@ -118,7 +114,7 @@ pub struct WorldObject {
 	pub zone: Point2<i32>,
 	pub id: i32,
 	pub unknown_a: i32,
-	pub type_: WorldObjectType,
+	pub kind: world_object::Kind,
 	//pad4
 	pub position: Point3<i64>,
 	pub orientation: i8,

@@ -6,11 +6,7 @@ use crate::utils::io_extensions::{ReadStruct, WriteStruct};
 
 use self::airship_traffic::*;
 use self::common::*;
-use self::creature_action::*;
 use self::creature_update::*;
-use self::hit::*;
-use self::projectile::*;
-use self::status_effect::*;
 use self::world_update::*;
 use self::world_update::drops::Drop;
 
@@ -128,7 +124,7 @@ pub struct CreatureAction {
 	pub zone: Point2<i32>,
 	pub item_index: i32,
 	pub unknown_a: i32,
-	pub type_: CreatureActionType
+	pub kind: creature_action::Kind
 	//pad3
 }
 
@@ -145,7 +141,7 @@ pub struct Hit {
 	pub position: Point3<i64>,
 	pub direction: Vector3<f32>,
 	pub is_yellow: bool,
-	pub type_: HitType,
+	pub kind: hit::Kind,
 	pub flash: bool,
 	//pad1
 }
@@ -155,7 +151,7 @@ pub struct Hit {
 pub struct StatusEffect {
 	pub source: CreatureId,
 	pub target: CreatureId,
-	pub type_: StatusEffectType,
+	pub kind: status_effect::Kind,
 	//pad3
 	pub modifier: f32,
 	pub duration: i32,
@@ -180,7 +176,7 @@ pub struct Projectile {
 	pub particles: f32,
 	pub skill: u8,
 	//pad3
-	pub type_: ProjectileType,
+	pub kind: projectile::Kind,
 	pub unknown_c: i32,
 	pub unknown_d: f32,
 	pub unknown_e: f32

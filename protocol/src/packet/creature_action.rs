@@ -1,6 +1,6 @@
 #[repr(u8)]
 #[derive(Debug, PartialEq, Eq, Clone)]
-pub enum CreatureActionType {
+pub enum Kind {
 	Bomb = 1,
 	Talk,
 	ObjectInteraction,

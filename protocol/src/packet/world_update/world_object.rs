@@ -1,6 +1,6 @@
 #[repr(i32)]
 #[derive(Debug, PartialEq, Eq, Clone, Copy)]
-pub enum WorldObjectType {
+pub enum Kind {
 	Statue,
 	Door,
 	BigDoor,

@@ -4,7 +4,7 @@ use protocol::packet::{Hit, StatusEffect, WorldUpdate};
 use protocol::packet::common::item::Kind::*;
 use protocol::packet::common::item::kind::Weapon::*;
 use protocol::packet::creature_update::equipment::Slot::RightWeapon;
-use protocol::packet::status_effect::StatusEffectType::Swiftness;
+use protocol::packet::status_effect::Kind::Swiftness;
 use protocol::utils::constants::combat_classes::*;
 
 use crate::server::creature::Creature;
@@ -12,7 +12,7 @@ use crate::server::Server;
 
 pub async fn buff_warfrenzy(warfrenzy: &StatusEffect, server: &Server) {
 	let swiftness = StatusEffect {
-		type_: Swiftness,
+		kind: Swiftness,
 		..*warfrenzy
 	};
 	// sending this separately from the original status effect

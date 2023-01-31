@@ -17,11 +17,11 @@ use tokio::time::sleep;
 
 use protocol::{CwSerializable, packet, Packet};
 use protocol::nalgebra::{Point2, Point3};
-use protocol::packet::*;
+use protocol::packet::{*, Hit};
 use protocol::packet::common::{CreatureId, Item};
 use protocol::packet::creature_update::Affiliation;
 use protocol::packet::world_update::drops::Drop;
-use protocol::packet::world_update::sound_effect::Sound;
+use protocol::packet::world_update::sound_effect::Kind::*;
 use protocol::packet::world_update::SoundEffect;
 use protocol::utils::constants::SIZE_ZONE;
 use protocol::utils::io_extensions::{ReadStruct, WriteStruct};
@@ -178,7 +178,7 @@ impl Server {
 			sound_effects: vec![
 				SoundEffect {
 					position: sound_position_of(position),
-					sound: Sound::Drop,
+					kind: Drop,
 					pitch: 1f32,
 					volume: 1f32
 				}
@@ -191,7 +191,7 @@ impl Server {
 			sleep(Duration::from_millis(500)).await;
 			let sound_effect = SoundEffect {
 				position: sound_position_of(position),
-				sound: Sound::DropItem,
+				kind: DropItem,
 				pitch: 1f32,
 				volume: 1f32
 			};

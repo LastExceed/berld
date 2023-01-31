@@ -1,6 +1,6 @@
 #[repr(i32)]
 #[derive(Debug, PartialEq, Eq, Clone, Copy)]
-pub enum Sound {
+pub enum Kind {
 	Hit,
 	Blade1,
 	Blade2,

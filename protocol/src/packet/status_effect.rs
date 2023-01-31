@@ -1,6 +1,6 @@
 #[repr(u8)]
 #[derive(Debug, PartialEq, Eq, Clone, Copy)]
-pub enum StatusEffectType {
+pub enum Kind {
 	Bulwalk = 1,
 	WarFrenzy,
 	Camouflage,
