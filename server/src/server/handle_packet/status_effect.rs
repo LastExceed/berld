@@ -8,8 +8,8 @@ use protocol::nalgebra::Vector3;
 use protocol::packet::{Hit, StatusEffect, WorldUpdate};
 use protocol::packet::hit::Kind::*;
 use protocol::packet::status_effect::Kind::*;
-use protocol::packet::world_update::sound_effect::Kind::*;
-use protocol::packet::world_update::SoundEffect;
+use protocol::packet::world_update::Sound;
+use protocol::packet::world_update::sound::Kind::*;
 use protocol::utils::sound_position_of;
 
 use crate::addons::balancing;
@@ -61,7 +61,7 @@ async fn apply_poison(source: &Player, target: Arc<Player>, status_effect: &Stat
 	drop(source_creature_guard);
 	drop(target_creature_guard);
 
-	let sound_effect = SoundEffect {
+	let sound_effect = Sound {
 		position: sound_position_of(hit.position),
 		kind: SlimeGroan,
 		pitch: 1.0,
@@ -70,7 +70,7 @@ async fn apply_poison(source: &Player, target: Arc<Player>, status_effect: &Stat
 
 	let world_update = WorldUpdate {
 		hits: vec![hit],
-		sound_effects: vec![sound_effect],
+		sounds: vec![sound_effect],
 		..Default::default()
 	};
 

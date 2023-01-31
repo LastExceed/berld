@@ -3,7 +3,7 @@ use async_trait::async_trait;
 use protocol::nalgebra::Vector3;
 use protocol::packet::{creature_action, CreatureAction, WorldUpdate};
 use protocol::packet::creature_action::Kind::*;
-use protocol::packet::world_update::{Pickup, sound_effect, SoundEffect};
+use protocol::packet::world_update::{Pickup, sound, Sound};
 use protocol::utils::constants::SIZE_BLOCK;
 use protocol::utils::sound_position_of;
 
@@ -37,15 +37,15 @@ impl HandlePacket<CreatureAction> for Server {
 						interactor: source.id,
 						item
 					};
-					let sound_effect = SoundEffect {
+					let sound_effect = Sound {
 						position: sound_position_of(source.creature.read().await.position),
-						kind: sound_effect::Kind::Pickup,
+						kind: sound::Kind::Pickup,
 						pitch: 1f32,
 						volume: 1f32
 					};
 					let world_update = WorldUpdate {
 						pickups: vec![pickup],
-						sound_effects: vec![sound_effect],
+						sounds: vec![sound_effect],
 						..Default::default()
 					};
 					source.send_ignoring(&world_update).await;

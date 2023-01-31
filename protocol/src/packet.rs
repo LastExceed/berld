@@ -98,7 +98,7 @@ pub struct WorldUpdate {
 	pub world_edits: Vec<WorldEdit>,
 	pub hits: Vec<Hit>,
 	pub particles: Vec<Particle>,
-	pub sound_effects: Vec<SoundEffect>,
+	pub sounds: Vec<Sound>,
 	pub projectiles: Vec<Projectile>,
 	pub world_objects: Vec<WorldObject>,
 	pub drops: Vec<(Point2<i32>, Vec<Drop>)>,//todo: dedicated type

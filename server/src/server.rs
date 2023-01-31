@@ -21,8 +21,8 @@ use protocol::packet::{*, Hit};
 use protocol::packet::common::{CreatureId, Item};
 use protocol::packet::creature_update::Affiliation;
 use protocol::packet::world_update::drops::Drop;
-use protocol::packet::world_update::sound_effect::Kind::*;
-use protocol::packet::world_update::SoundEffect;
+use protocol::packet::world_update::Sound;
+use protocol::packet::world_update::sound::Kind::*;
 use protocol::utils::constants::SIZE_ZONE;
 use protocol::utils::io_extensions::{ReadStruct, WriteStruct};
 use protocol::utils::sound_position_of;
@@ -175,8 +175,8 @@ impl Server {
 
 		self.broadcast(&WorldUpdate {
 			drops: vec![(zone, zone_drops_copy)],
-			sound_effects: vec![
-				SoundEffect {
+			sounds: vec![
+				Sound {
 					position: sound_position_of(position),
 					kind: Drop,
 					pitch: 1f32,
@@ -189,13 +189,13 @@ impl Server {
 		let server_static: &'static Server = unsafe { transmute(self) }; //todo: scoped task
 		tokio::spawn(async move {
 			sleep(Duration::from_millis(500)).await;
-			let sound_effect = SoundEffect {
+			let sound = Sound {
 				position: sound_position_of(position),
 				kind: DropItem,
 				pitch: 1f32,
 				volume: 1f32
 			};
-			server_static.broadcast(&WorldUpdate::from(sound_effect), None).await;
+			server_static.broadcast(&WorldUpdate::from(sound), None).await;
 		});
 	}
 

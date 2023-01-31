@@ -17,7 +17,7 @@ use self::p48::*;
 
 pub mod world_edit;
 pub mod particle;
-pub mod sound_effect;
+pub mod sound;
 pub mod world_object;
 pub mod drops;
 pub mod p48;
@@ -37,7 +37,7 @@ impl CwSerializable for WorldUpdate {
 			world_edits   : Vec::read_from(&mut decoder).await?,
 			hits          : Vec::read_from(&mut decoder).await?,
 			particles     : Vec::read_from(&mut decoder).await?,
-			sound_effects : Vec::read_from(&mut decoder).await?,
+			sounds        : Vec::read_from(&mut decoder).await?,
 			projectiles   : Vec::read_from(&mut decoder).await?,
 			world_objects : Vec::read_from(&mut decoder).await?,
 			drops         : Vec::read_from(&mut decoder).await?,
@@ -59,7 +59,7 @@ impl CwSerializable for WorldUpdate {
 			self.world_edits   .write_to(&mut encoder).await?;
 			self.hits          .write_to(&mut encoder).await?;
 			self.particles     .write_to(&mut encoder).await?;
-			self.sound_effects .write_to(&mut encoder).await?;
+			self.sounds.write_to(&mut encoder).await?;
 			self.projectiles   .write_to(&mut encoder).await?;
 			self.world_objects .write_to(&mut encoder).await?;
 			self.drops         .write_to(&mut encoder).await?;
@@ -101,9 +101,9 @@ pub struct Particle {
 
 #[repr(C)]
 #[derive(Debug, PartialEq, Clone)]
-pub struct SoundEffect {
+pub struct Sound {
 	pub position: Point3<f32>,
-	pub kind: sound_effect::Kind,
+	pub kind: sound::Kind,
 	pub pitch: f32,
 	pub volume: f32
 }
@@ -182,7 +182,7 @@ bulk_impl!(CwSerializable for
 	WorldEdit,
 	//Hit
 	Particle,
-	SoundEffect,
+	Sound,
 	//Projectile
 	WorldObject,
 	//Drop
@@ -222,10 +222,10 @@ impl From<Particle> for WorldUpdate {
 	}
 }
 
-impl From<SoundEffect> for WorldUpdate {
-	fn from(value: SoundEffect) -> Self {
+impl From<Sound> for WorldUpdate {
+	fn from(value: Sound) -> Self {
 		Self {
-			sound_effects: vec![value],
+			sounds: vec![value],
 			..Default::default()
 		}
 	}

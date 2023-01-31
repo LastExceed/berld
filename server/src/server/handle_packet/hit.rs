@@ -5,9 +5,9 @@ use protocol::packet::common::Race;
 use protocol::packet::common::Race::*;
 use protocol::packet::hit;
 use protocol::packet::hit::Kind::{*, Absorb, Block};
-use protocol::packet::world_update::sound_effect;
-use protocol::packet::world_update::sound_effect::Kind::*;
-use protocol::packet::world_update::SoundEffect;
+use protocol::packet::world_update::sound;
+use protocol::packet::world_update::Sound;
+use protocol::packet::world_update::sound::Kind::*;
 use protocol::utils::sound_position_of;
 
 use crate::addons::balancing;
@@ -31,7 +31,7 @@ impl HandlePacket<Hit> for Server {
 		let sound_effects =
 			impact_sounds(packet.kind, target_creature_guard.race)
 				.iter()
-				.map(|sound| SoundEffect {
+				.map(|sound| Sound {
 					position: sound_position_of(packet.position),
 					kind: *sound,
 					volume: 1.0,
@@ -41,19 +41,19 @@ impl HandlePacket<Hit> for Server {
 
 		let world_update = WorldUpdate {
 			hits: vec![packet],
-			sound_effects,
+			sounds: sound_effects,
 			..Default::default()
 		};
 		target.send_ignoring(&world_update).await; //todo: only target needs to receive this packet, but finding player by id is expensive atm
 	}
 }
 
-fn impact_sounds(hit_kind: hit::Kind, target_race: Race) -> Vec<sound_effect::Kind> {
+fn impact_sounds(hit_kind: hit::Kind, target_race: Race) -> Vec<sound::Kind> {
 	match hit_kind {
 		Block |
-		Miss => vec![sound_effect::Kind::Block],
+		Miss => vec![sound::Kind::Block],
 
-		Absorb => vec![sound_effect::Kind::Absorb],
+		Absorb => vec![sound::Kind::Absorb],
 
 		Dodge |
 		Invisible => vec![],
@@ -68,7 +68,7 @@ fn impact_sounds(hit_kind: hit::Kind, target_race: Race) -> Vec<sound_effect::Ki
 	}
 }
 
-fn groan_of(race: Race) -> Option<sound_effect::Kind> {
+fn groan_of(race: Race) -> Option<sound::Kind> {
 	match race {
 		ElfMale         => Some(MaleGroan),
 		ElfFemale       => Some(FemaleGroan),
