@@ -15,7 +15,7 @@ use crate::utils::io_extensions::{ReadStruct, WriteStruct};
 use self::mission::*;
 use self::p48::*;
 
-pub mod world_edit;
+pub mod block;
 pub mod particle;
 pub mod sound;
 pub mod world_object;
@@ -34,7 +34,7 @@ impl CwSerializable for WorldUpdate {
 
 		//todo: copypasta
 		Ok(Self {
-			world_edits   : Vec::read_from(&mut decoder).await?,
+			blocks        : Vec::read_from(&mut decoder).await?,
 			hits          : Vec::read_from(&mut decoder).await?,
 			particles     : Vec::read_from(&mut decoder).await?,
 			sounds        : Vec::read_from(&mut decoder).await?,
@@ -56,7 +56,7 @@ impl CwSerializable for WorldUpdate {
 			let mut encoder = ZlibEncoder::with_quality(&mut buffer, Level::Best);
 
 			//todo: copypasta
-			self.world_edits   .write_to(&mut encoder).await?;
+			self.blocks.write_to(&mut encoder).await?;
 			self.hits          .write_to(&mut encoder).await?;
 			self.particles     .write_to(&mut encoder).await?;
 			self.sounds.write_to(&mut encoder).await?;
@@ -79,10 +79,10 @@ impl CwSerializable for WorldUpdate {
 
 #[repr(C)]
 #[derive(Debug, PartialEq, Eq, Clone)]
-pub struct WorldEdit {
+pub struct Block {
 	pub position: Point3<i32>,
 	pub color: RGB<u8>,
-	pub kind: world_edit::Kind,
+	pub kind: block::Kind,
 	pub padding: i32
 }
 
@@ -179,7 +179,7 @@ pub struct Mission {
 }
 
 bulk_impl!(CwSerializable for
-	WorldEdit,
+	Block,
 	//Hit
 	Particle,
 	Sound,
@@ -195,10 +195,10 @@ bulk_impl!(CwSerializable for
 );
 
 //todo: copypasta
-impl From<WorldEdit> for WorldUpdate {
-	fn from(value: WorldEdit) -> Self {
+impl From<Block> for WorldUpdate {
+	fn from(value: Block) -> Self {
 		Self {
-			world_edits: vec![value],
+			blocks: vec![value],
 			..Default::default()
 		}
 	}

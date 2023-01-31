@@ -95,7 +95,7 @@ pub struct ServerTick;
 
 #[derive(Debug, Clone, Default)]
 pub struct WorldUpdate {
-	pub world_edits: Vec<WorldEdit>,
+	pub blocks: Vec<Block>,
 	pub hits: Vec<Hit>,
 	pub particles: Vec<Particle>,
 	pub sounds: Vec<Sound>,

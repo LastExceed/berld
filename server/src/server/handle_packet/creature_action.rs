@@ -37,7 +37,7 @@ impl HandlePacket<CreatureAction> for Server {
 						interactor: source.id,
 						item
 					};
-					let sound_effect = Sound {
+					let sound = Sound {
 						position: sound_position_of(source.creature.read().await.position),
 						kind: sound::Kind::Pickup,
 						pitch: 1f32,
@@ -45,7 +45,7 @@ impl HandlePacket<CreatureAction> for Server {
 					};
 					let world_update = WorldUpdate {
 						pickups: vec![pickup],
-						sounds: vec![sound_effect],
+						sounds: vec![sound],
 						..Default::default()
 					};
 					source.send_ignoring(&world_update).await;
