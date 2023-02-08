@@ -6,7 +6,6 @@ use async_compression::tokio::write::ZlibEncoder;
 use async_trait::async_trait;
 use nalgebra::Point3;
 use rgb::RGB;
-use strum::EnumCount;
 use strum_macros::EnumIter;
 use tokio::io;
 use tokio::io::{AsyncRead, AsyncReadExt, AsyncWrite, AsyncWriteExt};

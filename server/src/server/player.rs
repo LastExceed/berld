@@ -2,7 +2,6 @@ use std::mem::size_of;
 use std::sync::atomic::AtomicBool;
 
 use tokio::io;
-use tokio::io::AsyncWriteExt;
 use tokio::net::tcp::OwnedWriteHalf;
 use tokio::sync::RwLock;
 
