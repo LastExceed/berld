@@ -19,7 +19,7 @@ pub const SNIPER: CombatClass = CombatClass {
 
 pub const SCOUT: CombatClass = CombatClass {
 	occupation: Ranger,
-	specialization: Default
+	specialization: Alternative
 };
 
 pub const FIRE_MAGE: CombatClass = CombatClass {
