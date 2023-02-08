@@ -1,3 +1,5 @@
+#![allow(unused_variables)]
+
 use boolinator::Boolinator;
 use strum::IntoEnumIterator;
 
