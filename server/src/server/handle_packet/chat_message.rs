@@ -61,7 +61,7 @@ async fn handle_command(server: &Server, source: &Player, packet: &ChatMessageFr
 				killer: source.id,
 				unknown: 0,
 				victim: dummy.id,
-				xp: parsed_amount
+				experience: parsed_amount
 			};
 
 			source.send_ignoring(&WorldUpdate::from(kill)).await;

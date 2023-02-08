@@ -56,10 +56,10 @@ impl CwSerializable for WorldUpdate {
 			let mut encoder = ZlibEncoder::with_quality(&mut buffer, Level::Best);
 
 			//todo: copypasta
-			self.blocks.write_to(&mut encoder).await?;
+			self.blocks        .write_to(&mut encoder).await?;
 			self.hits          .write_to(&mut encoder).await?;
 			self.particles     .write_to(&mut encoder).await?;
-			self.sounds.write_to(&mut encoder).await?;
+			self.sounds        .write_to(&mut encoder).await?;
 			self.projectiles   .write_to(&mut encoder).await?;
 			self.world_objects .write_to(&mut encoder).await?;
 			self.drops         .write_to(&mut encoder).await?;
@@ -83,7 +83,7 @@ pub struct Block {
 	pub position: Point3<i32>,
 	pub color: RGB<u8>,
 	pub kind: block::Kind,
-	pub padding: i32
+	pub padding: i32 //definitely NOT padding
 }
 
 #[repr(C)]
@@ -96,7 +96,7 @@ pub struct Particle {
 	pub count: i32,
 	pub kind: particle::Kind,
 	pub spread: f32,
-	//pad4
+	//pad4 //i32 according to cuwo
 }
 
 #[repr(C)]
@@ -117,14 +117,14 @@ pub struct WorldObject {
 	pub kind: world_object::Kind,
 	//pad4
 	pub position: Point3<i64>,
-	pub orientation: i8,
+	pub orientation: i8,//i32 according to cuwo
 	//pad3
 	pub size: Hitbox,
 	pub is_closed: bool,
 	//pad3
 	pub transform_time: i32,
 	pub unknown_b: i32,
-	//pad4
+	//pad4 //cuwo says 64bit padding??
 	pub interactor: i64
 }
 
@@ -147,7 +147,7 @@ pub struct Kill {
 	pub killer: CreatureId,
 	pub victim: CreatureId,
 	pub unknown: i32,
-	pub xp: i32
+	pub experience: i32
 }
 
 #[repr(C)]
@@ -163,19 +163,19 @@ pub struct Attack {
 #[derive(Debug, PartialEq, Eq, Clone)]
 pub struct Mission {
 	pub sector: Point2<i32>,
-	pub unknown_a: i32,
-	pub unknown_b: i32,
-	pub unknown_c: i32,
-	pub id: i32,
-	pub kind: i32,
-	pub boss: Race,
+	pub unknown_a: i32,//always 0?
+	pub unknown_b: i32,//always 0?
+	pub unknown_c: i32,//always 0?
+	pub id: i32,//doesnt matter at all?
+	pub objective: Objective,
+	pub race: Race,
 	pub level: i32,
-	pub unknown_d: u8,
+	pub power_base: u8,
 	pub state: MissionState,
 	//pad2
-	pub health_current: i32,
-	pub health_maximum: i32,
-	pub zone: Point2<i32>
+	pub progress_current: i32,
+	pub progress_maximum: i32,
+	pub zone: Point2<i32>//only matters for kind 1
 }
 
 bulk_impl!(CwSerializable for
