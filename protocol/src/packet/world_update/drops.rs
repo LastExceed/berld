@@ -30,7 +30,7 @@ pub struct Drop {
 	//pad3
 	pub droptime: i32,
 	pub unknown_b: i32,
-	//pad4
+	//pad4 //i32 according to cuwo
 }
 
 impl CwSerializable for Drop {}

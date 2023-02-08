@@ -137,10 +137,10 @@ pub struct Hit {
 	pub critical: bool,
 	//pad3
 	pub stuntime: i32,
-	//pad3
+	//pad4
 	pub position: Point3<i64>,
 	pub direction: Vector3<f32>,
-	pub is_yellow: bool,
+	pub is_yellow: bool, //u8 used skill according to cuwo
 	pub kind: hit::Kind,
 	pub flash: bool,
 	//pad1
@@ -156,7 +156,7 @@ pub struct StatusEffect {
 	pub modifier: f32,
 	pub duration: i32,
 	//pad4
-	pub creature_id3: CreatureId
+	pub creature_id3: CreatureId //=source for poison, else 0
 }
 
 #[repr(C)]

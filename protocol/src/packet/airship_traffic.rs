@@ -20,18 +20,17 @@ impl CwSerializable for AirshipTraffic {
 #[derive(Debug, PartialEq, Clone)]
 pub struct Airship {
 	pub id: i64,
-	pub unknown_a: i32,
-	pub unknown_b: i32,
+	pub unknown_a: i32, //u8 + 3pad according to cuwo
+	pub unknown_b: i32, //maybe padding
 	pub position: Point3<i64>,
 	pub velocity: Vector3<f32>,
 	pub rotation: f32,
 	pub station: Point3<i64>,
 	pub path_rotation: f32,
-	//pad4
+	pub unknown_c: i32,//maybe padding
 	pub destination: Point3<i64>,
 	pub state: State,
-	// u8 ?
-	// pad3
+	pub unknown_d: i32 //u8 + 3pad according to cuwo
 }
 
 impl CwSerializable for Airship {}
