@@ -37,6 +37,9 @@ impl CwSerializable for Airship {}
 
 #[repr(i32)]
 #[derive(Debug, PartialEq, Eq, Clone)]
-pub enum State {
-	Unknown //todo
+pub enum State {//from cuwo
+	GoToStart,
+	Landing,
+	Takeoff,
+	GoToDestination
 }
