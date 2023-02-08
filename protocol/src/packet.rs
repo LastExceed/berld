@@ -174,7 +174,7 @@ pub struct Projectile {
 	pub scale: f32,
 	pub mana: f32,
 	pub particles: f32,
-	pub skill: u8,
+	pub is_yellow: bool,
 	//pad3
 	pub kind: projectile::Kind,
 	pub unknown_c: i32,
