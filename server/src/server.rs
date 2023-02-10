@@ -59,10 +59,23 @@ impl Server {
 
 		let listener = TcpListener::bind("0.0.0.0:12345").await.expect("unable to bind listening socket");
 
+		let self_static: &'static Server = unsafe { transmute(&self) }; //todo: scoped task
+		tokio::spawn(async move {
+			loop {
+				self_static.broadcast(
+					&IngameDatetime {
+						time: 12 * 60 * 60 * 1000,
+						day: 0
+					},
+					None
+				).await;
+				sleep(Duration::from_secs(6)).await;
+			}
+		});
+
 		loop {
 			let (stream, _) = listener.accept().await.unwrap();
 
-			let self_static: &'static Server = unsafe { transmute(&self) }; //todo: scoped task
 			tokio::spawn(async move {
 				if let Err(_) = self_static.handle_new_connection(stream).await {
 					//TODO: error logging
