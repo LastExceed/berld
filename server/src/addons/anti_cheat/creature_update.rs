@@ -101,13 +101,21 @@ pub(crate) fn inspect_animation(animation: &Animation, former_state: &Creature, 
 		.ensure_one_of(&allowed_animations, "animation")
 }
 pub(crate) fn inspect_animation_time(animation_time: &i32, former_state: &Creature, updated_state: &Creature) -> anti_cheat::Result {
-	const TIMELESS_ANIMATIONS: [Animation; 6] = [
+	const TIMELESS_ANIMATIONS: [Animation; 12] = [
 		Idle,
 		Stealth,
 		Sailing,
 		Sitting,
 		PetFoodPresent,
-		Sleeping
+		Sleeping,
+		//todo: separate?
+		ShieldM2Charging,
+		GreatweaponM2Charging,
+		BoomerangM2Charging,
+		CrossbowM2Charging,
+		UnarmedM2Charging,
+		BowM2Charging
+		//todo: some unused animations are timeless as well
 	];
 
 	animation_time.ensure_not_negative("animation time")?;
