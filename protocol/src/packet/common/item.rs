@@ -152,12 +152,12 @@ impl CwSerializable for Item {
 #[derive(Debug, PartialEq, Eq, Clone, Copy, EnumIter, EnumCount)]
 pub enum Stat {
 	Damage,
-	Health,
 	Armor,
 	Resi,
+	Health,
+	Reg,
 	Crit,
-	Tempo,
-	Reg
+	Tempo
 }
 
 impl From<Stat> for usize {
