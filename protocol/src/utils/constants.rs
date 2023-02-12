@@ -5,6 +5,7 @@ use crate::packet::creature_update::{Occupation, Specialization};
 pub mod combat_classes;
 pub mod animations;
 pub mod materials;
+pub mod rarity;
 
 pub const SIZE_BLOCK: i64 = 65536;
 pub const SIZE_MAPBLOCK: i64 = SIZE_BLOCK * 8;

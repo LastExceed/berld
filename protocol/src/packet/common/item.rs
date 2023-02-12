@@ -44,18 +44,6 @@ pub enum Kind {
 	ManaCube
 }
 
-#[repr(u8)]
-#[derive(Debug, PartialEq, Eq, Clone, Copy, Default, EnumIter)]
-pub enum Rarity {
-	#[default]
-	Normal,
-	Uncommon,
-	Rare,
-	Epic,
-	Legendary,
-	Mythic
-}
-
 #[repr(i8)]
 #[derive(Debug, PartialEq, Eq, Clone, Copy, Default, EnumIter)]
 pub enum Material {
@@ -269,7 +257,7 @@ impl Item {
 				* if skip_size { 1.0 } else { size_multiplier }
 				* (material_multiplier + seed_phase_bonus)
 				* level_scaling_factor(self.level as f32 + if apply_spirit_bonus { spirit_bonus } else { 0.0 })
-				* rarity_scaling_factor(self.rarity as u8)
+				* rarity_scaling_factor(self.rarity)
 		}).into()
 	}
 }

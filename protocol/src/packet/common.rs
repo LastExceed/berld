@@ -177,7 +177,7 @@ pub struct Item {
 	//pad 2 (ephemeral)
 	pub seed: i32,
 	pub _recipe: RecipeDummy,
-	pub rarity: Rarity,
+	pub rarity: u8,
 	pub material: Material,
 	pub flags: FlagSet8<ItemFlag>,
 	//pad1 (ephemeral)
