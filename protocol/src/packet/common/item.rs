@@ -1,11 +1,13 @@
+use std::mem::{size_of, transmute};
+use std::slice;
+
 use nalgebra::Point3;
 use strum_macros::{EnumCount, EnumIter};
-use tokio::io::{AsyncRead, AsyncReadExt, AsyncWrite, AsyncWriteExt};
 
 use kind::*;
 
-use crate::CwSerializable;
 use crate::packet::common::{Item, Race};
+use crate::packet::common::item::Kind::Formula;
 use crate::utils::{ArrayWrapper, level_scaling_factor, rarity_scaling_factor};
 
 pub mod kind;
@@ -112,6 +114,52 @@ pub struct Spirit {
 	pub material: Material,
 	pub level: i16,
 	//pad2 //todo: struct align suggests that this could be a property, maybe seed/rarity/flags of the spirit?
+}
+
+
+///an awful workaround for the typesafety breaking inconsistency of formulas. initialize with Default::default(), and use the get/set functions afterwards
+#[derive(Debug, PartialEq, Eq, Clone, Default)]
+pub struct RecipeDummy([u8;4]);
+
+#[derive(Debug)]
+pub struct NotAFormula;
+
+impl Item {
+	pub fn get_recipe(&self) -> Result<Kind, NotAFormula> {
+		if self.kind != Formula {
+			return Err(NotAFormula);
+		}
+
+		let recipe = unsafe {
+			let recipe_bytes = [
+				self._recipe.0[0],
+				transmute::<_, [u8; size_of::<Kind>()]>(self.kind)[1]
+			];
+
+			transmute(recipe_bytes)
+		};
+
+		Ok(recipe)
+	}
+
+	pub fn set_recipe(&mut self, recipe: Kind) -> Result<(), NotAFormula> {
+		if self.kind != Formula {
+			return Err(NotAFormula);
+		}
+
+		unsafe {
+			let recipe_bytes: [u8; size_of::<Kind>()] = transmute(recipe);
+
+			slice::from_raw_parts_mut(
+				(self as *mut Self).cast::<u8>(),
+				size_of::<Self>()
+			)[1] = recipe_bytes[1];
+
+			self._recipe.0[0] = recipe_bytes[0];
+		}
+
+		Ok(())
+	}
 }
 
 

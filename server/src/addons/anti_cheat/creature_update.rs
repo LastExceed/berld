@@ -629,12 +629,11 @@ pub(crate) fn inspect_equipment(equipment: &Equipment, former_state: &Creature, 
 		}
 
 		//todo: safety measure until data validation is implemented
-		(item.recipe == Void).ok_or(format!("illegal equipment[{:?}].recipe", slot))?;
 		Material::iter().any(|material| item.material == material).ok_or(format!("invalid equipment[{:?}].kind", slot))?;
 		Rarity::iter().any(|rarity| item.rarity == rarity).ok_or(format!("invalid equipment[{:?}].rarity", slot))?;
 
 		//item.seed.ensure_not_negative(&format!("equipment[{:?}].seed", slot)) //tolerating negative seeds due to popularity
-		item.recipe.ensure_exact(&Void, &format!("equipment[{:?}].recipe", slot))?;
+		//item._recipe.ensure_exact(&Void, &format!("equipment[{:?}].recipe", slot))?;
 		//item.minus_modifier
 		item.rarity.ensure_one_of(&[Normal, Uncommon, Rare, Epic, Legendary], &format!("equipment[{:?}].rarity", slot))?; //todo: crashes for rarity 6+
 		let allowed_materials = allowed_materials(item.kind, updated_state.occupation);

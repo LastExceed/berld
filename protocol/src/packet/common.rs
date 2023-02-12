@@ -1,4 +1,5 @@
 use strum_macros::EnumIter;
+
 use crate::utils::flagset::FlagSet8;
 
 use self::item::*;
@@ -175,8 +176,7 @@ pub struct Item {
 	pub kind: Kind,
 	//pad 2 (ephemeral)
 	pub seed: i32,
-	pub recipe: Kind,
-	pub minus_modifier: i16,//todo: structure alignment entails this property's existence, name adopted from cuwo (might just be an incorrectly sized property)
+	pub _recipe: RecipeDummy,
 	pub rarity: Rarity,
 	pub material: Material,
 	pub flags: FlagSet8<ItemFlag>,
