@@ -83,7 +83,7 @@ impl CwSerializable for CreatureUpdate {
 			experience        : if bitfield & (1 << 34) > 0 { Some(decoder.read_struct().await?) } else { None },
 			master            : if bitfield & (1 << 35) > 0 { Some(decoder.read_struct().await?) } else { None },
 			unknown36         : if bitfield & (1 << 36) > 0 { Some(decoder.read_struct().await?) } else { None },
-			power_base        : if bitfield & (1 << 37) > 0 { Some(decoder.read_struct().await?) } else { None },
+			rarity            : if bitfield & (1 << 37) > 0 { Some(decoder.read_struct().await?) } else { None },
 			unknown38         : if bitfield & (1 << 38) > 0 { Some(decoder.read_struct().await?) } else { None },
 			home_zone         : if bitfield & (1 << 39) > 0 { Some(decoder.read_struct().await?) } else { None },
 			home              : if bitfield & (1 << 40) > 0 { Some(decoder.read_struct().await?) } else { None },
@@ -149,7 +149,7 @@ impl CwSerializable for CreatureUpdate {
 		bitfield |= (self.experience        .is_some() as u64) << 34;
 		bitfield |= (self.master            .is_some() as u64) << 35;
 		bitfield |= (self.unknown36         .is_some() as u64) << 36;
-		bitfield |= (self.power_base        .is_some() as u64) << 37;
+		bitfield |= (self.rarity            .is_some() as u64) << 37;
 		bitfield |= (self.unknown38         .is_some() as u64) << 38;
 		bitfield |= (self.home_zone         .is_some() as u64) << 39;
 		bitfield |= (self.home              .is_some() as u64) << 40;
@@ -206,7 +206,7 @@ impl CwSerializable for CreatureUpdate {
 			if let Some(it) = &self.experience         { encoder.write_struct(it).await?; }
 			if let Some(it) = &self.master             { encoder.write_struct(it).await?; }
 			if let Some(it) = &self.unknown36          { encoder.write_struct(it).await?; }
-			if let Some(it) = &self.power_base         { encoder.write_struct(it).await?; }
+			if let Some(it) = &self.rarity             { encoder.write_struct(it).await?; }
 			if let Some(it) = &self.unknown38          { encoder.write_struct(it).await?; }
 			if let Some(it) = &self.home_zone          { encoder.write_struct(it).await?; }
 			if let Some(it) = &self.home               { encoder.write_struct(it).await?; }

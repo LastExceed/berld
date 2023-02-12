@@ -51,7 +51,7 @@ pub fn inspect_creature_update(packet: &CreatureUpdate, former_state: &Creature,
 	packet.experience        .map_or_ok(|value| inspect_experience(        value, &former_state, &updated_state))?;
 	packet.master            .map_or_ok(|value| inspect_master(            value, &former_state, &updated_state))?;
 	packet.unknown36         .map_or_ok(|value| inspect_unknown36(         value, &former_state, &updated_state))?;
-	packet.power_base        .map_or_ok(|value| inspect_power_base(        value, &former_state, &updated_state))?;
+	packet.rarity            .map_or_ok(|value| inspect_rarity(            value, &former_state, &updated_state))?;
 	packet.unknown38         .map_or_ok(|value| inspect_unknown38(         value, &former_state, &updated_state))?;
 	packet.home_zone         .map_or_ok(|value| inspect_home_zone(         value, &former_state, &updated_state))?;
 	packet.home              .map_or_ok(|value| inspect_home(              value, &former_state, &updated_state))?;

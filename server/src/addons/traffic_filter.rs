@@ -145,7 +145,7 @@ pub fn filter(packet: &mut CreatureUpdate, former_state: &Creature, updated_stat
 	packet.experience        .is_some() ||
 	packet.master            .is_some() ||
 	packet.unknown36         .is_some() ||
-	packet.power_base        .is_some() ||
+	packet.rarity            .is_some() ||
 	packet.unknown38         .is_some() ||
 	packet.home_zone         .is_some() ||
 	packet.home              .is_some() ||

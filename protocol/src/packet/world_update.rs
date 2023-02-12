@@ -170,7 +170,7 @@ pub struct Mission {
 	pub objective: Objective,
 	pub race: Race,
 	pub level: i32,
-	pub power_base: u8,
+	pub rarity: u8,
 	pub state: MissionState,
 	//pad2
 	pub progress_current: i32,

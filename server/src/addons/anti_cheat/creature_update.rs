@@ -5,9 +5,8 @@ use strum::IntoEnumIterator;
 
 use protocol::nalgebra::{Point3, Vector3};
 use protocol::packet::common::{CreatureId, EulerAngles, Hitbox, Item, item, Race};
-use protocol::packet::common::item::{Material, Rarity};
 use protocol::packet::common::item::Kind::*;
-use protocol::packet::common::item::Rarity::*;
+use protocol::packet::common::item::Material;
 use protocol::packet::common::Race::*;
 use protocol::packet::creature_update::{Affiliation, Animation, Appearance, CreatureFlag, Equipment, Multipliers, Occupation, PhysicsFlag, SkillTree, Specialization};
 use protocol::packet::creature_update::Animation::*;
@@ -19,6 +18,7 @@ use protocol::packet::creature_update::Specialization::*;
 use protocol::utils::{maximum_experience_of, power_of};
 use protocol::utils::constants::combat_classes::*;
 use protocol::utils::constants::PLAYABLE_RACES;
+use protocol::utils::constants::rarity::*;
 use protocol::utils::flagset::{FlagSet16, FlagSet32};
 
 use crate::addons::anti_cheat;
@@ -536,9 +536,9 @@ pub(crate) fn inspect_master(master: &CreatureId, former_state: &Creature, updat
 pub(crate) fn inspect_unknown36(unknown36: &i64, former_state: &Creature, updated_state: &Creature) -> anti_cheat::Result {
 	Ok(())
 }
-pub(crate) fn inspect_power_base(power_base: &u8, former_state: &Creature, updated_state: &Creature) -> anti_cheat::Result {
-	power_base
-		.ensure_exact(&0, "power_base")
+pub(crate) fn inspect_rarity(rarity: &u8, former_state: &Creature, updated_state: &Creature) -> anti_cheat::Result {
+	rarity
+		.ensure_exact(&0, "rarity")
 }
 pub(crate) fn inspect_unknown38(unknown38: &i32, former_state: &Creature, updated_state: &Creature) -> anti_cheat::Result {
 	Ok(())
@@ -564,7 +564,7 @@ pub(crate) fn inspect_consumable(consumable: &Item, former_state: &Creature, upd
 	 matches!(consumable.kind, Consumable(_))
 	 	.ensure("consumable.kind", &consumable.kind, "any variant of", "Consumable")?;
 	consumable.rarity
-		.ensure_exact(&Normal, "consumable.rarity")?;
+		.ensure_exact(&NORMAL, "consumable.rarity")?;
 	power_of(consumable.level as i32)
 		.ensure_within(&(0..=power_of(updated_state.level)), "consumable.power")
 }
@@ -630,12 +630,11 @@ pub(crate) fn inspect_equipment(equipment: &Equipment, former_state: &Creature, 
 
 		//todo: safety measure until data validation is implemented
 		Material::iter().any(|material| item.material == material).ok_or(format!("invalid equipment[{:?}].kind", slot))?;
-		Rarity::iter().any(|rarity| item.rarity == rarity).ok_or(format!("invalid equipment[{:?}].rarity", slot))?;
 
 		//item.seed.ensure_not_negative(&format!("equipment[{:?}].seed", slot)) //tolerating negative seeds due to popularity
 		//item._recipe.ensure_exact(&Void, &format!("equipment[{:?}].recipe", slot))?;
 		//item.minus_modifier
-		item.rarity.ensure_one_of(&[Normal, Uncommon, Rare, Epic, Legendary], &format!("equipment[{:?}].rarity", slot))?; //todo: crashes for rarity 6+
+		item.rarity.ensure_at_most(LEGENDARY, &format!("equipment[{:?}].rarity", slot))?; //todo: crashes for rarity 6+
 		let allowed_materials = allowed_materials(item.kind, updated_state.occupation);
 		item.material.ensure_one_of(allowed_materials, &format!("equipment[{:?}].material", slot))?;
 		//item.flags

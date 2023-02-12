@@ -54,7 +54,7 @@ pub struct Creature {
 	pub master: CreatureId,
 	pub unknown36: i64,
 	/**this is the '+#' that monsters in some dungeons have next to their [race]*/
-	pub power_base: u8,
+	pub rarity: u8,
 	pub unknown38: i32,
 	pub home_zone: Point3<i32>,
 	pub home: Point3<i64>,
@@ -116,7 +116,7 @@ impl Creature {
 			experience           : creature_update.experience?,
 			master               : creature_update.master?,
 			unknown36            : creature_update.unknown36?,
-			power_base           : creature_update.power_base?,
+			rarity               : creature_update.rarity?,
 			unknown38            : creature_update.unknown38?,
 			home_zone            : creature_update.home_zone?,
 			home                 : creature_update.home?,
@@ -169,7 +169,7 @@ impl Creature {
 		if let Some(it) = packet.experience            { self.experience            = it }
 		if let Some(it) = packet.master                { self.master                = it }
 		if let Some(it) = packet.unknown36             { self.unknown36             = it }
-		if let Some(it) = packet.power_base            { self.power_base            = it }
+		if let Some(it) = packet.rarity                { self.rarity                = it }
 		if let Some(it) = packet.unknown38             { self.unknown38             = it }
 		if let Some(it) = packet.home_zone             { self.home_zone             = it }
 		if let Some(it) = packet.home                  { self.home                  = it }
@@ -222,7 +222,7 @@ impl Creature {
 			experience        : Some(self.experience),
 			master            : Some(self.master),
 			unknown36         : Some(self.unknown36),
-			power_base        : Some(self.power_base),
+			rarity            : Some(self.rarity),
 			unknown38         : Some(self.unknown38),
 			home_zone         : Some(self.home_zone),
 			home              : Some(self.home),
@@ -247,7 +247,7 @@ impl Creature {
 
 		let innate_health = [
 			level_scaling_factor(self.level as f32),
-			rarity_scaling_factor(if self.affiliation == Affiliation::Player { 4 } else { self.power_base }),
+			rarity_scaling_factor(if self.affiliation == Affiliation::Player { 4 } else { self.rarity }),
 			combat_class_multiplier
 		].iter().fold(
 			self.multipliers[Health],
