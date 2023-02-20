@@ -2,6 +2,7 @@ use std::mem::size_of;
 use std::sync::atomic::AtomicBool;
 
 use tokio::io;
+use tokio::io::{AsyncWriteExt, BufWriter};
 use tokio::net::tcp::OwnedWriteHalf;
 use tokio::sync::RwLock;
 
@@ -13,16 +14,16 @@ use crate::server::creature::Creature;
 pub struct Player {
 	pub id: CreatureId,
 	pub creature: RwLock<Creature>,
-	write_half: RwLock<OwnedWriteHalf>,
+	writer: RwLock<BufWriter<OwnedWriteHalf>>,
 	pub should_disconnect: AtomicBool,
 }
 
 impl Player {
-	pub fn new(id: CreatureId, creature: Creature, write_half: OwnedWriteHalf) -> Self {
+	pub fn new(id: CreatureId, creature: Creature, writer: BufWriter<OwnedWriteHalf>) -> Self {
 		Self {
 			id,
 			creature: RwLock::new(creature),
-			write_half: RwLock::new(write_half),
+			writer: RwLock::new(writer),
 			should_disconnect: AtomicBool::new(false)
 		}
 	}
@@ -30,7 +31,9 @@ impl Player {
 	pub async fn send<Packet: FromServer + Sync>(&self, packet: &Packet) -> io::Result<()>
 		where [(); size_of::<Packet>()]:
 	{
-		packet.write_to_with_id(&mut self.write_half.write().await as &mut OwnedWriteHalf).await
+		let mut writer = self.writer.write().await;
+		packet.write_to_with_id(&mut *writer).await?;
+		writer.flush().await
 	}
 
 	///sends a packet to this player and ignores any io errors.

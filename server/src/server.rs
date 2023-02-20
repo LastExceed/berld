@@ -10,8 +10,9 @@ use colour::white_ln;
 use futures::future;
 use tokio::io;
 use tokio::io::{AsyncWrite, AsyncWriteExt};
+use tokio::io::{BufReader, BufWriter};
 use tokio::net::{TcpListener, TcpStream};
-use tokio::net::tcp::OwnedReadHalf;
+use tokio::net::tcp::{OwnedReadHalf, OwnedWriteHalf};
 use tokio::sync::RwLock;
 use tokio::time::sleep;
 
@@ -84,46 +85,54 @@ impl Server {
 		}
 	}
 
-	async fn handle_new_connection(&self, mut stream: TcpStream) -> io::Result<()> {
+	async fn handle_new_connection(&self, stream: TcpStream) -> io::Result<()> {
 		stream.set_nodelay(true).unwrap();
 
-		if stream.read_struct::<packet::Id>().await? != ProtocolVersion::ID {
+		let (read_half, write_half) = stream.into_split();
+		let mut reader = BufReader::new(read_half);
+		let mut writer = BufWriter::new(write_half);
+
+		if reader.read_struct::<packet::Id>().await? != ProtocolVersion::ID {
 			return Err(InvalidData.into());
 		}
-		if ProtocolVersion::read_from(&mut stream).await?.0 != 3 {
-			return ProtocolVersion(3).write_to_with_id(&mut stream).await; //todo: log this!
+		if ProtocolVersion::read_from(&mut reader).await?.0 != 3 {
+			ProtocolVersion(3).write_to_with_id(&mut writer).await?; //todo: log this!
+			writer.flush().await?;
+			return Err(InvalidInput.into());
 		}
 		let assigned_id = self.id_pool.write().await.claim();
-		let result = self.handle_new_player(stream, assigned_id).await;
+		let result = self.handle_new_player(assigned_id, reader, writer).await;
 		self.id_pool.write().await.free(assigned_id);
 		result
 	}
 
-	async fn handle_new_player(&self, mut stream: TcpStream, assigned_id: CreatureId) -> io::Result<()> {
-		ConnectionAcceptance {}.write_to_with_id(&mut stream).await?;
-		write_abnormal_creature_update(&mut stream, assigned_id).await?;
+	async fn handle_new_player(&self, assigned_id: CreatureId, mut reader: BufReader<OwnedReadHalf>, mut writer: BufWriter<OwnedWriteHalf>) -> io::Result<()> {
+		ConnectionAcceptance {}.write_to_with_id(&mut writer).await?;
+		write_abnormal_creature_update(&mut writer, assigned_id).await?;
+		writer.flush().await?;
 
-		if stream.read_struct::<packet::Id>().await? != CreatureUpdate::ID {
+		if reader.read_struct::<packet::Id>().await? != CreatureUpdate::ID {
 			return Err(InvalidData.into())
 		}
-		let mut full_creature_update = CreatureUpdate::read_from(&mut stream).await?;
-		let character = Creature::maybe_from(&full_creature_update).ok_or(InvalidData.into())?;
+		let mut full_creature_update = CreatureUpdate::read_from(&mut reader).await?;
+		let Some(character) = Creature::maybe_from(&full_creature_update) else {
+			return Err(InvalidInput.into());
+		};
 
 		if let Err(reason) = inspect_creature_update(&full_creature_update, &character, &character) {
 			ChatMessageFromServer {
 				source: CreatureId(0),
 				text: reason
-			}.write_to_with_id(&mut stream).await?;
+			}.write_to_with_id(&mut writer).await?;
+			writer.flush().await?;
 			sleep(Duration::from_millis(100)).await;
 			return Err(InvalidInput.into());
 		}
 
-		let (read_half, write_half) = stream.into_split();
-
 		let new_player = Player::new(
 			assigned_id,
 			character,
-			write_half,
+			writer,
 		);
 		new_player.send(&MapSeed(56345)).await?;
 		new_player.notify("welcome to berld").await;
@@ -150,7 +159,7 @@ impl Server {
 		enable_pvp(&mut full_creature_update);
 		self.broadcast(&full_creature_update, None).await;
 
-		let _ = self.read_packets_forever(&new_player_arc, read_half).await
+		let _ = self.read_packets_forever(&new_player_arc, reader).await
 			.expect_err("impossible"); //TODO: check if error emerged from reading or writing
 
 		self.remove_player(&new_player_arc).await;
@@ -250,7 +259,7 @@ impl Server {
 		}, None).await;
 	}
 
-	async fn read_packets_forever(&self, source: &Player, mut readable: OwnedReadHalf) -> io::Result<()> {
+	async fn read_packets_forever(&self, source: &Player, mut readable: BufReader<OwnedReadHalf>) -> io::Result<()> {
 		loop {
 			//todo: copypasta
 			match readable.read_struct::<packet::Id>().await? {
