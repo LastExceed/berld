@@ -67,3 +67,27 @@ async fn write_text<Writable: AsyncWrite + Unpin + Send>(writable: &mut Writable
 	writable.write_struct(&character_count).await?;
 	writable.write_all(&bytes).await
 }
+
+
+impl From<ChatMessageFromServer> for ChatMessageFromClient {
+	fn from(value: ChatMessageFromServer) -> Self {
+		Self {
+			text: value.text,
+		}
+	}
+}
+
+impl ChatMessageFromServer {
+	pub fn from_reverse(value: ChatMessageFromClient, source: CreatureId) -> Self {
+		Self {
+			source,
+			text: value.text,
+		}
+	}
+}
+
+impl ChatMessageFromClient {
+	pub fn into_reverse(self, source: CreatureId) -> ChatMessageFromServer {
+		ChatMessageFromServer::from_reverse(self, source)
+	}
+}

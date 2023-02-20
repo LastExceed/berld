@@ -1,6 +1,6 @@
 use colour::{cyan, white_ln};
 
-use protocol::packet::{ChatMessageFromClient, ChatMessageFromServer, CreatureUpdate, WorldUpdate};
+use protocol::packet::{ChatMessageFromClient, CreatureUpdate, WorldUpdate};
 use protocol::packet::common::CreatureId;
 use protocol::packet::creature_update::Affiliation;
 use protocol::packet::world_update::Kill;
@@ -19,13 +19,7 @@ impl HandlePacket<ChatMessageFromClient> for Server {
 			return;
 		}
 
-		self.broadcast(
-			&ChatMessageFromServer {
-				source: source.id,
-				text: packet.text
-			},
-			None
-		).await;
+		self.broadcast(&packet.into_reverse(source.id), None).await;
 	}
 }
 
