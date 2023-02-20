@@ -1,5 +1,5 @@
 use std::collections::HashMap;
-use std::io::ErrorKind;
+use std::io::ErrorKind::{InvalidData, InvalidInput};
 use std::mem::{size_of, transmute};
 use std::ptr;
 use std::sync::Arc;
@@ -88,7 +88,7 @@ impl Server {
 		stream.set_nodelay(true).unwrap();
 
 		if stream.read_struct::<packet::Id>().await? != ProtocolVersion::ID {
-			return Err(ErrorKind::InvalidData.into());
+			return Err(InvalidData.into());
 		}
 		if ProtocolVersion::read_from(&mut stream).await?.0 != 3 {
 			return ProtocolVersion(3).write_to_with_id(&mut stream).await; //todo: log this!
@@ -104,10 +104,10 @@ impl Server {
 		write_abnormal_creature_update(&mut stream, assigned_id).await?;
 
 		if stream.read_struct::<packet::Id>().await? != CreatureUpdate::ID {
-			return Err(io::Error::from(ErrorKind::InvalidData))
+			return Err(InvalidData.into())
 		}
 		let mut full_creature_update = CreatureUpdate::read_from(&mut stream).await?;
-		let character = Creature::maybe_from(&full_creature_update).ok_or_else(|| io::Error::from(ErrorKind::InvalidData))?;
+		let character = Creature::maybe_from(&full_creature_update).ok_or(InvalidData.into())?;
 
 		if let Err(reason) = inspect_creature_update(&full_creature_update, &character, &character) {
 			ChatMessageFromServer {
@@ -115,7 +115,7 @@ impl Server {
 				text: reason
 			}.write_to_with_id(&mut stream).await?;
 			sleep(Duration::from_millis(100)).await;
-			return Err(ErrorKind::InvalidInput.into());
+			return Err(InvalidInput.into());
 		}
 
 		let (read_half, write_half) = stream.into_split();
@@ -266,7 +266,7 @@ impl Server {
 			};
 
 			if source.should_disconnect.load(Ordering::Relaxed) {
-				return Err(ErrorKind::InvalidInput.into());
+				return Err(InvalidInput.into());
 			}
 		}
 	}

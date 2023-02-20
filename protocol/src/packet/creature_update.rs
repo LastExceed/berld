@@ -1,5 +1,5 @@
 use std::ffi::CStr;
-use std::io::{Error, ErrorKind};
+use std::io::ErrorKind::InvalidData;
 
 use async_compression::tokio::bufread::ZlibDecoder;
 use async_compression::tokio::write::ZlibEncoder;
@@ -49,7 +49,7 @@ impl CwSerializable for CreatureUpdate {
 				//so we need to skip 3 bytes here
 				let padding = decoder.read_struct::<[u8;3]>().await?;
 				if padding != [0u8; 3] {
-					return Err(ErrorKind::InvalidData.into());
+					return Err(InvalidData.into());
 				}
 				Some(race)
 			} else { None },
@@ -93,7 +93,7 @@ impl CwSerializable for CreatureUpdate {
 				if let Ok(cstr) = CStr::from_bytes_until_nul(decoder.read_struct::<[u8; 16]>().await?.as_slice()) {
 					Some(cstr.to_str().unwrap().to_string())
 				} else {
-					return Err(Error::from(ErrorKind::InvalidData));
+					return Err(InvalidData.into());
 				}
 			} else { None },
 			skill_tree        : if bitfield & (1 << 46) > 0 { Some(decoder.read_struct().await?) } else { None },
@@ -101,7 +101,7 @@ impl CwSerializable for CreatureUpdate {
 		};
 
 		if !matches!(decoder.read_to_end(&mut vec![0u8; 0]).await, Ok(0)) {
-			return Err(Error::from(ErrorKind::InvalidData));
+			return Err(InvalidData.into());
 		}
 		Ok(instance)
 	}
@@ -214,7 +214,7 @@ impl CwSerializable for CreatureUpdate {
 			if let Some(it) = &self.equipment          { encoder.write_struct(it).await?; }
 			if let Some(it) = &self.name               {
 				let bytes = it.as_bytes();
-				if bytes.len() > 16 { return Err(Error::from(ErrorKind::InvalidData)) }
+				if bytes.len() > 16 { return Err(InvalidData.into()) }
 				encoder.write_all(bytes).await?;
 				encoder.write_all(&vec![0u8; 16 - bytes.len()]).await?;
 				//todo: check what happens with non-ascii characters
