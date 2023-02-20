@@ -15,7 +15,7 @@ impl HandlePacket<ChatMessageFromClient> for Server {
 		white_ln!("{}", packet.text);
 
 		if packet.text.starts_with('/') {
-			handle_command(&self, &source, &packet).await;
+			handle_command(&source, &packet).await;
 			return;
 		}
 
@@ -29,7 +29,7 @@ impl HandlePacket<ChatMessageFromClient> for Server {
 	}
 }
 
-async fn handle_command(server: &Server, source: &Player, packet: &ChatMessageFromClient) {
+async fn handle_command(source: &Player, packet: &ChatMessageFromClient) {
 	let mut params = packet.text.strip_prefix("/").unwrap().split(" ");
 	let Some(command) = params.next() else {
 		//text was just / with nothing else
