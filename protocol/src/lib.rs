@@ -1,7 +1,6 @@
 #![allow(incomplete_features)]
 #![feature(generic_const_exprs)]
 #![feature(associated_type_defaults)]
-#![feature(cstr_from_bytes_until_nul)]
 #![allow(const_evaluatable_unchecked)]
 #![feature(async_closure)]
 #![feature(async_fn_in_trait)]
