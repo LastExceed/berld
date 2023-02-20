@@ -87,9 +87,11 @@ impl Server {
 	async fn handle_new_connection(&self, mut stream: TcpStream) -> io::Result<()> {
 		stream.set_nodelay(true).unwrap();
 
-		if stream.read_struct::<packet::Id>().await? != ProtocolVersion::ID
-			|| ProtocolVersion::read_from(&mut stream).await?.0 != 3 {
-			return Err(io::Error::from(ErrorKind::InvalidData));
+		if stream.read_struct::<packet::Id>().await? != ProtocolVersion::ID {
+			return Err(ErrorKind::InvalidData.into());
+		}
+		if ProtocolVersion::read_from(&mut stream).await?.0 != 3 {
+			return ProtocolVersion(3).write_to_with_id(&mut stream).await; //todo: log this!
 		}
 		let assigned_id = self.id_pool.write().await.claim();
 		let result = self.handle_new_player(stream, assigned_id).await;
