@@ -1,5 +1,3 @@
-use async_trait::async_trait;
-
 use protocol::packet::{Hit, WorldUpdate};
 use protocol::packet::common::Race;
 use protocol::packet::common::Race::*;
@@ -15,7 +13,6 @@ use crate::server::handle_packet::HandlePacket;
 use crate::server::player::Player;
 use crate::server::Server;
 
-#[async_trait]
 impl HandlePacket<Hit> for Server {
 	async fn handle_packet(&self, source: &Player, mut packet: Hit) {
 		let players_guard = self.players.read().await;

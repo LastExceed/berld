@@ -1,7 +1,6 @@
 use std::sync::Arc;
 use std::time::Duration;
 
-use async_trait::async_trait;
 use tokio::time::sleep;
 
 use protocol::nalgebra::Vector3;
@@ -17,7 +16,6 @@ use crate::server::handle_packet::HandlePacket;
 use crate::server::player::Player;
 use crate::server::Server;
 
-#[async_trait]
 impl HandlePacket<StatusEffect> for Server {
 	async fn handle_packet(&self, source: &Player, packet: StatusEffect) {
 		match packet.kind {

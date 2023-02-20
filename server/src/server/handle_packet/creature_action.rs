@@ -1,5 +1,3 @@
-use async_trait::async_trait;
-
 use protocol::nalgebra::Vector3;
 use protocol::packet::{creature_action, CreatureAction, WorldUpdate};
 use protocol::packet::creature_action::Kind::*;
@@ -11,7 +9,6 @@ use crate::server::handle_packet::HandlePacket;
 use crate::server::player::Player;
 use crate::server::Server;
 
-#[async_trait]
 impl HandlePacket<CreatureAction> for Server {
 	async fn handle_packet(&self, source: &Player, packet: CreatureAction) {
 		match packet.kind {

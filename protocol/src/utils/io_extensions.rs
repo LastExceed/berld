@@ -1,11 +1,9 @@
 use std::mem::size_of;
 use std::slice;
 
-use async_trait::async_trait;
 use tokio::io;
 use tokio::io::{AsyncRead, AsyncReadExt, AsyncWrite, AsyncWriteExt};
 
-#[async_trait]
 pub trait ReadStruct: AsyncRead + Unpin {
 	async fn read_struct<T>(&mut self) -> io::Result<T>
 		where [(); size_of::<T>()]:
@@ -18,9 +16,8 @@ pub trait ReadStruct: AsyncRead + Unpin {
 	}
 }
 
-#[async_trait]
 pub trait WriteStruct: AsyncWrite + Unpin {
-	async fn write_struct<T: Sync>(&mut self, data: &T) -> io::Result<()> {
+	async fn write_struct<T>(&mut self, data: &T) -> io::Result<()> {
 		let data_as_bytes = unsafe { slice::from_raw_parts((data as *const T).cast::<u8>(), size_of::<T>()) };
 		self.write_all(data_as_bytes).await
 	}

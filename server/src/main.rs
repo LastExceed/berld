@@ -3,6 +3,7 @@
 #![feature(async_closure)]
 #![feature(future_join)]
 #![feature(let_chains)]
+#![feature(async_fn_in_trait)]
 
 use colour::magenta_ln;
 

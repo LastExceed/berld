@@ -1,5 +1,3 @@
-use async_trait::async_trait;
-
 use protocol::packet::FromClient;
 
 use crate::server::player::Player;
@@ -13,7 +11,6 @@ mod chat_message;
 mod zone_discovery;
 mod region_discovery;
 
-#[async_trait]
 pub trait HandlePacket<Packet: FromClient> {
 	async fn handle_packet(&self, source: &Player, packet: Packet);
 }

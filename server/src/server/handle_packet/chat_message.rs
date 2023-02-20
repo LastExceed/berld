@@ -1,4 +1,3 @@
-use async_trait::async_trait;
 use colour::{cyan, white_ln};
 
 use protocol::packet::{ChatMessageFromClient, ChatMessageFromServer, CreatureUpdate, WorldUpdate};
@@ -10,7 +9,6 @@ use crate::server::handle_packet::HandlePacket;
 use crate::server::player::Player;
 use crate::server::Server;
 
-#[async_trait]
 impl HandlePacket<ChatMessageFromClient> for Server {
 	async fn handle_packet(&self, source: &Player, packet: ChatMessageFromClient) {
 		cyan!("{}: ", source.creature.read().await.name);

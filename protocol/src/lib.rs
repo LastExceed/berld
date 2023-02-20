@@ -4,10 +4,10 @@
 #![feature(cstr_from_bytes_until_nul)]
 #![allow(const_evaluatable_unchecked)]
 #![feature(async_closure)]
+#![feature(async_fn_in_trait)]
 
 use std::mem::size_of;
 
-use async_trait::async_trait;
 pub use nalgebra;
 pub use rgb;
 use tokio::io;
@@ -18,7 +18,6 @@ use crate::utils::io_extensions::{ReadStruct, WriteStruct};
 pub mod packet;
 pub mod utils;
 
-#[async_trait]
 pub trait CwSerializable: Sized {
 	async fn read_from<Readable: AsyncRead + Unpin + Send>(readable: &mut Readable) -> io::Result<Self>
 		where [(); size_of::<Self>()]:
@@ -31,7 +30,6 @@ pub trait CwSerializable: Sized {
 	}
 }
 
-#[async_trait]
 pub trait Packet: CwSerializable {
 	const ID: packet::Id; //dedicated type ensures this can't be used in any mathematic manner
 

@@ -3,7 +3,6 @@ use std::mem::size_of;
 use std::ops::{Index, IndexMut};
 use std::slice::Iter;
 
-use async_trait::async_trait;
 use nalgebra::Point3;
 use strum::EnumCount;
 use tokio::io;
@@ -50,7 +49,6 @@ macro_rules! bulk_impl {
 	}
 }
 
-#[async_trait]
 impl<Element: CwSerializable + Send + Sync> CwSerializable for Vec<Element>
 	where [(); size_of::<Element>()]:
 {

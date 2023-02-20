@@ -252,16 +252,16 @@ impl Server {
 		loop {
 			//todo: copypasta
 			match readable.read_struct::<packet::Id>().await? {
-				CreatureUpdate       ::ID => self.handle_packet(source, CreatureUpdate       ::read_from(&mut readable).await?),
-				CreatureAction       ::ID => self.handle_packet(source, CreatureAction       ::read_from(&mut readable).await?),
-				Hit                  ::ID => self.handle_packet(source, Hit                  ::read_from(&mut readable).await?),
-				StatusEffect         ::ID => self.handle_packet(source, StatusEffect         ::read_from(&mut readable).await?),
-				Projectile           ::ID => self.handle_packet(source, Projectile           ::read_from(&mut readable).await?),
-				ChatMessageFromClient::ID => self.handle_packet(source, ChatMessageFromClient::read_from(&mut readable).await?),
-				ZoneDiscovery        ::ID => self.handle_packet(source, ZoneDiscovery        ::read_from(&mut readable).await?),
-				RegionDiscovery      ::ID => self.handle_packet(source, RegionDiscovery      ::read_from(&mut readable).await?),
+				CreatureUpdate       ::ID => self.handle_packet(source, CreatureUpdate       ::read_from(&mut readable).await?).await,
+				CreatureAction       ::ID => self.handle_packet(source, CreatureAction       ::read_from(&mut readable).await?).await,
+				Hit                  ::ID => self.handle_packet(source, Hit                  ::read_from(&mut readable).await?).await,
+				StatusEffect         ::ID => self.handle_packet(source, StatusEffect         ::read_from(&mut readable).await?).await,
+				Projectile           ::ID => self.handle_packet(source, Projectile           ::read_from(&mut readable).await?).await,
+				ChatMessageFromClient::ID => self.handle_packet(source, ChatMessageFromClient::read_from(&mut readable).await?).await,
+				ZoneDiscovery        ::ID => self.handle_packet(source, ZoneDiscovery        ::read_from(&mut readable).await?).await,
+				RegionDiscovery      ::ID => self.handle_packet(source, RegionDiscovery      ::read_from(&mut readable).await?).await,
 				unexpected_packet_id => panic!("unexpected packet id {:?}", unexpected_packet_id)
-			}.await;
+			};
 
 			if source.should_disconnect.load(Ordering::Relaxed) {
 				return Err(ErrorKind::InvalidInput.into());

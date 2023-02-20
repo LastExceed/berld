@@ -1,5 +1,3 @@
-use async_trait::async_trait;
-
 use protocol::packet::CreatureUpdate;
 
 use crate::addons::{anti_cheat, fix_cutoff_animations};
@@ -9,7 +7,6 @@ use crate::server::handle_packet::HandlePacket;
 use crate::server::player::Player;
 use crate::server::Server;
 
-#[async_trait]
 impl HandlePacket<CreatureUpdate> for Server {
 	async fn handle_packet(&self, source: &Player, mut packet: CreatureUpdate) {
 		let mut character = source.creature.write().await;

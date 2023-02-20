@@ -3,7 +3,6 @@ use std::io::{Error, ErrorKind};
 
 use async_compression::tokio::bufread::ZlibDecoder;
 use async_compression::tokio::write::ZlibEncoder;
-use async_trait::async_trait;
 use nalgebra::Point3;
 use rgb::RGB;
 use strum_macros::EnumIter;
@@ -21,7 +20,6 @@ pub mod equipment;
 pub mod skill_tree;
 pub mod multipliers;
 
-#[async_trait]
 impl CwSerializable for CreatureUpdate {
 	async fn read_from<Readable: AsyncRead + Unpin + Send>(readable: &mut Readable) -> io::Result<Self> {
 		//todo: can't decode from network stream directly because ???

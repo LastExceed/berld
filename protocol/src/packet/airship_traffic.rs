@@ -1,11 +1,9 @@
-use async_trait::async_trait;
 use nalgebra::Point3;
 use tokio::io;
 use tokio::io::{AsyncRead, AsyncWrite};
 
 use crate::packet::*;
 
-#[async_trait]
 impl CwSerializable for AirshipTraffic {
 	async fn read_from<Readable: AsyncRead + Unpin + Send>(readable: &mut Readable) -> io::Result<Self> {
 		Ok(Self { airships: Vec::read_from(readable).await? })

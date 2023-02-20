@@ -1,7 +1,6 @@
 use async_compression::Level;
 use async_compression::tokio::bufread::ZlibDecoder;
 use async_compression::tokio::write::ZlibEncoder;
-use async_trait::async_trait;
 use nalgebra::{Point2, Point3, Vector3};
 use rgb::{RGB, RGBA};
 use tokio::io;
@@ -23,7 +22,6 @@ pub mod drops;
 pub mod p48;
 pub mod mission;
 
-#[async_trait]
 impl CwSerializable for WorldUpdate {
 	async fn read_from<Readable: AsyncRead + Unpin + Send>(readable: &mut Readable) -> io::Result<Self> {
 		//todo: deduplicate (creature_update)

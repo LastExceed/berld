@@ -1,4 +1,3 @@
-use async_trait::async_trait;
 use nalgebra::{Point2, Point3};
 use tokio::io;
 use tokio::io::{AsyncRead, AsyncWrite};
@@ -8,7 +7,6 @@ use crate::packet::Item;
 use crate::utils::io_extensions::{ReadStruct, WriteStruct};
 
 //todo: implementation is extremely similar to P48
-#[async_trait]
 impl CwSerializable for (Point2<i32>, Vec<Drop>) {
 	async fn read_from<Readable: AsyncRead + Unpin + Send>(readable: &mut Readable) -> io::Result<Self> {
 		Ok((readable.read_struct::<Point2<i32>>().await?, Vec::read_from(readable).await?))

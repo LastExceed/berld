@@ -1,4 +1,3 @@
-use async_trait::async_trait;
 use nalgebra::Point2;
 use tokio::io;
 use tokio::io::{AsyncRead, AsyncWrite};
@@ -7,7 +6,6 @@ use crate::packet::CwSerializable;
 use crate::packet::world_update::P48;
 use crate::utils::io_extensions::{ReadStruct, WriteStruct};
 
-#[async_trait]
 impl CwSerializable for P48 {
 	async fn read_from<Readable: AsyncRead + Unpin + Send>(readable: &mut Readable) -> io::Result<Self> {
 		Ok(Self {
