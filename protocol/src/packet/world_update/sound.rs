@@ -1,3 +1,8 @@
+use nalgebra::Point3;
+
+use crate::packet::world_update::Sound;
+use crate::utils::sound_position_of;
+
 #[repr(i32)]
 #[derive(Debug, PartialEq, Eq, Clone, Copy)]
 pub enum Kind {
@@ -102,4 +107,15 @@ pub enum Kind {
 	Cricket2,
 	Owl1,
 	Owl2
+}
+
+impl Sound {
+	pub fn at(position: Point3<i64>, kind: Kind) -> Self {
+		Self {
+			position: sound_position_of(position),
+			kind,
+			volume: 1.0,
+			pitch: 1.0
+		}
+	}
 }
