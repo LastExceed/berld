@@ -27,7 +27,6 @@ use protocol::packet::world_update::sound::Kind::*;
 use protocol::utils::constants::SIZE_ZONE;
 use protocol::utils::io_extensions::{ReadStruct, WriteStruct};
 
-use crate::addons::anti_cheat::inspect_creature_update;
 use crate::addons::enable_pvp;
 use crate::server::creature::Creature;
 use crate::server::creature_id_pool::CreatureIdPool;
@@ -113,20 +112,10 @@ impl Server {
 		if reader.read_struct::<packet::Id>().await? != CreatureUpdate::ID {
 			return Err(InvalidData.into())
 		}
-		let mut full_creature_update = CreatureUpdate::read_from(&mut reader).await?;
+		let full_creature_update = CreatureUpdate::read_from(&mut reader).await?;
 		let Some(character) = Creature::maybe_from(&full_creature_update) else {
 			return Err(InvalidInput.into());
 		};
-
-		if let Err(reason) = inspect_creature_update(&full_creature_update, &character, &character) {
-			ChatMessageFromServer {
-				source: CreatureId(0),
-				text: reason
-			}.write_to_with_id(&mut writer).await?;
-			writer.flush().await?;
-			sleep(Duration::from_millis(100)).await;
-			return Err(InvalidInput.into());
-		}
 
 		let new_player = Player::new(
 			assigned_id,
@@ -155,11 +144,10 @@ impl Server {
 		let new_player_arc = Arc::new(new_player);
 		self.players.write().await.push(new_player_arc.clone());
 
-		enable_pvp(&mut full_creature_update);
-		self.broadcast(&full_creature_update, None).await;
+		self.handle_packet(&new_player_arc, full_creature_update).await;
 
 		let _ = self.read_packets_forever(&new_player_arc, reader).await
-			.expect_err("impossible"); //TODO: check if error emerged from reading or writing
+			.expect_err("impossible");
 
 		self.remove_player(&new_player_arc).await;
 
