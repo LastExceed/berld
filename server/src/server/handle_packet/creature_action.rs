@@ -28,15 +28,14 @@ impl HandlePacket<CreatureAction> for Server {
 				source.notify("object interactions are disabled").await;
 			}
 			PickUp => {
-				//todo: let else
-				//todo: kick if invalid?
-				if let Some(item) = self.remove_drop(packet.zone, packet.item_index as usize).await {
-					source.send_ignoring(&WorldUpdate {
-						pickups: vec![Pickup { item, interactor: source.id }],
-						sounds: vec![Sound::at(source.creature.read().await.position, sound::Kind::Pickup)],
-						..Default::default()
-					}).await;
-				}
+				let Some(item) = self.remove_drop(packet.zone, packet.item_index as usize).await
+					else { return; }; //todo: kick if invalid?
+
+				source.send_ignoring(&WorldUpdate {
+					pickups: vec![Pickup { item, interactor: source.id }],
+					sounds: vec![Sound::at(source.creature.read().await.position, sound::Kind::Pickup)],
+					..Default::default()
+				}).await;
 			}
 			Drop => {
 				let creature_guard = source.creature.read().await;
