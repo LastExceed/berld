@@ -27,7 +27,7 @@ use protocol::packet::world_update::sound::Kind::*;
 use protocol::utils::constants::SIZE_ZONE;
 use protocol::utils::io_extensions::{ReadStruct, WriteStruct};
 
-use crate::addons::enable_pvp;
+use crate::addons::{enable_pvp, freeze_time};
 use crate::server::creature::Creature;
 use crate::server::creature_id_pool::CreatureIdPool;
 use crate::server::handle_packet::HandlePacket;
@@ -58,23 +58,12 @@ impl Server {
 
 		let listener = TcpListener::bind("0.0.0.0:12345").await.expect("unable to bind listening socket");
 
-		let self_static: &'static Server = unsafe { transmute(&self) }; //todo: scoped task
-		tokio::spawn(async move {
-			loop {
-				self_static.broadcast(
-					&IngameDatetime {
-						time: 12 * 60 * 60 * 1000,
-						day: 0
-					},
-					None
-				).await;
-				sleep(Duration::from_secs(6)).await;
-			}
-		});
+		freeze_time(&self);
 
 		loop {
 			let (stream, _) = listener.accept().await.unwrap();
 
+			let self_static: &'static Server = unsafe { transmute(&self) }; //todo: scoped task
 			tokio::spawn(async move {
 				if let Err(_) = self_static.handle_new_connection(stream).await {
 					//TODO: error logging
