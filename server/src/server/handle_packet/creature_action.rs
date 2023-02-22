@@ -3,7 +3,6 @@ use protocol::packet::{creature_action, CreatureAction, WorldUpdate};
 use protocol::packet::creature_action::Kind::*;
 use protocol::packet::world_update::{Pickup, sound, Sound};
 use protocol::utils::constants::SIZE_BLOCK;
-use protocol::utils::sound_position_of;
 
 use crate::server::handle_packet::HandlePacket;
 use crate::server::player::Player;
@@ -29,23 +28,14 @@ impl HandlePacket<CreatureAction> for Server {
 				source.notify("object interactions are disabled").await;
 			}
 			PickUp => {
+				//todo: let else
+				//todo: kick if invalid?
 				if let Some(item) = self.remove_drop(packet.zone, packet.item_index as usize).await {
-					let pickup = Pickup {
-						interactor: source.id,
-						item
-					};
-					let sound = Sound {
-						position: sound_position_of(source.creature.read().await.position),
-						kind: sound::Kind::Pickup,
-						pitch: 1f32,
-						volume: 1f32
-					};
-					let world_update = WorldUpdate {
-						pickups: vec![pickup],
-						sounds: vec![sound],
+					source.send_ignoring(&WorldUpdate {
+						pickups: vec![Pickup { item, interactor: source.id }],
+						sounds: vec![Sound::at(source.creature.read().await.position, sound::Kind::Pickup)],
 						..Default::default()
-					};
-					source.send_ignoring(&world_update).await;
+					}).await;
 				}
 			}
 			Drop => {

@@ -26,7 +26,6 @@ use protocol::packet::world_update::Sound;
 use protocol::packet::world_update::sound::Kind::*;
 use protocol::utils::constants::SIZE_ZONE;
 use protocol::utils::io_extensions::{ReadStruct, WriteStruct};
-use protocol::utils::sound_position_of;
 
 use crate::addons::anti_cheat::inspect_creature_update;
 use crate::addons::enable_pvp;
@@ -199,27 +198,14 @@ impl Server {
 
 		self.broadcast(&WorldUpdate {
 			drops: vec![(zone, zone_drops_copy)],
-			sounds: vec![
-				Sound {
-					position: sound_position_of(position),
-					kind: Drop,
-					pitch: 1f32,
-					volume: 1f32
-				}
-			],
+			sounds: vec![Sound::at(position, Drop)],
 			..Default::default()
 		}, None).await;
 
 		let server_static: &'static Server = unsafe { transmute(self) }; //todo: scoped task
 		tokio::spawn(async move {
 			sleep(Duration::from_millis(500)).await;
-			let sound = Sound {
-				position: sound_position_of(position),
-				kind: DropItem,
-				pitch: 1f32,
-				volume: 1f32
-			};
-			server_static.broadcast(&WorldUpdate::from(sound), None).await;
+			server_static.broadcast(&WorldUpdate::from(Sound::at(position, DropItem)), None).await;
 		});
 	}
 

@@ -1,12 +1,9 @@
 use protocol::packet::{Hit, WorldUpdate};
 use protocol::packet::common::Race;
 use protocol::packet::common::Race::*;
-use protocol::packet::hit;
 use protocol::packet::hit::Kind::{*, Absorb, Block};
-use protocol::packet::world_update::sound;
-use protocol::packet::world_update::Sound;
+use protocol::packet::world_update::{Sound, sound};
 use protocol::packet::world_update::sound::Kind::*;
-use protocol::utils::sound_position_of;
 
 use crate::addons::balancing;
 use crate::server::handle_packet::HandlePacket;
@@ -20,33 +17,21 @@ impl HandlePacket<Hit> for Server {
 			return; //can happen when the target disconnected in this moment
 		};
 		let target_creature_guard = target.creature.read().await;
-		let source_creature_guard = source.creature.read().await; //todo: why can't i inline this?
+		let source_creature_guard = source.creature.read().await; //todo: rename creature -> character
 
 		balancing::adjust_hit(&mut packet, &source_creature_guard, &target_creature_guard);
-		packet.flash = true;
+		packet.flash = true;//todo: (re-)move
 
-		let sound_effects =
-			impact_sounds(packet.kind, target_creature_guard.race)
-				.iter()
-				.map(|sound| Sound {
-					position: sound_position_of(packet.position),
-					kind: *sound,
-					volume: 1.0,
-					pitch: 1.0
-				})
-				.collect();
-
-		let world_update = WorldUpdate {
+		target.send_ignoring(&WorldUpdate {
+			sounds: impact_sounds(&packet, target_creature_guard.race),
 			hits: vec![packet],
-			sounds: sound_effects,
 			..Default::default()
-		};
-		target.send_ignoring(&world_update).await; //todo: only target needs to receive this packet, but finding player by id is expensive atm
+		}).await; //todo: verify that only target needs this packet
 	}
 }
 
-fn impact_sounds(hit_kind: hit::Kind, target_race: Race) -> Vec<sound::Kind> {
-	match hit_kind {
+pub fn impact_sounds(hit: &Hit, target_race: Race) -> Vec<Sound> {
+	match hit.kind {
 		Block |
 		Miss => vec![sound::Kind::Block],
 
@@ -62,7 +47,9 @@ fn impact_sounds(hit_kind: hit::Kind, target_race: Race) -> Vec<sound::Kind> {
 				vec![Punch1]
 			}
 		},
-	}
+	}.into_iter()
+		.map(|kind| Sound::at(hit.position, kind))
+		.collect()
 }
 
 fn groan_of(race: Race) -> Option<sound::Kind> {
