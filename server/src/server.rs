@@ -95,29 +95,11 @@ impl Server {
 			character,
 			writer,
 		);
-		new_player.send(&MapSeed(56345)).await?;
-		new_player.notify("welcome to berld").await;
 
-		for existing_player in self.players.read().await.iter() {
-			let mut creature_update = existing_player.creature.read().await.to_update(existing_player.id);
-			enable_pvp(&mut creature_update);
-			new_player.send(&creature_update).await?;
-		}
-
-		new_player.send(&WorldUpdate {
-			drops: self.drops.read().await
-				.clone()
-				.into_iter()
-				.collect(),
-			..Default::default()
-		}).await?;
-
-		self.announce(format!("[+] {}", new_player.creature.read().await.name)).await;
+		self.on_join(&new_player, full_creature_update).await?;//todo: character 2x updated
 
 		let new_player_arc = Arc::new(new_player);
 		self.players.write().await.push(new_player_arc.clone());
-
-		self.handle_packet(&new_player_arc, full_creature_update).await;
 
 		let _ = self.read_packets_forever(&new_player_arc, reader).await
 			.expect_err("impossible");
@@ -244,6 +226,35 @@ impl Server {
 
 		player.should_disconnect.store(true, Ordering::Relaxed);
 		//remove_player will be called by the reading task
+	}
+
+	async fn on_join(&self, player: &Player, full_creature_update: CreatureUpdate) -> io::Result<()> {
+		self.handle_packet(player, full_creature_update).await;
+
+		if player.should_disconnect.load(Ordering::Relaxed) {//todo: this is very error prone. need proper kick logic asap
+			return Err(InvalidInput.into());
+		}
+
+		player.send(&MapSeed(56345)).await?;
+		player.notify("welcome to berld").await;
+
+		for existing_player in self.players.read().await.iter() {
+			let mut creature_update = existing_player.creature.read().await.to_update(existing_player.id);
+			enable_pvp(&mut creature_update);
+			player.send(&creature_update).await?;
+		}
+
+		player.send(&WorldUpdate {
+			drops: self.drops.read().await
+				.clone()
+				.into_iter()
+				.collect(),
+			..Default::default()
+		}).await?;
+
+		self.announce(format!("[+] {}", player.creature.read().await.name)).await;
+
+		Ok(())
 	}
 }
 
