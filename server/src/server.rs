@@ -74,10 +74,7 @@ impl Server {
 
 	async fn handle_new_connection(&self, stream: TcpStream) -> io::Result<()> {
 		stream.set_nodelay(true).unwrap();
-
-		let (read_half, write_half) = stream.into_split();
-		let mut reader = BufReader::new(read_half);
-		let mut writer = BufWriter::new(write_half);
+		let (mut reader, mut writer) = split_and_buffer(stream);
 
 		check_version(&mut reader, &mut writer).await?;
 
@@ -254,6 +251,15 @@ impl Server {
 		player.should_disconnect.store(true, Ordering::Relaxed);
 		//remove_player will be called by the reading task
 	}
+}
+
+fn split_and_buffer(stream: TcpStream) -> (BufReader<OwnedReadHalf>, BufWriter<OwnedWriteHalf>) {
+	let (read_half, write_half) = stream.into_split();
+
+	let reader = BufReader::new(read_half);
+	let writer = BufWriter::new(write_half);
+
+	(reader, writer)
 }
 
 async fn check_version(reader: &mut impl ReadPacket, writer: &mut impl WritePacket<ProtocolVersion>) -> io::Result<()> {
