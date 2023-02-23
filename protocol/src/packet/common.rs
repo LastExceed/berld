@@ -6,7 +6,7 @@ use self::item::*;
 
 pub mod item;
 
-#[derive(Debug, PartialEq, Eq, Clone, Copy, Default)]
+#[derive(Debug, PartialEq, Eq, Clone, Copy, Default, Hash)]
 pub struct CreatureId(pub i64);
 
 #[repr(u8)]

@@ -28,28 +28,31 @@ use protocol::utils::constants::SIZE_ZONE;
 use protocol::utils::io_extensions::{ReadPacket, WriteArbitrary, WritePacket};
 
 use crate::addons::{enable_pvp, freeze_time};
+use crate::addons::anti_cheat::AntiCheat;
 use crate::server::creature::Creature;
 use crate::server::creature_id_pool::CreatureIdPool;
 use crate::server::handle_packet::HandlePacket;
 use crate::server::player::Player;
 
 mod creature_id_pool;
-mod player;
+pub(crate) mod player;
 mod handle_packet;
 pub mod creature;
 
 pub struct Server {
-	players: RwLock<Vec<Arc<Player>>>,
 	id_pool: RwLock<CreatureIdPool>,
-	drops: RwLock<HashMap<Point2<i32>, Vec<Drop>>>
+	players: RwLock<Vec<Arc<Player>>>,
+	drops: RwLock<HashMap<Point2<i32>, Vec<Drop>>>,
+	anti_cheat: AntiCheat
 }
 
 impl Server {
 	pub fn new() -> Self {
 		Self {
-			players: RwLock::new(Vec::new()),
 			id_pool: RwLock::new(CreatureIdPool::new()),
-			drops: RwLock::new(HashMap::new())
+			players: RwLock::new(Vec::new()),
+			drops: RwLock::new(HashMap::new()),
+			anti_cheat: AntiCheat::new()
 		}
 	}
 
@@ -107,6 +110,7 @@ impl Server {
 		self.remove_player(&new_player_arc).await;
 
 		self.announce(format!("[-] {}", new_player_arc.creature.read().await.name)).await;
+		self.anti_cheat.on_leave(&new_player_arc).await;
 
 		Ok(())
 	}
@@ -229,6 +233,7 @@ impl Server {
 	}
 
 	async fn on_join(&self, player: &Player, full_creature_update: CreatureUpdate) -> io::Result<()> {
+		self.anti_cheat.on_join(player).await;
 		self.handle_packet(player, full_creature_update).await;
 
 		if player.should_disconnect.load(Ordering::Relaxed) {//todo: this is very error prone. need proper kick logic asap
