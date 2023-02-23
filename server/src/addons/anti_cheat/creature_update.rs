@@ -138,7 +138,7 @@ pub(super) fn inspect_combo(combo: &i32, former_state: &Creature, updated_state:
 pub(super) fn inspect_combo_timeout(combo_timeout: &i32, former_state: &Creature, updated_state: &Creature, ac_data: &mut PlayerACData) -> anti_cheat::Result {
 	combo_timeout.ensure_not_negative("combo_timeout")?;
 
-	if *combo_timeout <= former_state.hit_time_out { //equal incase of seed change lag
+	if *combo_timeout <= former_state.combo_timeout { //equal incase of seed change lag
 		ac_data.last_combo_update = Some(Instant::now() - Duration::from_millis(*combo_timeout as u64));
 		return Ok(());
 	}

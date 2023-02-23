@@ -25,7 +25,7 @@ pub struct Creature {
 	pub animation: Animation,
 	pub animation_time: i32,
 	pub combo: i32,
-	pub hit_time_out: i32,
+	pub combo_timeout: i32,
 	pub appearance: Appearance,
 	pub flags: FlagSet16<CreatureFlag>,
 	pub effect_time_dodge: i32,
@@ -91,7 +91,7 @@ impl Creature {
 			animation            : creature_update.animation?,
 			animation_time       : creature_update.animation_time?,
 			combo                : creature_update.combo?,
-			hit_time_out         : creature_update.combo_timeout?,
+			combo_timeout        : creature_update.combo_timeout?,
 			appearance           : creature_update.appearance.clone()?,
 			flags                : creature_update.flags.clone()?,
 			effect_time_dodge    : creature_update.effect_time_dodge?,
@@ -144,7 +144,7 @@ impl Creature {
 		if let Some(it) = packet.animation             { self.animation             = it }
 		if let Some(it) = packet.animation_time        { self.animation_time        = it }
 		if let Some(it) = packet.combo                 { self.combo                 = it }
-		if let Some(it) = packet.combo_timeout         { self.hit_time_out          = it }
+		if let Some(it) = packet.combo_timeout         { self.combo_timeout         = it }
 		if let Some(it) = packet.appearance.clone()    { self.appearance            = it }
 		if let Some(it) = packet.flags.clone()         { self.flags                 = it }
 		if let Some(it) = packet.effect_time_dodge     { self.effect_time_dodge     = it }
@@ -197,7 +197,7 @@ impl Creature {
 			animation         : Some(self.animation),
 			animation_time    : Some(self.animation_time),
 			combo             : Some(self.combo),
-			combo_timeout     : Some(self.hit_time_out),
+			combo_timeout     : Some(self.combo_timeout),
 			appearance        : Some(self.appearance.clone()),
 			flags             : Some(self.flags.clone()),
 			effect_time_dodge : Some(self.effect_time_dodge),
