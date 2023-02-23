@@ -4,11 +4,15 @@
 #![allow(const_evaluatable_unchecked)]
 #![feature(async_closure)]
 #![feature(async_fn_in_trait)]
+#![feature(min_specialization)]
 
+use std::io::ErrorKind::InvalidData;
 use std::mem::size_of;
 
+use boolinator::Boolinator;
 pub use nalgebra;
 pub use rgb;
+use strum::IntoEnumIterator;
 use tokio::io;
 use tokio::io::{AsyncRead, AsyncWrite};
 
@@ -70,3 +74,22 @@ impl<Writable: AsyncWrite + Unpin> WriteCwData<ConnectionRejection > for Writabl
 //WorldUpdate                //which can be found in their respective module
 //AirshipTraffic             //these packets have non-default trait implementations
 //CreatureUpdate
+
+//todo: this should honestly be done entirely with macros, else its gonna be a bunch of copypasta
+struct Validator;
+
+impl Validator {
+	fn validate_enum<E: IntoEnumIterator + PartialEq>(e: E) -> io::Result<()> {
+		E::iter().any(|variant| e == variant).ok_or(InvalidData.into())
+	}
+}
+
+trait Validate<T> {
+	fn validate(data: &T) -> io::Result<()>;
+}
+
+impl<T> Validate<T> for Validator {
+	default fn validate(_data: &T) -> io::Result<()> {
+		Ok(())
+	}
+}

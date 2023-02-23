@@ -9,12 +9,12 @@ use strum_macros::EnumIter;
 use tokio::io;
 use tokio::io::{AsyncRead, AsyncReadExt, AsyncWrite, AsyncWriteExt};
 
+use crate::{ReadCwData, Validate, Validator};
 use crate::packet::*;
 use crate::packet::common::EulerAngles;
 use crate::packet::creature_update::equipment::Slot;
 use crate::packet::creature_update::multipliers::Multiplier;
 use crate::packet::creature_update::skill_tree::Skill;
-use crate::ReadCwData;
 use crate::utils::ArrayWrapper;
 
 pub mod equipment;
@@ -233,6 +233,35 @@ impl<Writable: AsyncWrite + Unpin> WriteCwData<CreatureUpdate> for Writable {
 	}
 }
 
+impl Validate<CreatureUpdate> for Validator {
+	fn validate(creature_update: &CreatureUpdate) -> io::Result<()> {
+		if let Some(affiliation) = creature_update.affiliation {
+			Validator::validate_enum(affiliation)?
+		}
+		if let Some(race) = creature_update.race {
+			Validator::validate_enum(race)?
+		}
+		if let Some(animation) = creature_update.animation {
+			Validator::validate_enum(animation)?
+		}
+		if let Some(occupation) = creature_update.occupation {
+			Validator::validate_enum(occupation)?
+		}
+		if let Some(specialization) = creature_update.specialization {
+			Validator::validate_enum(specialization)?
+		}
+		if let Some(ref consumable) = creature_update.consumable {
+			Validator::validate(consumable)?
+		}
+		if let Some(ref equipment) = creature_update.equipment {
+			for item in equipment.iter() {
+				Validator::validate(item)?
+			}
+		}
+
+		Ok(())
+	}
+}
 
 #[repr(u32)]
 #[derive(Debug, PartialEq, Eq, Clone, Copy)]
@@ -464,7 +493,7 @@ impl From<CreatureFlag> for u16 {
 }
 
 #[repr(i8)]
-#[derive(Debug, PartialEq, Eq, Clone, Copy)]
+#[derive(Debug, PartialEq, Eq, Clone, Copy, EnumIter)]
 pub enum Occupation {
 	None,
 	Warrior,
@@ -485,7 +514,7 @@ pub enum Occupation {
 }
 
 #[repr(u8)]
-#[derive(Debug, PartialEq, Eq, Clone, Copy)]
+#[derive(Debug, PartialEq, Eq, Clone, Copy, EnumIter)]
 pub enum Specialization {
 	Default,
 	Alternative,

@@ -4,7 +4,7 @@ use std::slice;
 use tokio::io;
 use tokio::io::{AsyncRead, AsyncReadExt, AsyncWrite, AsyncWriteExt};
 
-use crate::{Packet, packet, ReadCwData, WriteCwData};
+use crate::{Packet, packet, ReadCwData, Validate, Validator, WriteCwData};
 
 pub trait ReadArbitrary: AsyncRead + Unpin {
 	async fn read_arbitrary<T>(&mut self) -> io::Result<T>
@@ -35,7 +35,10 @@ pub trait ReadPacket: AsyncRead + Unpin + Sized {//todo: move to io extensions
 			[(); size_of::<P>()]:,
 			Self: ReadCwData<P>,
 	{
-		ReadCwData::<P>::read_cw_data(self).await
+		let instance = ReadCwData::<P>::read_cw_data(self).await?;
+		Validator::validate(&instance)?;
+
+		Ok(instance)
 	}
 
 	async fn read_id(&mut self) -> io::Result<packet::Id> {

@@ -3,17 +3,37 @@ use std::slice;
 
 use nalgebra::Point3;
 use strum_macros::{EnumCount, EnumIter};
+use tokio::io;
 
 use kind::*;
 
+use crate::{Validate, Validator};
 use crate::packet::common::{Item, Race};
 use crate::packet::common::item::Kind::Formula;
 use crate::utils::{ArrayWrapper, level_scaling_factor, rarity_scaling_factor};
 
 pub mod kind;
 
+impl Validate<Item> for Validator {
+	fn validate(item: &Item) -> io::Result<()> {
+		match item.kind {
+			Kind::Void                   => Ok(()),
+			Kind::Consumable(consumable) => Validator::validate_enum(consumable),
+			Kind::Weapon(weapon)         => Validator::validate_enum(weapon),
+			Kind::Resource(resource)     => Validator::validate_enum(resource),
+			Kind::Candle(candle)         => Validator::validate_enum(candle),
+			Kind::Pet(race)              => Validator::validate_enum(race),
+			Kind::PetFood(race)          => Validator::validate_enum(race),
+			Kind::Quest(quest)           => Validator::validate_enum(quest),
+			Kind::Special(special)       => Validator::validate_enum(special),
+			_                            => Validator::validate_enum(item.kind)
+		}?;
+		Validator::validate_enum(item.material)
+	}
+}
+
 #[repr(u8)]
-#[derive(Debug, PartialEq, Eq, Clone, Copy, Default)]
+#[derive(Debug, PartialEq, Eq, Clone, Copy, Default, EnumIter)]
 pub enum Kind {
 	#[default]
 	Void,

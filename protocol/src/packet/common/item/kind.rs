@@ -1,6 +1,9 @@
+use strum_macros::EnumIter;
+
 #[repr(u8)]
-#[derive(Debug, PartialEq, Eq, Clone, Copy)]
+#[derive(Debug, PartialEq, Eq, Clone, Copy, Default, EnumIter)]
 pub enum Consumable {
+	#[default]
 	Cookie,
 	LifePotion,
 	CactusPotion,
@@ -13,8 +16,9 @@ pub enum Consumable {
 }
 
 #[repr(u8)]
-#[derive(Debug, PartialEq, Eq, Clone, Copy)]
+#[derive(Debug, PartialEq, Eq, Clone, Copy, Default, EnumIter)]
 pub enum Weapon {
+	#[default]
 	Sword,
 	Axe,
 	Mace,
@@ -39,8 +43,9 @@ pub enum Weapon {
 }
 
 #[repr(u8)]
-#[derive(Debug, PartialEq, Eq, Clone, Copy)]
+#[derive(Debug, PartialEq, Eq, Clone, Copy, Default, EnumIter)]
 pub enum Resource {
+	#[default]
 	Nugget,
 	Log,
 	Feather,
@@ -72,15 +77,17 @@ pub enum Resource {
 }
 
 #[repr(u8)]
-#[derive(Debug, PartialEq, Eq, Clone, Copy)]
+#[derive(Debug, PartialEq, Eq, Clone, Copy, Default, EnumIter)]
 pub enum Candle {
+	#[default]
 	Red,
 	Green
 }
 
 #[repr(u8)]
-#[derive(Debug, PartialEq, Eq, Clone, Copy)]
+#[derive(Debug, PartialEq, Eq, Clone, Copy, Default, EnumIter)]
 pub enum Quest {
+	#[default]
 	AmuletYellow,
 	AmuletBlue,
 	JewelCase,
@@ -94,8 +101,9 @@ pub enum Quest {
 }
 
 #[repr(u8)]
-#[derive(Debug, PartialEq, Eq, Clone, Copy)]
+#[derive(Debug, PartialEq, Eq, Clone, Copy, Default, EnumIter)]
 pub enum Special {
+	#[default]
 	HangGlider,
 	Boat
 }

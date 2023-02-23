@@ -10,8 +10,9 @@ pub mod item;
 pub struct CreatureId(pub i64);
 
 #[repr(u8)]
-#[derive(Debug, PartialEq, Eq, Clone, Copy, EnumIter)]
+#[derive(Debug, PartialEq, Eq, Clone, Copy, Default, EnumIter)]
 pub enum Race {
+	#[default]
 	ElfMale,
 	ElfFemale,
 	HumanMale,

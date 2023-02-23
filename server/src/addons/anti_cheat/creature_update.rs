@@ -8,7 +8,6 @@ use strum::IntoEnumIterator;
 use protocol::nalgebra::{Point3, Vector3};
 use protocol::packet::common::{CreatureId, EulerAngles, Hitbox, Item, item, Race};
 use protocol::packet::common::item::Kind::*;
-use protocol::packet::common::item::Material;
 use protocol::packet::common::Race::*;
 use protocol::packet::creature_update::{Affiliation, Animation, Appearance, CreatureFlag, Equipment, Multipliers, Occupation, PhysicsFlag, SkillTree, Specialization};
 use protocol::packet::creature_update::Animation::*;
@@ -87,16 +86,13 @@ pub(super) fn inspect_flags_physics(flags_physics: &FlagSet32<PhysicsFlag>, form
 	Ok(())
 }
 pub(super) fn inspect_affiliation(affiliation: &Affiliation, former_state: &Creature, updated_state: &Creature, ac_data: &mut PlayerACData) -> anti_cheat::Result {
-	Affiliation::iter().any(|it| *affiliation == it).ok_or("invalid affiliation".to_string())?;//todo: safety measure until data validation is implemented
 	affiliation
 		.ensure_exact(&Affiliation::Player, "affiliation")
 }
 pub(super) fn inspect_race(race: &Race, former_state: &Creature, updated_state: &Creature, ac_data: &mut PlayerACData) -> anti_cheat::Result {
-	Race::iter().any(|it| *race == it).ok_or("invalid race".to_string())?;//todo: safety measure until data validation is implemented
 	race.ensure_one_of(PLAYABLE_RACES.as_slice(), "")
 }
 pub(super) fn inspect_animation(animation: &Animation, former_state: &Creature, updated_state: &Creature, ac_data: &mut PlayerACData) -> anti_cheat::Result {
-	Animation::iter().any(|it| *animation == it).ok_or("invalid animation".to_string())?;//todo: safety measure until data validation is implemented
 	let allowed_animations = animations_avilable_with(updated_state.combat_class(), &updated_state.equipment);
 
 	animation
@@ -458,12 +454,10 @@ pub(super) fn inspect_show_patch_time(show_patch_time: &i32, former_state: &Crea
 	Ok(())
 }
 pub(super) fn inspect_occupation(occupation: &Occupation, former_state: &Creature, updated_state: &Creature, ac_data: &mut PlayerACData) -> anti_cheat::Result {
-	occupation.present_in(&[Warrior, Ranger, Mage, Rogue]).ok_or("invalid combat_class_major".to_string())?;//todo: safety measure until data validation is implemented
 	occupation.ensure_one_of([Warrior, Ranger, Mage, Rogue].as_slice(), "combat_class_major")?;
 	inspect_equipment(&updated_state.equipment, former_state, updated_state, ac_data)
 }
 pub(super) fn inspect_specialization(specialization: &Specialization, former_state: &Creature, updated_state: &Creature, ac_data: &mut PlayerACData) -> anti_cheat::Result {
-	specialization.present_in(&[Default, Alternative]).ok_or("invalid combat_class_minor".to_string())?;//todo: safety measure until data validation is implemented
 	specialization.ensure_one_of([Default, Alternative].as_slice(), "combat_class_minor")
 }
 pub(super) fn inspect_mana_charge(mana_charge: &f32, former_state: &Creature, updated_state: &Creature, ac_data: &mut PlayerACData) -> anti_cheat::Result {
@@ -590,15 +584,8 @@ pub(super) fn inspect_equipment(equipment: &Equipment, former_state: &Creature, 
 	];
 
 	for (slot, allowed_kind) in invariant_slots {
-		equipment[slot].kind.present_in(&[Void, allowed_kind]).ok_or(format!("illegal equipment[{:?}].kind", slot))?;//todo: safety measure until data validation is implemented
 		equipment[slot].kind.ensure_one_of(&[Void, allowed_kind], &format!("equipment[{:?}].kind", slot))?;
 	}
-
-	//todo: safety measure until data validation is implemented
-	matches!(equipment[Slot::LeftWeapon].kind, Void | Weapon(_)).ok_or(format!("illegal equipment[{:?}].kind", Slot::LeftWeapon))?;
-	matches!(equipment[Slot::RightWeapon].kind, Void | Weapon(_)).ok_or(format!("illegal equipment[{:?}].kind", Slot::RightWeapon))?;
-	matches!(equipment[Slot::Special].kind, Void | Special(_)).ok_or(format!("illegal equipment[{:?}].kind", Slot::Special))?;
-	matches!(equipment[Slot::Pet].kind, Void | Pet(_) | PetFood(_)).ok_or(format!("illegal equipment[{:?}].kind", Slot::Pet))?;
 
 	matches!(equipment[Slot::LeftWeapon].kind, Void | Weapon(_))
 		.ensure(
@@ -634,9 +621,6 @@ pub(super) fn inspect_equipment(equipment: &Equipment, former_state: &Creature, 
 		if item.kind == Void {
 			continue; //empty item slots contain uninitialized memory
 		}
-
-		//todo: safety measure until data validation is implemented
-		Material::iter().any(|material| item.material == material).ok_or(format!("invalid equipment[{:?}].kind", slot))?;
 
 		//item.seed.ensure_not_negative(&format!("equipment[{:?}].seed", slot)) //tolerating negative seeds due to popularity
 		//item._recipe.ensure_exact(&Void, &format!("equipment[{:?}].recipe", slot))?;
