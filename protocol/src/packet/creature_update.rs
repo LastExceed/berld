@@ -91,11 +91,13 @@ impl<Readable: AsyncRead + Unpin> ReadCwData<CreatureUpdate> for Readable {
 			consumable        : if bitfield & (1 << 43) > 0 { Some(decoder.read_arbitrary().await?) } else { None },
 			equipment         : if bitfield & (1 << 44) > 0 { Some(decoder.read_arbitrary().await?) } else { None },
 			name              : if bitfield & (1 << 45) > 0 {
-				if let Ok(cstr) = CStr::from_bytes_until_nul(decoder.read_arbitrary::<[u8; 16]>().await?.as_slice()) {
-					Some(cstr.to_str().unwrap().to_string())
-				} else {
-					return Err(InvalidData.into());
-				}
+				let name = CStr::from_bytes_until_nul(decoder.read_arbitrary::<[u8; 16]>().await?.as_slice())
+					.map_err(|_| io::Error::from(InvalidData))?
+					.to_str()
+					.map_err(|_| io::Error::from(InvalidData))?
+					.to_string();
+
+				Some(name)
 			} else { None },
 			skill_tree        : if bitfield & (1 << 46) > 0 { Some(decoder.read_arbitrary().await?) } else { None },
 			mana_cubes        : if bitfield & (1 << 47) > 0 { Some(decoder.read_arbitrary().await?) } else { None }
