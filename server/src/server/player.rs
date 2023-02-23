@@ -14,7 +14,7 @@ use crate::server::creature::Creature;
 
 pub struct Player {
 	pub id: CreatureId,
-	pub creature: RwLock<Creature>,
+	pub character: RwLock<Creature>,
 	writer: RwLock<BufWriter<OwnedWriteHalf>>,
 	pub should_disconnect: AtomicBool,
 }
@@ -23,7 +23,7 @@ impl Player {
 	pub fn new(id: CreatureId, creature: Creature, writer: BufWriter<OwnedWriteHalf>) -> Self {
 		Self {
 			id,
-			creature: RwLock::new(creature),
+			character: RwLock::new(creature),
 			writer: RwLock::new(writer),
 			should_disconnect: AtomicBool::new(false)
 		}

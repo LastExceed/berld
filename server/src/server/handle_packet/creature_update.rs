@@ -9,7 +9,7 @@ use crate::server::Server;
 
 impl HandlePacket<CreatureUpdate> for Server {
 	async fn handle_packet(&self, source: &Player, mut packet: CreatureUpdate) {
-		let mut character = source.creature.write().await;
+		let mut character = source.character.write().await;
 		let snapshot = character.clone();
 		character.update(&packet);
 		let character = character.downgrade();

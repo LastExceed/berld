@@ -38,8 +38,8 @@ impl HandlePacket<StatusEffect> for Server {
 }
 
 async fn apply_poison(source: &Player, target: Arc<Player>, status_effect: &StatusEffect) {
-	let source_creature_guard = source.creature.read().await;
-	let target_creature_guard = target.creature.read().await;
+	let source_character_guard = source.character.read().await;
+	let target_character_guard = target.character.read().await;
 
 	let mut hit = Hit {
 		attacker: source.id,//todo: check if this matters
@@ -47,16 +47,16 @@ async fn apply_poison(source: &Player, target: Arc<Player>, status_effect: &Stat
 		damage: status_effect.modifier,
 		critical: false,
 		stuntime: 0,
-		position: target_creature_guard.position,
+		position: target_character_guard.position,
 		direction: Vector3::zeros(),
 		is_yellow: false,
 		kind: Normal,
 		flash: true,
 	};
 
-	balancing::adjust_hit(&mut hit, &source_creature_guard, &target_creature_guard);
-	drop(source_creature_guard);
-	drop(target_creature_guard);
+	balancing::adjust_hit(&mut hit, &source_character_guard, &target_character_guard);
+	drop(source_character_guard);
+	drop(target_character_guard);
 
 	let world_update = WorldUpdate {
 		sounds: vec![Sound::at(hit.position, SlimeGroan)],

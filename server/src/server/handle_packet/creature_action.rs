@@ -33,12 +33,12 @@ impl HandlePacket<CreatureAction> for Server {
 
 				source.send_ignoring(&WorldUpdate {
 					pickups: vec![Pickup { item, interactor: source.id }],
-					sounds: vec![Sound::at(source.creature.read().await.position, sound::Kind::Pickup)],
+					sounds: vec![Sound::at(source.character.read().await.position, sound::Kind::Pickup)],
 					..Default::default()
 				}).await;
 			}
 			Drop => {
-				let creature_guard = source.creature.read().await;
+				let creature_guard = source.character.read().await;
 
 				self.add_drop(
 					packet.item,

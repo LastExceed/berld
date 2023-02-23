@@ -109,7 +109,7 @@ impl Server {
 
 		self.remove_player(&new_player_arc).await;
 
-		self.announce(format!("[-] {}", new_player_arc.creature.read().await.name)).await;
+		self.announce(format!("[-] {}", new_player_arc.character.read().await.name)).await;
 		self.anti_cheat.on_leave(&new_player_arc).await;
 
 		Ok(())
@@ -224,7 +224,7 @@ impl Server {
 	}
 
 	pub(crate) async fn kick(&self, player: &Player, reason: String) {
-		self.announce(format!("kicked {} because {}", player.creature.read().await.name, reason)).await;
+		self.announce(format!("kicked {} because {}", player.character.read().await.name, reason)).await;
 		//wait a bit to make sure the message arrives at the player about to be kicked
 		sleep(Duration::from_millis(100)).await;
 
@@ -244,7 +244,7 @@ impl Server {
 		player.notify("welcome to berld").await;
 
 		for existing_player in self.players.read().await.iter() {
-			let mut creature_update = existing_player.creature.read().await.to_update(existing_player.id);
+			let mut creature_update = existing_player.character.read().await.to_update(existing_player.id);
 			enable_pvp(&mut creature_update);
 			player.send(&creature_update).await?;
 		}
@@ -257,7 +257,7 @@ impl Server {
 			..Default::default()
 		}).await?;
 
-		self.announce(format!("[+] {}", player.creature.read().await.name)).await;
+		self.announce(format!("[+] {}", player.character.read().await.name)).await;
 
 		Ok(())
 	}

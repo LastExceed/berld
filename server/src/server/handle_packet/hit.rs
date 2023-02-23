@@ -16,14 +16,14 @@ impl HandlePacket<Hit> for Server {
 		let Some(target) = players_guard.iter().find(|player| { player.id == packet.target }) else {
 			return; //can happen when the target disconnected in this moment
 		};
-		let target_creature_guard = target.creature.read().await;
-		let source_creature_guard = source.creature.read().await; //todo: rename creature -> character
+		let target_character_guard = target.character.read().await;
+		let source_character_guard = source.character.read().await; //todo: rename creature -> character
 
-		balancing::adjust_hit(&mut packet, &source_creature_guard, &target_creature_guard);
+		balancing::adjust_hit(&mut packet, &source_character_guard, &target_character_guard);
 		packet.flash = true;//todo: (re-)move
 
 		target.send_ignoring(&WorldUpdate {
-			sounds: impact_sounds(&packet, target_creature_guard.race),
+			sounds: impact_sounds(&packet, target_character_guard.race),
 			hits: vec![packet],
 			..Default::default()
 		}).await; //todo: verify that only target needs this packet

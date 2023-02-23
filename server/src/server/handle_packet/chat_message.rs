@@ -11,7 +11,7 @@ use crate::server::Server;
 
 impl HandlePacket<ChatMessageFromClient> for Server {
 	async fn handle_packet(&self, source: &Player, packet: ChatMessageFromClient) {
-		cyan!("{}: ", source.creature.read().await.name);
+		cyan!("{}: ", source.character.read().await.name);
 		white_ln!("{}", packet.text);
 
 		if packet.text.starts_with('/') {
@@ -31,7 +31,7 @@ async fn handle_command(source: &Player, packet: &ChatMessageFromClient) {
 	};
 	match command {
 		"a" => {
-			source.notify(format!("{}", source.creature.read().await.maximum_health())).await;
+			source.notify(format!("{}", source.character.read().await.maximum_health())).await;
 		}
 		"xp" => {
 			let Some(amount) = params.next() else {
