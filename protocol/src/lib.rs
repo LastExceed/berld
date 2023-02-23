@@ -13,7 +13,7 @@ use tokio::io;
 use tokio::io::{AsyncRead, AsyncWrite};
 
 use crate::packet::*;
-use crate::utils::io_extensions::{ReadStruct, WriteStruct};
+use crate::utils::io_extensions::{ReadArbitrary, WriteArbitrary};
 
 pub mod packet;
 pub mod utils;
@@ -27,13 +27,13 @@ pub trait ReadCwData<CwStruct>: AsyncRead + Unpin + Sized {
 	async fn read_cw_data(&mut self) -> io::Result<CwStruct>
 		where [(); size_of::<CwStruct>()]:
 	{
-		self.read_struct().await
+		self.read_arbitrary().await
 	}
 }
 
 pub trait WriteCwData<CwStruct>: AsyncWrite + Unpin + Sized {
 	async fn write_cw_data(&mut self, cw_data: &CwStruct) -> io::Result<()> {
-		self.write_struct(cw_data).await
+		self.write_arbitrary(cw_data).await
 	}
 }
 

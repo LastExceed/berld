@@ -5,10 +5,10 @@ use tokio::io::{AsyncRead, AsyncReadExt, AsyncWrite, AsyncWriteExt};
 
 use crate::packet::*;
 use crate::ReadCwData;
-use crate::utils::io_extensions::{ReadStruct, WriteStruct};
+use crate::utils::io_extensions::{ReadArbitrary, WriteArbitrary};
 
 async fn read_text<Readable: AsyncRead + Unpin>(readable: &mut Readable) -> io::Result<String> {
-	let character_count = readable.read_struct::<i32>().await? as usize;
+	let character_count = readable.read_arbitrary::<i32>().await? as usize;
 	const U16_SIZE: usize = size_of::<u16>();
 
 	let mut u8s = vec![0u8; character_count * U16_SIZE];
@@ -35,7 +35,7 @@ async fn write_text<Writable: AsyncWrite + Unpin>(writable: &mut Writable, strin
 		.flat_map(u16::to_le_bytes)
 		.collect::<Vec<u8>>();
 	let character_count = (bytes.len() / 2) as i32; //cant use the utf16 iterator as counting it's elements would consume it prematurely
-	writable.write_struct(&character_count).await?;
+	writable.write_arbitrary(&character_count).await?;
 	writable.write_all(&bytes).await
 }
 
@@ -56,7 +56,7 @@ impl<Writable: AsyncWrite + Unpin> WriteCwData<ChatMessageFromClient> for Writab
 impl<Readable: AsyncRead + Unpin> ReadCwData<ChatMessageFromServer> for Readable {
 	async fn read_cw_data(&mut self) -> io::Result<ChatMessageFromServer> {
 		Ok(ChatMessageFromServer {
-			source: self.read_struct().await?,
+			source: self.read_arbitrary().await?,
 			text: read_text(self).await?
 		})
 	}
@@ -64,7 +64,7 @@ impl<Readable: AsyncRead + Unpin> ReadCwData<ChatMessageFromServer> for Readable
 
 impl<Writable: AsyncWrite + Unpin> WriteCwData<ChatMessageFromServer> for Writable {
 	async fn write_cw_data(&mut self, cw_struct: &ChatMessageFromServer) -> io::Result<()> {
-		self.write_struct(&cw_struct.source).await?;
+		self.write_arbitrary(&cw_struct.source).await?;
 		write_text(self, &cw_struct.text).await
 	}
 }

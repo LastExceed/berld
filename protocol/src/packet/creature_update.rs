@@ -24,81 +24,81 @@ pub mod multipliers;
 impl<Readable: AsyncRead + Unpin> ReadCwData<CreatureUpdate> for Readable {
 	async fn read_cw_data(&mut self) -> io::Result<CreatureUpdate> {
 		//todo: can't decode from network stream directly because ???
-		let size = self.read_struct::<i32>().await?;
+		let size = self.read_arbitrary::<i32>().await?;
 		let mut buffer = vec![0u8; size as usize];
 		self.read_exact(&mut buffer).await?;
 
 		let mut decoder = ZlibDecoder::new(buffer.as_slice());
 
-		let id = decoder.read_struct::<CreatureId>().await?;
-		let bitfield = decoder.read_struct::<u64>().await?;
+		let id = decoder.read_arbitrary::<CreatureId>().await?;
+		let bitfield = decoder.read_arbitrary::<u64>().await?;
 
 		//todo: macro
 		let instance = CreatureUpdate {
 			id,
-			position          : if bitfield & (1 <<  0) > 0 { Some(decoder.read_struct().await?) } else { None },
-			rotation          : if bitfield & (1 <<  1) > 0 { Some(decoder.read_struct().await?) } else { None },
-			velocity          : if bitfield & (1 <<  2) > 0 { Some(decoder.read_struct().await?) } else { None },
-			acceleration      : if bitfield & (1 <<  3) > 0 { Some(decoder.read_struct().await?) } else { None },
-			velocity_extra    : if bitfield & (1 <<  4) > 0 { Some(decoder.read_struct().await?) } else { None },
-			head_tilt         : if bitfield & (1 <<  5) > 0 { Some(decoder.read_struct().await?) } else { None },
-			flags_physics     : if bitfield & (1 <<  6) > 0 { Some(decoder.read_struct().await?) } else { None },
-			affiliation       : if bitfield & (1 <<  7) > 0 { Some(decoder.read_struct().await?) } else { None },
+			position          : if bitfield & (1 <<  0) > 0 { Some(decoder.read_arbitrary().await?) } else { None },
+			rotation          : if bitfield & (1 <<  1) > 0 { Some(decoder.read_arbitrary().await?) } else { None },
+			velocity          : if bitfield & (1 <<  2) > 0 { Some(decoder.read_arbitrary().await?) } else { None },
+			acceleration      : if bitfield & (1 <<  3) > 0 { Some(decoder.read_arbitrary().await?) } else { None },
+			velocity_extra    : if bitfield & (1 <<  4) > 0 { Some(decoder.read_arbitrary().await?) } else { None },
+			head_tilt         : if bitfield & (1 <<  5) > 0 { Some(decoder.read_arbitrary().await?) } else { None },
+			flags_physics     : if bitfield & (1 <<  6) > 0 { Some(decoder.read_arbitrary().await?) } else { None },
+			affiliation       : if bitfield & (1 <<  7) > 0 { Some(decoder.read_arbitrary().await?) } else { None },
 			race              : if bitfield & (1 <<  8) > 0 {
-				let race = decoder.read_struct().await?;
+				let race = decoder.read_arbitrary().await?;
 				//the game treats Race as u32 here, but u8 everywhere else
 				//so we need to skip 3 bytes here
-				let padding = decoder.read_struct::<[u8;3]>().await?;
+				let padding = decoder.read_arbitrary::<[u8;3]>().await?;
 				if padding != [0u8; 3] {
 					return Err(InvalidData.into());
 				}
 				Some(race)
 			} else { None },
-			animation         : if bitfield & (1 <<  9) > 0 { Some(decoder.read_struct().await?) } else { None },
-			animation_time    : if bitfield & (1 << 10) > 0 { Some(decoder.read_struct().await?) } else { None },
-			combo             : if bitfield & (1 << 11) > 0 { Some(decoder.read_struct().await?) } else { None },
-			combo_timeout     : if bitfield & (1 << 12) > 0 { Some(decoder.read_struct().await?) } else { None },
-			appearance        : if bitfield & (1 << 13) > 0 { Some(decoder.read_struct().await?) } else { None },
-			flags             : if bitfield & (1 << 14) > 0 { Some(decoder.read_struct().await?) } else { None },
-			effect_time_dodge : if bitfield & (1 << 15) > 0 { Some(decoder.read_struct().await?) } else { None },
-			effect_time_stun  : if bitfield & (1 << 16) > 0 { Some(decoder.read_struct().await?) } else { None },
-			effect_time_fear  : if bitfield & (1 << 17) > 0 { Some(decoder.read_struct().await?) } else { None },
-			effect_time_chill : if bitfield & (1 << 18) > 0 { Some(decoder.read_struct().await?) } else { None },
-			effect_time_wind  : if bitfield & (1 << 19) > 0 { Some(decoder.read_struct().await?) } else { None },
-			show_patch_time   : if bitfield & (1 << 20) > 0 { Some(decoder.read_struct().await?) } else { None },
-			occupation        : if bitfield & (1 << 21) > 0 { Some(decoder.read_struct().await?) } else { None },
-			specialization    : if bitfield & (1 << 22) > 0 { Some(decoder.read_struct().await?) } else { None },
-			mana_charge       : if bitfield & (1 << 23) > 0 { Some(decoder.read_struct().await?) } else { None },
-			unknown24         : if bitfield & (1 << 24) > 0 { Some(decoder.read_struct().await?) } else { None },
-			unknown25         : if bitfield & (1 << 25) > 0 { Some(decoder.read_struct().await?) } else { None },
-			aim_offset        : if bitfield & (1 << 26) > 0 { Some(decoder.read_struct().await?) } else { None },
-			health            : if bitfield & (1 << 27) > 0 { Some(decoder.read_struct().await?) } else { None },
-			mana              : if bitfield & (1 << 28) > 0 { Some(decoder.read_struct().await?) } else { None },
-			blocking_gauge    : if bitfield & (1 << 29) > 0 { Some(decoder.read_struct().await?) } else { None },
-			multipliers       : if bitfield & (1 << 30) > 0 { Some(decoder.read_struct().await?) } else { None },
-			unknown31         : if bitfield & (1 << 31) > 0 { Some(decoder.read_struct().await?) } else { None },
-			unknown32         : if bitfield & (1 << 32) > 0 { Some(decoder.read_struct().await?) } else { None },
-			level             : if bitfield & (1 << 33) > 0 { Some(decoder.read_struct().await?) } else { None },
-			experience        : if bitfield & (1 << 34) > 0 { Some(decoder.read_struct().await?) } else { None },
-			master            : if bitfield & (1 << 35) > 0 { Some(decoder.read_struct().await?) } else { None },
-			unknown36         : if bitfield & (1 << 36) > 0 { Some(decoder.read_struct().await?) } else { None },
-			rarity            : if bitfield & (1 << 37) > 0 { Some(decoder.read_struct().await?) } else { None },
-			unknown38         : if bitfield & (1 << 38) > 0 { Some(decoder.read_struct().await?) } else { None },
-			home_zone         : if bitfield & (1 << 39) > 0 { Some(decoder.read_struct().await?) } else { None },
-			home              : if bitfield & (1 << 40) > 0 { Some(decoder.read_struct().await?) } else { None },
-			zone_to_reveal    : if bitfield & (1 << 41) > 0 { Some(decoder.read_struct().await?) } else { None },
-			unknown42         : if bitfield & (1 << 42) > 0 { Some(decoder.read_struct().await?) } else { None },
-			consumable        : if bitfield & (1 << 43) > 0 { Some(decoder.read_struct().await?) } else { None },
-			equipment         : if bitfield & (1 << 44) > 0 { Some(decoder.read_struct().await?) } else { None },
+			animation         : if bitfield & (1 <<  9) > 0 { Some(decoder.read_arbitrary().await?) } else { None },
+			animation_time    : if bitfield & (1 << 10) > 0 { Some(decoder.read_arbitrary().await?) } else { None },
+			combo             : if bitfield & (1 << 11) > 0 { Some(decoder.read_arbitrary().await?) } else { None },
+			combo_timeout     : if bitfield & (1 << 12) > 0 { Some(decoder.read_arbitrary().await?) } else { None },
+			appearance        : if bitfield & (1 << 13) > 0 { Some(decoder.read_arbitrary().await?) } else { None },
+			flags             : if bitfield & (1 << 14) > 0 { Some(decoder.read_arbitrary().await?) } else { None },
+			effect_time_dodge : if bitfield & (1 << 15) > 0 { Some(decoder.read_arbitrary().await?) } else { None },
+			effect_time_stun  : if bitfield & (1 << 16) > 0 { Some(decoder.read_arbitrary().await?) } else { None },
+			effect_time_fear  : if bitfield & (1 << 17) > 0 { Some(decoder.read_arbitrary().await?) } else { None },
+			effect_time_chill : if bitfield & (1 << 18) > 0 { Some(decoder.read_arbitrary().await?) } else { None },
+			effect_time_wind  : if bitfield & (1 << 19) > 0 { Some(decoder.read_arbitrary().await?) } else { None },
+			show_patch_time   : if bitfield & (1 << 20) > 0 { Some(decoder.read_arbitrary().await?) } else { None },
+			occupation        : if bitfield & (1 << 21) > 0 { Some(decoder.read_arbitrary().await?) } else { None },
+			specialization    : if bitfield & (1 << 22) > 0 { Some(decoder.read_arbitrary().await?) } else { None },
+			mana_charge       : if bitfield & (1 << 23) > 0 { Some(decoder.read_arbitrary().await?) } else { None },
+			unknown24         : if bitfield & (1 << 24) > 0 { Some(decoder.read_arbitrary().await?) } else { None },
+			unknown25         : if bitfield & (1 << 25) > 0 { Some(decoder.read_arbitrary().await?) } else { None },
+			aim_offset        : if bitfield & (1 << 26) > 0 { Some(decoder.read_arbitrary().await?) } else { None },
+			health            : if bitfield & (1 << 27) > 0 { Some(decoder.read_arbitrary().await?) } else { None },
+			mana              : if bitfield & (1 << 28) > 0 { Some(decoder.read_arbitrary().await?) } else { None },
+			blocking_gauge    : if bitfield & (1 << 29) > 0 { Some(decoder.read_arbitrary().await?) } else { None },
+			multipliers       : if bitfield & (1 << 30) > 0 { Some(decoder.read_arbitrary().await?) } else { None },
+			unknown31         : if bitfield & (1 << 31) > 0 { Some(decoder.read_arbitrary().await?) } else { None },
+			unknown32         : if bitfield & (1 << 32) > 0 { Some(decoder.read_arbitrary().await?) } else { None },
+			level             : if bitfield & (1 << 33) > 0 { Some(decoder.read_arbitrary().await?) } else { None },
+			experience        : if bitfield & (1 << 34) > 0 { Some(decoder.read_arbitrary().await?) } else { None },
+			master            : if bitfield & (1 << 35) > 0 { Some(decoder.read_arbitrary().await?) } else { None },
+			unknown36         : if bitfield & (1 << 36) > 0 { Some(decoder.read_arbitrary().await?) } else { None },
+			rarity            : if bitfield & (1 << 37) > 0 { Some(decoder.read_arbitrary().await?) } else { None },
+			unknown38         : if bitfield & (1 << 38) > 0 { Some(decoder.read_arbitrary().await?) } else { None },
+			home_zone         : if bitfield & (1 << 39) > 0 { Some(decoder.read_arbitrary().await?) } else { None },
+			home              : if bitfield & (1 << 40) > 0 { Some(decoder.read_arbitrary().await?) } else { None },
+			zone_to_reveal    : if bitfield & (1 << 41) > 0 { Some(decoder.read_arbitrary().await?) } else { None },
+			unknown42         : if bitfield & (1 << 42) > 0 { Some(decoder.read_arbitrary().await?) } else { None },
+			consumable        : if bitfield & (1 << 43) > 0 { Some(decoder.read_arbitrary().await?) } else { None },
+			equipment         : if bitfield & (1 << 44) > 0 { Some(decoder.read_arbitrary().await?) } else { None },
 			name              : if bitfield & (1 << 45) > 0 {
-				if let Ok(cstr) = CStr::from_bytes_until_nul(decoder.read_struct::<[u8; 16]>().await?.as_slice()) {
+				if let Ok(cstr) = CStr::from_bytes_until_nul(decoder.read_arbitrary::<[u8; 16]>().await?.as_slice()) {
 					Some(cstr.to_str().unwrap().to_string())
 				} else {
 					return Err(InvalidData.into());
 				}
 			} else { None },
-			skill_tree        : if bitfield & (1 << 46) > 0 { Some(decoder.read_struct().await?) } else { None },
-			mana_cubes        : if bitfield & (1 << 47) > 0 { Some(decoder.read_struct().await?) } else { None }
+			skill_tree        : if bitfield & (1 << 46) > 0 { Some(decoder.read_arbitrary().await?) } else { None },
+			mana_cubes        : if bitfield & (1 << 47) > 0 { Some(decoder.read_arbitrary().await?) } else { None }
 		};
 
 		if !matches!(decoder.read_to_end(&mut vec![0u8; 0]).await, Ok(0)) {
@@ -166,55 +166,55 @@ impl<Writable: AsyncWrite + Unpin> WriteCwData<CreatureUpdate> for Writable {
 		{
 			let mut encoder = ZlibEncoder::new(&mut buffer);
 
-			encoder.write_struct(&creature_update.id).await?;
-			encoder.write_struct(&bitfield).await?;
+			encoder.write_arbitrary(&creature_update.id).await?;
+			encoder.write_arbitrary(&bitfield).await?;
 
 			//todo: macro
-			if let Some(it) = &creature_update.position          { encoder.write_struct(it).await?; }
-			if let Some(it) = &creature_update.rotation          { encoder.write_struct(it).await?; }
-			if let Some(it) = &creature_update.velocity          { encoder.write_struct(it).await?; }
-			if let Some(it) = &creature_update.acceleration      { encoder.write_struct(it).await?; }
-			if let Some(it) = &creature_update.velocity_extra    { encoder.write_struct(it).await?; }
-			if let Some(it) = &creature_update.head_tilt         { encoder.write_struct(it).await?; }
-			if let Some(it) = &creature_update.flags_physics     { encoder.write_struct(it).await?; }
-			if let Some(it) = &creature_update.affiliation       { encoder.write_struct(it).await?; }
-			if let Some(it) = &creature_update.race              { encoder.write_struct(&(*it as i32)).await?; } //see de-serialization
-			if let Some(it) = &creature_update.animation         { encoder.write_struct(it).await?; }
-			if let Some(it) = &creature_update.animation_time    { encoder.write_struct(it).await?; }
-			if let Some(it) = &creature_update.combo             { encoder.write_struct(it).await?; }
-			if let Some(it) = &creature_update.combo_timeout     { encoder.write_struct(it).await?; }
-			if let Some(it) = &creature_update.appearance        { encoder.write_struct(it).await?; }
-			if let Some(it) = &creature_update.flags             { encoder.write_struct(it).await?; }
-			if let Some(it) = &creature_update.effect_time_dodge { encoder.write_struct(it).await?; }
-			if let Some(it) = &creature_update.effect_time_stun  { encoder.write_struct(it).await?; }
-			if let Some(it) = &creature_update.effect_time_fear  { encoder.write_struct(it).await?; }
-			if let Some(it) = &creature_update.effect_time_chill { encoder.write_struct(it).await?; }
-			if let Some(it) = &creature_update.effect_time_wind  { encoder.write_struct(it).await?; }
-			if let Some(it) = &creature_update.show_patch_time   { encoder.write_struct(it).await?; }
-			if let Some(it) = &creature_update.occupation        { encoder.write_struct(it).await?; }
-			if let Some(it) = &creature_update.specialization    { encoder.write_struct(it).await?; }
-			if let Some(it) = &creature_update.mana_charge       { encoder.write_struct(it).await?; }
-			if let Some(it) = &creature_update.unknown24         { encoder.write_struct(it).await?; }
-			if let Some(it) = &creature_update.unknown25         { encoder.write_struct(it).await?; }
-			if let Some(it) = &creature_update.aim_offset        { encoder.write_struct(it).await?; }
-			if let Some(it) = &creature_update.health            { encoder.write_struct(it).await?; }
-			if let Some(it) = &creature_update.mana              { encoder.write_struct(it).await?; }
-			if let Some(it) = &creature_update.blocking_gauge    { encoder.write_struct(it).await?; }
-			if let Some(it) = &creature_update.multipliers       { encoder.write_struct(it).await?; }
-			if let Some(it) = &creature_update.unknown31         { encoder.write_struct(it).await?; }
-			if let Some(it) = &creature_update.unknown32         { encoder.write_struct(it).await?; }
-			if let Some(it) = &creature_update.level             { encoder.write_struct(it).await?; }
-			if let Some(it) = &creature_update.experience        { encoder.write_struct(it).await?; }
-			if let Some(it) = &creature_update.master            { encoder.write_struct(it).await?; }
-			if let Some(it) = &creature_update.unknown36         { encoder.write_struct(it).await?; }
-			if let Some(it) = &creature_update.rarity            { encoder.write_struct(it).await?; }
-			if let Some(it) = &creature_update.unknown38         { encoder.write_struct(it).await?; }
-			if let Some(it) = &creature_update.home_zone         { encoder.write_struct(it).await?; }
-			if let Some(it) = &creature_update.home              { encoder.write_struct(it).await?; }
-			if let Some(it) = &creature_update.zone_to_reveal    { encoder.write_struct(it).await?; }
-			if let Some(it) = &creature_update.unknown42         { encoder.write_struct(it).await?; }
-			if let Some(it) = &creature_update.consumable        { encoder.write_struct(it).await?; }
-			if let Some(it) = &creature_update.equipment         { encoder.write_struct(it).await?; }
+			if let Some(it) = &creature_update.position          { encoder.write_arbitrary(it).await?; }
+			if let Some(it) = &creature_update.rotation          { encoder.write_arbitrary(it).await?; }
+			if let Some(it) = &creature_update.velocity          { encoder.write_arbitrary(it).await?; }
+			if let Some(it) = &creature_update.acceleration      { encoder.write_arbitrary(it).await?; }
+			if let Some(it) = &creature_update.velocity_extra    { encoder.write_arbitrary(it).await?; }
+			if let Some(it) = &creature_update.head_tilt         { encoder.write_arbitrary(it).await?; }
+			if let Some(it) = &creature_update.flags_physics     { encoder.write_arbitrary(it).await?; }
+			if let Some(it) = &creature_update.affiliation       { encoder.write_arbitrary(it).await?; }
+			if let Some(it) = &creature_update.race              { encoder.write_arbitrary(&(*it as i32)).await?; } //see de-serialization
+			if let Some(it) = &creature_update.animation         { encoder.write_arbitrary(it).await?; }
+			if let Some(it) = &creature_update.animation_time    { encoder.write_arbitrary(it).await?; }
+			if let Some(it) = &creature_update.combo             { encoder.write_arbitrary(it).await?; }
+			if let Some(it) = &creature_update.combo_timeout     { encoder.write_arbitrary(it).await?; }
+			if let Some(it) = &creature_update.appearance        { encoder.write_arbitrary(it).await?; }
+			if let Some(it) = &creature_update.flags             { encoder.write_arbitrary(it).await?; }
+			if let Some(it) = &creature_update.effect_time_dodge { encoder.write_arbitrary(it).await?; }
+			if let Some(it) = &creature_update.effect_time_stun  { encoder.write_arbitrary(it).await?; }
+			if let Some(it) = &creature_update.effect_time_fear  { encoder.write_arbitrary(it).await?; }
+			if let Some(it) = &creature_update.effect_time_chill { encoder.write_arbitrary(it).await?; }
+			if let Some(it) = &creature_update.effect_time_wind  { encoder.write_arbitrary(it).await?; }
+			if let Some(it) = &creature_update.show_patch_time   { encoder.write_arbitrary(it).await?; }
+			if let Some(it) = &creature_update.occupation        { encoder.write_arbitrary(it).await?; }
+			if let Some(it) = &creature_update.specialization    { encoder.write_arbitrary(it).await?; }
+			if let Some(it) = &creature_update.mana_charge       { encoder.write_arbitrary(it).await?; }
+			if let Some(it) = &creature_update.unknown24         { encoder.write_arbitrary(it).await?; }
+			if let Some(it) = &creature_update.unknown25         { encoder.write_arbitrary(it).await?; }
+			if let Some(it) = &creature_update.aim_offset        { encoder.write_arbitrary(it).await?; }
+			if let Some(it) = &creature_update.health            { encoder.write_arbitrary(it).await?; }
+			if let Some(it) = &creature_update.mana              { encoder.write_arbitrary(it).await?; }
+			if let Some(it) = &creature_update.blocking_gauge    { encoder.write_arbitrary(it).await?; }
+			if let Some(it) = &creature_update.multipliers       { encoder.write_arbitrary(it).await?; }
+			if let Some(it) = &creature_update.unknown31         { encoder.write_arbitrary(it).await?; }
+			if let Some(it) = &creature_update.unknown32         { encoder.write_arbitrary(it).await?; }
+			if let Some(it) = &creature_update.level             { encoder.write_arbitrary(it).await?; }
+			if let Some(it) = &creature_update.experience        { encoder.write_arbitrary(it).await?; }
+			if let Some(it) = &creature_update.master            { encoder.write_arbitrary(it).await?; }
+			if let Some(it) = &creature_update.unknown36         { encoder.write_arbitrary(it).await?; }
+			if let Some(it) = &creature_update.rarity            { encoder.write_arbitrary(it).await?; }
+			if let Some(it) = &creature_update.unknown38         { encoder.write_arbitrary(it).await?; }
+			if let Some(it) = &creature_update.home_zone         { encoder.write_arbitrary(it).await?; }
+			if let Some(it) = &creature_update.home              { encoder.write_arbitrary(it).await?; }
+			if let Some(it) = &creature_update.zone_to_reveal    { encoder.write_arbitrary(it).await?; }
+			if let Some(it) = &creature_update.unknown42         { encoder.write_arbitrary(it).await?; }
+			if let Some(it) = &creature_update.consumable        { encoder.write_arbitrary(it).await?; }
+			if let Some(it) = &creature_update.equipment         { encoder.write_arbitrary(it).await?; }
 			if let Some(it) = &creature_update.name              {
 				let bytes = it.as_bytes();
 				if bytes.len() > 16 { return Err(InvalidData.into()) }
@@ -222,13 +222,13 @@ impl<Writable: AsyncWrite + Unpin> WriteCwData<CreatureUpdate> for Writable {
 				encoder.write_all(&vec![0u8; 16 - bytes.len()]).await?;
 				//todo: check what happens with non-ascii characters
 			}
-			if let Some(it) = &creature_update.skill_tree        { encoder.write_struct(it).await?; }
-			if let Some(it) = &creature_update.mana_cubes        { encoder.write_struct(it).await?; }
+			if let Some(it) = &creature_update.skill_tree        { encoder.write_arbitrary(it).await?; }
+			if let Some(it) = &creature_update.mana_cubes        { encoder.write_arbitrary(it).await?; }
 
 			encoder.shutdown().await?;
 		}
 
-		self.write_struct(&(buffer.len() as i32)).await?;
+		self.write_arbitrary(&(buffer.len() as i32)).await?;
 		self.write_all(&buffer).await
 	}
 }

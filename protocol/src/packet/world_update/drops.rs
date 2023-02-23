@@ -4,19 +4,19 @@ use tokio::io::{AsyncRead, AsyncWrite};
 
 use crate::{ReadCwData, WriteCwData};
 use crate::packet::Item;
-use crate::utils::io_extensions::{ReadStruct, WriteStruct};
+use crate::utils::io_extensions::{ReadArbitrary, WriteArbitrary};
 
 //todo: implementation is extremely similar to P48 and AirshipTraffic
 impl<Readable: AsyncRead + Unpin> ReadCwData<(Point2<i32>, Vec<Drop>)> for Readable {
 	async fn read_cw_data(&mut self) -> io::Result<(Point2<i32>, Vec<Drop>)> {
 		//explicit type annotation as a workaround for https://github.com/rust-lang/rust/issues/108362
-		Ok((self.read_struct().await?, ReadCwData::<Vec<Drop>>::read_cw_data(self).await?))//self.read_cw_struct().await?))
+		Ok((self.read_arbitrary().await?, ReadCwData::<Vec<Drop>>::read_cw_data(self).await?))//self.read_cw_struct().await?))
 	}
 }
 
 impl<Writable: AsyncWrite + Unpin> WriteCwData<(Point2<i32>, Vec<Drop>)> for Writable {
 	async fn write_cw_data(&mut self, zone_drops: &(Point2<i32>, Vec<Drop>)) -> io::Result<()> {
-		self.write_struct(&zone_drops.0).await?;
+		self.write_arbitrary(&zone_drops.0).await?;
 		self.write_cw_data(&zone_drops.1).await
 	}
 }

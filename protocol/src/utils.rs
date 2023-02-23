@@ -9,7 +9,7 @@ use tokio::io;
 
 use crate::{ReadCwData, WriteCwData};
 use crate::utils::constants::SIZE_BLOCK;
-use crate::utils::io_extensions::{ReadStruct, WriteStruct};
+use crate::utils::io_extensions::{ReadArbitrary, WriteArbitrary};
 
 pub mod io_extensions;
 pub mod flagset;
@@ -55,7 +55,7 @@ impl<Element, Readable: ReadCwData<Element>> ReadCwData<Vec<Element>> for Readab
 	async fn read_cw_data(&mut self) -> io::Result<Vec<Element>>
 		where [(); size_of::<Element>()]:
 	{
-		let count = self.read_struct::<i32>().await?;
+		let count = self.read_arbitrary::<i32>().await?;
 		let mut vec = Vec::with_capacity(count as usize);
 		for _ in 0..count {
 			vec.push(self.read_cw_data().await?); //todo: figure out how to do this functional style (probably create and collect an Iter)
@@ -66,7 +66,7 @@ impl<Element, Readable: ReadCwData<Element>> ReadCwData<Vec<Element>> for Readab
 
 impl<Element, Writable: WriteCwData<Element>> WriteCwData<Vec<Element>> for Writable {//todo: relax to iterable
 	async fn write_cw_data(&mut self, elements: &Vec<Element>) -> io::Result<()> {
-		self.write_struct(&(elements.len() as i32)).await?;
+		self.write_arbitrary(&(elements.len() as i32)).await?;
 		for element in elements {
 			self.write_cw_data(element).await?;
 		}

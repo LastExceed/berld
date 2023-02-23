@@ -2,7 +2,7 @@ use nalgebra::{Point2, Point3, Vector3};
 
 use crate::{bulk_impl, Packet, WriteCwData};
 use crate::utils::flagset::{FlagSet16, FlagSet32};
-use crate::utils::io_extensions::{ReadStruct, WriteStruct};
+use crate::utils::io_extensions::{ReadArbitrary, WriteArbitrary};
 
 use self::airship_traffic::*;
 use self::common::*;

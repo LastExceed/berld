@@ -25,7 +25,7 @@ use protocol::packet::world_update::drops::Drop;
 use protocol::packet::world_update::Sound;
 use protocol::packet::world_update::sound::Kind::*;
 use protocol::utils::constants::SIZE_ZONE;
-use protocol::utils::io_extensions::{ReadPacket, WritePacket, WriteStruct};
+use protocol::utils::io_extensions::{ReadPacket, WriteArbitrary, WritePacket};
 
 use crate::addons::{enable_pvp, freeze_time};
 use crate::server::creature::Creature;
@@ -291,8 +291,8 @@ async fn check_version(reader: &mut impl ReadPacket, writer: &mut impl WritePack
 /// from that it can be deduced that the missing bytes belong to the last 3 properties.
 /// it's probably a cut-off at the end resulting from an incorrectly sized buffer
 async fn write_abnormal_creature_update<Writable: AsyncWrite + Unpin + Send>(writable: &mut Writable, assigned_id: CreatureId) -> io::Result<()> {
-	writable.write_struct(&CreatureUpdate::ID).await?;
-	writable.write_struct(&assigned_id).await?; //luckily the only thing the alpha client does with this data is acquiring its assigned CreatureId
+	writable.write_arbitrary(&CreatureUpdate::ID).await?;
+	writable.write_arbitrary(&assigned_id).await?; //luckily the only thing the alpha client does with this data is acquiring its assigned CreatureId
 	writable.write_all(&[0u8; 4456]).await?; //so we can simply zero out everything else and not worry about the missing bytes
 	writable.flush().await
 	//TODO: move this to protocol crate and construct this from an actual [CreatureUpdate]
