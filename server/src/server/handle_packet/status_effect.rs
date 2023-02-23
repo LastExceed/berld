@@ -10,7 +10,7 @@ use protocol::packet::status_effect::Kind::*;
 use protocol::packet::world_update::Sound;
 use protocol::packet::world_update::sound::Kind::*;
 
-use crate::addons::balancing;
+use crate::addon::balancing;
 use crate::server::handle_packet::HandlePacket;
 use crate::server::player::Player;
 use crate::server::Server;

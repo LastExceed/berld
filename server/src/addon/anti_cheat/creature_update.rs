@@ -22,10 +22,10 @@ use protocol::utils::constants::PLAYABLE_RACES;
 use protocol::utils::constants::rarity::*;
 use protocol::utils::flagset::{FlagSet16, FlagSet32};
 
-use crate::addons::anti_cheat;
-use crate::addons::anti_cheat::*;
-use crate::addons::anti_cheat::creature_update::animation::animations_avilable_with;
-use crate::addons::anti_cheat::creature_update::equipment::allowed_materials;
+use crate::addon::anti_cheat;
+use crate::addon::anti_cheat::*;
+use crate::addon::anti_cheat::creature_update::animation::animations_avilable_with;
+use crate::addon::anti_cheat::creature_update::equipment::allowed_materials;
 use crate::server::creature::Creature;
 
 mod animation;

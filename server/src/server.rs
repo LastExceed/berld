@@ -27,8 +27,8 @@ use protocol::packet::world_update::sound::Kind::*;
 use protocol::utils::constants::SIZE_ZONE;
 use protocol::utils::io_extensions::{ReadPacket, WriteArbitrary, WritePacket};
 
-use crate::addons::{enable_pvp, freeze_time};
-use crate::addons::anti_cheat::AntiCheat;
+use crate::addon::{enable_pvp, freeze_time};
+use crate::addon::anti_cheat::AntiCheat;
 use crate::server::creature::Creature;
 use crate::server::creature_id_pool::CreatureIdPool;
 use crate::server::handle_packet::HandlePacket;

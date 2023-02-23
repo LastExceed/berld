@@ -1,8 +1,8 @@
 use protocol::packet::CreatureUpdate;
 
-use crate::addons::enable_pvp;
-use crate::addons::fix_cutoff_animations;
-use crate::addons::traffic_filter::filter;
+use crate::addon::enable_pvp;
+use crate::addon::fix_cutoff_animations;
+use crate::addon::traffic_filter::filter;
 use crate::server::handle_packet::HandlePacket;
 use crate::server::player::Player;
 use crate::server::Server;

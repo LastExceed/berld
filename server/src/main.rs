@@ -10,7 +10,7 @@ use colour::magenta_ln;
 use server::Server;
 
 mod server;
-mod addons;
+mod addon;
 
 #[tokio::main]
 async fn main() {
