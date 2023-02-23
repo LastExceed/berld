@@ -79,14 +79,8 @@ impl Server {
 		let mut reader = BufReader::new(read_half);
 		let mut writer = BufWriter::new(write_half);
 
-		if reader.read_id().await? != ProtocolVersion::ID {
-			return Err(InvalidData.into());
-		}
+		check_version(&mut reader, &mut writer).await?;
 
-		if reader.read_packet::<ProtocolVersion>().await?.0 != 3 {
-			writer.write_packet(&ProtocolVersion(3)).await?;
-			return Err(InvalidInput.into());
-		}
 		let assigned_id = self.id_pool.write().await.claim();
 		let result = self.handle_new_player(assigned_id, reader, writer).await;
 		self.id_pool.write().await.free(assigned_id);
@@ -260,6 +254,19 @@ impl Server {
 		player.should_disconnect.store(true, Ordering::Relaxed);
 		//remove_player will be called by the reading task
 	}
+}
+
+async fn check_version(reader: &mut impl ReadPacket, writer: &mut impl WritePacket<ProtocolVersion>) -> io::Result<()> {
+	if reader.read_id().await? != ProtocolVersion::ID {
+		return Err(InvalidData.into());
+	}
+
+	if reader.read_packet::<ProtocolVersion>().await?.0 != 3 {
+		writer.write_packet(&ProtocolVersion(3)).await?;
+		return Err(InvalidInput.into());
+	}
+
+	Ok(())
 }
 
 /// during new player setup the server needs to send an abnormal CreatureUpdate which:
