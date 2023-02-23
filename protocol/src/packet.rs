@@ -1,6 +1,6 @@
 use nalgebra::{Point2, Point3, Vector3};
 
-use crate::{bulk_impl, CwSerializable, Packet};
+use crate::{bulk_impl, Packet, WriteCwData};
 use crate::utils::flagset::{FlagSet16, FlagSet32};
 use crate::utils::io_extensions::{ReadStruct, WriteStruct};
 
@@ -217,43 +217,22 @@ pub struct ProtocolVersion(pub i32);
 pub struct ConnectionRejection;
 
 
-bulk_impl!(CwSerializable for
-	MultiCreatureUpdate,
-	ServerTick,
-	IngameDatetime,
-	CreatureAction,
-	Hit,
-	StatusEffect,
-	Projectile,
-	ZoneDiscovery,
-	RegionDiscovery,
-	MapSeed,
-	ConnectionAcceptance,
-	ProtocolVersion,
-	ConnectionRejection
-	//CreatureUpdate
-	//AirshipTraffic             //these packets have non-default trait implementations
-	//WorldUpdate                //which can be found in their respective module
-	//ChatMessageFromClient
-	//ChatMessageFromServer
-);
-
 #[derive(Debug, Eq, PartialEq)]
 pub struct Id(i32);
 //the anonymous field is intentionally kept private to prevent manual construction
-//serialization isnt affected as it uses transmute to construct this
+//serialization isnt affected as it constructs this via transmutation
 
 //todo: macro
-impl Packet for CreatureUpdate        { const ID: Id = Id(00); }
-impl Packet for MultiCreatureUpdate   { const ID: Id = Id(01); }
-impl Packet for ServerTick            { const ID: Id = Id(02); }
-impl Packet for AirshipTraffic        { const ID: Id = Id(03); }
-impl Packet for WorldUpdate           { const ID: Id = Id(04); }
-impl Packet for IngameDatetime        { const ID: Id = Id(05); }
-impl Packet for CreatureAction        { const ID: Id = Id(06); }
-impl Packet for Hit                   { const ID: Id = Id(07); }
-impl Packet for StatusEffect          { const ID: Id = Id(08); }
-impl Packet for Projectile            { const ID: Id = Id(09); }
+impl Packet for CreatureUpdate        { const ID: Id = Id( 0); }
+impl Packet for MultiCreatureUpdate   { const ID: Id = Id( 1); }
+impl Packet for ServerTick            { const ID: Id = Id( 2); }
+impl Packet for AirshipTraffic        { const ID: Id = Id( 3); }
+impl Packet for WorldUpdate           { const ID: Id = Id( 4); }
+impl Packet for IngameDatetime        { const ID: Id = Id( 5); }
+impl Packet for CreatureAction        { const ID: Id = Id( 6); }
+impl Packet for Hit                   { const ID: Id = Id( 7); }
+impl Packet for StatusEffect          { const ID: Id = Id( 8); }
+impl Packet for Projectile            { const ID: Id = Id( 9); }
 impl Packet for ChatMessageFromClient { const ID: Id = Id(10); }
 impl Packet for ChatMessageFromServer { const ID: Id = Id(10); }
 impl Packet for ZoneDiscovery         { const ID: Id = Id(11); }

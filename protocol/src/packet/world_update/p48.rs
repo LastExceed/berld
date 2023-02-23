@@ -1,26 +1,29 @@
-use nalgebra::Point2;
 use tokio::io;
 use tokio::io::{AsyncRead, AsyncWrite};
 
-use crate::packet::CwSerializable;
+use crate::{ReadCwData, WriteCwData};
 use crate::packet::world_update::P48;
 use crate::utils::io_extensions::{ReadStruct, WriteStruct};
 
-impl CwSerializable for P48 {
-	async fn read_from<Readable: AsyncRead + Unpin + Send>(readable: &mut Readable) -> io::Result<Self> {
-		Ok(Self {
-			zone: readable.read_struct::<Point2<i32>>().await?,
-			sub_packets: Vec::read_from(readable).await?
+impl<Readable: AsyncRead + Unpin> ReadCwData<P48> for Readable {
+	async fn read_cw_data(&mut self) -> io::Result<P48> {
+		Ok(P48 {
+			zone: self.read_struct().await?,
+			//explicit type annotation as a workaround for https://github.com/rust-lang/rust/issues/108362
+			sub_packets: ReadCwData::<Vec<P48sub>>::read_cw_data(self).await?//self.read_cw_struct().await?
 		})
 	}
+}
 
-	async fn write_to<Writable: AsyncWrite + Unpin + Send>(&self, writable: &mut Writable) -> io::Result<()> {
-		writable.write_struct(&self.zone).await?;
-		self.sub_packets.write_to(writable).await
+impl<Writable: AsyncWrite + Unpin> WriteCwData<P48> for Writable {
+	async fn write_cw_data(&mut self, p48: &P48) -> io::Result<()> {
+		self.write_struct(&p48.zone).await?;
+		self.write_cw_data(&p48.sub_packets).await
 	}
 }
 
 #[derive(Debug, PartialEq, Eq, Clone)]
 pub struct P48sub(pub [u8; 16]);
 
-impl CwSerializable for P48sub {}
+impl<Readable: AsyncRead + Unpin> ReadCwData<P48sub> for Readable {}
+impl<Writable: AsyncWrite + Unpin> WriteCwData<P48sub> for Writable {}

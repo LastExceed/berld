@@ -12,28 +12,61 @@ pub use rgb;
 use tokio::io;
 use tokio::io::{AsyncRead, AsyncWrite};
 
+use crate::packet::*;
 use crate::utils::io_extensions::{ReadStruct, WriteStruct};
 
 pub mod packet;
 pub mod utils;
 
-pub trait CwSerializable: Sized {
-	async fn read_from<Readable: AsyncRead + Unpin + Send>(readable: &mut Readable) -> io::Result<Self>
-		where [(); size_of::<Self>()]:
+pub trait Packet {
+	const ID: packet::Id;//dedicated type ensures this can't be used in arithmetic operations
+}
+
+
+pub trait ReadCwData<CwStruct>: AsyncRead + Unpin + Sized {
+	async fn read_cw_data(&mut self) -> io::Result<CwStruct>
+		where [(); size_of::<CwStruct>()]:
 	{
-		readable.read_struct::<Self>().await
-	}
-
-	async fn write_to<Writable: AsyncWrite + Unpin + Send>(&self, writable: &mut Writable) -> io::Result<()> {
-		writable.write_struct(self).await
+		self.read_struct().await
 	}
 }
 
-pub trait Packet: CwSerializable {
-	const ID: packet::Id; //dedicated type ensures this can't be used in any mathematic manner
-
-	async fn write_to_with_id<Writable: AsyncWrite + Unpin + Send>(&self, writable: &mut Writable) -> io::Result<()> {
-		writable.write_struct(&Self::ID).await?;
-		self.write_to(writable).await
+pub trait WriteCwData<CwStruct>: AsyncWrite + Unpin + Sized {
+	async fn write_cw_data(&mut self, cw_data: &CwStruct) -> io::Result<()> {
+		self.write_struct(cw_data).await
 	}
 }
+
+//todo: use blanket default implementation, then specialize the rest (waiting for https://github.com/rust-lang/rust/issues/108309)
+impl<Readable: AsyncRead + Unpin> ReadCwData<MultiCreatureUpdate > for Readable {}
+impl<Readable: AsyncRead + Unpin> ReadCwData<ServerTick          > for Readable {}
+impl<Readable: AsyncRead + Unpin> ReadCwData<IngameDatetime      > for Readable {}
+impl<Readable: AsyncRead + Unpin> ReadCwData<CreatureAction      > for Readable {}
+impl<Readable: AsyncRead + Unpin> ReadCwData<Hit                 > for Readable {}
+impl<Readable: AsyncRead + Unpin> ReadCwData<StatusEffect        > for Readable {}
+impl<Readable: AsyncRead + Unpin> ReadCwData<Projectile          > for Readable {}
+impl<Readable: AsyncRead + Unpin> ReadCwData<ZoneDiscovery       > for Readable {}
+impl<Readable: AsyncRead + Unpin> ReadCwData<RegionDiscovery     > for Readable {}
+impl<Readable: AsyncRead + Unpin> ReadCwData<MapSeed             > for Readable {}
+impl<Readable: AsyncRead + Unpin> ReadCwData<ConnectionAcceptance> for Readable {}
+impl<Readable: AsyncRead + Unpin> ReadCwData<ProtocolVersion     > for Readable {}
+impl<Readable: AsyncRead + Unpin> ReadCwData<ConnectionRejection > for Readable {}
+
+impl<Writable: AsyncWrite + Unpin> WriteCwData<MultiCreatureUpdate > for Writable {}
+impl<Writable: AsyncWrite + Unpin> WriteCwData<ServerTick          > for Writable {}
+impl<Writable: AsyncWrite + Unpin> WriteCwData<IngameDatetime      > for Writable {}
+impl<Writable: AsyncWrite + Unpin> WriteCwData<CreatureAction      > for Writable {}
+impl<Writable: AsyncWrite + Unpin> WriteCwData<Hit                 > for Writable {}
+impl<Writable: AsyncWrite + Unpin> WriteCwData<StatusEffect        > for Writable {}
+impl<Writable: AsyncWrite + Unpin> WriteCwData<Projectile          > for Writable {}
+impl<Writable: AsyncWrite + Unpin> WriteCwData<ZoneDiscovery       > for Writable {}
+impl<Writable: AsyncWrite + Unpin> WriteCwData<RegionDiscovery     > for Writable {}
+impl<Writable: AsyncWrite + Unpin> WriteCwData<MapSeed             > for Writable {}
+impl<Writable: AsyncWrite + Unpin> WriteCwData<ConnectionAcceptance> for Writable {}
+impl<Writable: AsyncWrite + Unpin> WriteCwData<ProtocolVersion     > for Writable {}
+impl<Writable: AsyncWrite + Unpin> WriteCwData<ConnectionRejection > for Writable {}
+//ChatMessageFromServer
+//ChatMessageFromClient
+//WorldUpdate                //which can be found in their respective module
+//AirshipTraffic             //these packets have non-default trait implementations
+//CreatureUpdate

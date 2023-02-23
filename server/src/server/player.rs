@@ -1,13 +1,14 @@
-use std::mem::size_of;
 use std::sync::atomic::AtomicBool;
 
 use tokio::io;
-use tokio::io::{AsyncWriteExt, BufWriter};
+use tokio::io::BufWriter;
 use tokio::net::tcp::OwnedWriteHalf;
 use tokio::sync::RwLock;
 
 use protocol::packet::{ChatMessageFromServer, FromServer};
 use protocol::packet::common::CreatureId;
+use protocol::utils::io_extensions::WritePacket;
+use protocol::WriteCwData;
 
 use crate::server::creature::Creature;
 
@@ -28,18 +29,17 @@ impl Player {
 		}
 	}
 
-	pub async fn send<Packet: FromServer + Sync>(&self, packet: &Packet) -> io::Result<()>
-		where [(); size_of::<Packet>()]:
+	pub async fn send<Packet: FromServer>(&self, packet: &Packet) -> io::Result<()>
+		where BufWriter<OwnedWriteHalf>: WriteCwData<Packet>//todo: specialization could obsolete this
 	{
 		let mut writer = self.writer.write().await;
-		packet.write_to_with_id(&mut *writer).await?;
-		writer.flush().await
+		(&mut writer as &mut BufWriter<OwnedWriteHalf>).write_packet(packet).await //todo: why is this cast necessary?
 	}
 
 	///sends a packet to this player and ignores any io errors.
 	///useful when errors are already handled by the reading thread
-	pub async fn send_ignoring<Packet: FromServer + Sync>(&self, packet: &Packet)
-		where [(); size_of::<Packet>()]:
+	pub async fn send_ignoring<Packet: FromServer>(&self, packet: &Packet)
+		where BufWriter<OwnedWriteHalf>: WriteCwData<Packet>//todo: specialization could obsolete this
 	{
 		let _ = self.send(packet).await;
 	}

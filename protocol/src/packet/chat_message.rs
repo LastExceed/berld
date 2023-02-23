@@ -4,39 +4,10 @@ use tokio::io;
 use tokio::io::{AsyncRead, AsyncReadExt, AsyncWrite, AsyncWriteExt};
 
 use crate::packet::*;
+use crate::ReadCwData;
 use crate::utils::io_extensions::{ReadStruct, WriteStruct};
 
-impl CwSerializable for ChatMessageFromClient {
-	async fn read_from<Readable: AsyncRead + Unpin + Send>(readable: &mut Readable) -> io::Result<Self> {
-		Ok(
-			Self {
-				text: read_text(readable).await?
-			}
-		)
-	}
-
-	async fn write_to<Writable: AsyncWrite + Unpin + Send>(&self, writable: &mut Writable) -> io::Result<()> {
-		write_text(writable, &self.text).await
-	}
-}
-
-impl CwSerializable for ChatMessageFromServer {
-	async fn read_from<Readable: AsyncRead + Unpin + Send>(readable: &mut Readable) -> io::Result<Self> {
-		Ok(
-			Self {
-				source: readable.read_struct::<CreatureId>().await?,
-				text: read_text(readable).await?
-			}
-		)
-	}
-
-	async fn write_to<Writable: AsyncWrite + Unpin + Send>(&self, writable: &mut Writable) -> io::Result<()> {
-		writable.write_struct(&self.source).await?;
-		write_text(writable, &self.text).await
-	}
-}
-
-async fn read_text<Readable: AsyncRead + Unpin + Send>(readable: &mut Readable) -> io::Result<String> {
+async fn read_text<Readable: AsyncRead + Unpin>(readable: &mut Readable) -> io::Result<String> {
 	let character_count = readable.read_struct::<i32>().await? as usize;
 	const U16_SIZE: usize = size_of::<u16>();
 
@@ -58,7 +29,7 @@ async fn read_text<Readable: AsyncRead + Unpin + Send>(readable: &mut Readable) 
 	Ok(String::from_utf16_lossy(&u16s))
 }
 
-async fn write_text<Writable: AsyncWrite + Unpin + Send>(writable: &mut Writable, string: &str) -> io::Result<()> {
+async fn write_text<Writable: AsyncWrite + Unpin>(writable: &mut Writable, string: &str) -> io::Result<()> {
 	let bytes = string
 		.encode_utf16()
 		.flat_map(u16::to_le_bytes)
@@ -66,6 +37,36 @@ async fn write_text<Writable: AsyncWrite + Unpin + Send>(writable: &mut Writable
 	let character_count = (bytes.len() / 2) as i32; //cant use the utf16 iterator as counting it's elements would consume it prematurely
 	writable.write_struct(&character_count).await?;
 	writable.write_all(&bytes).await
+}
+
+
+impl<Readable: AsyncRead + Unpin> ReadCwData<ChatMessageFromClient> for Readable {
+	async fn read_cw_data(&mut self) -> io::Result<ChatMessageFromClient> {
+		Ok(ChatMessageFromClient { text: read_text(self).await? })
+	}
+}
+
+impl<Writable: AsyncWrite + Unpin> WriteCwData<ChatMessageFromClient> for Writable {
+	async fn write_cw_data(&mut self, chat_message: &ChatMessageFromClient) -> io::Result<()> {
+		write_text(self, &chat_message.text).await
+	}
+}
+
+
+impl<Readable: AsyncRead + Unpin> ReadCwData<ChatMessageFromServer> for Readable {
+	async fn read_cw_data(&mut self) -> io::Result<ChatMessageFromServer> {
+		Ok(ChatMessageFromServer {
+			source: self.read_struct().await?,
+			text: read_text(self).await?
+		})
+	}
+}
+
+impl<Writable: AsyncWrite + Unpin> WriteCwData<ChatMessageFromServer> for Writable {
+	async fn write_cw_data(&mut self, cw_struct: &ChatMessageFromServer) -> io::Result<()> {
+		self.write_struct(&cw_struct.source).await?;
+		write_text(self, &cw_struct.text).await
+	}
 }
 
 

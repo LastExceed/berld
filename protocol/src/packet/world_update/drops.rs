@@ -2,18 +2,22 @@ use nalgebra::{Point2, Point3};
 use tokio::io;
 use tokio::io::{AsyncRead, AsyncWrite};
 
-use crate::packet::CwSerializable;
+use crate::{ReadCwData, WriteCwData};
 use crate::packet::Item;
 use crate::utils::io_extensions::{ReadStruct, WriteStruct};
 
-//todo: implementation is extremely similar to P48
-impl CwSerializable for (Point2<i32>, Vec<Drop>) {
-	async fn read_from<Readable: AsyncRead + Unpin + Send>(readable: &mut Readable) -> io::Result<Self> {
-		Ok((readable.read_struct::<Point2<i32>>().await?, Vec::read_from(readable).await?))
+//todo: implementation is extremely similar to P48 and AirshipTraffic
+impl<Readable: AsyncRead + Unpin> ReadCwData<(Point2<i32>, Vec<Drop>)> for Readable {
+	async fn read_cw_data(&mut self) -> io::Result<(Point2<i32>, Vec<Drop>)> {
+		//explicit type annotation as a workaround for https://github.com/rust-lang/rust/issues/108362
+		Ok((self.read_struct().await?, ReadCwData::<Vec<Drop>>::read_cw_data(self).await?))//self.read_cw_struct().await?))
 	}
-	async fn write_to<Writable: AsyncWrite + Unpin + Send>(&self, writable: &mut Writable) -> io::Result<()> {
-		writable.write_struct(&self.0).await?;
-		self.1.write_to(writable).await
+}
+
+impl<Writable: AsyncWrite + Unpin> WriteCwData<(Point2<i32>, Vec<Drop>)> for Writable {
+	async fn write_cw_data(&mut self, zone_drops: &(Point2<i32>, Vec<Drop>)) -> io::Result<()> {
+		self.write_struct(&zone_drops.0).await?;
+		self.write_cw_data(&zone_drops.1).await
 	}
 }
 
@@ -31,4 +35,5 @@ pub struct Drop {
 	//pad4 //i32 according to cuwo
 }
 
-impl CwSerializable for Drop {}
+impl<Readable: AsyncRead + Unpin> ReadCwData<Drop> for Readable {}
+impl<Writable: AsyncWrite + Unpin> WriteCwData<Drop> for Writable {}

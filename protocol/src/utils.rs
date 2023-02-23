@@ -6,9 +6,8 @@ use std::slice::Iter;
 use nalgebra::Point3;
 use strum::EnumCount;
 use tokio::io;
-use tokio::io::{AsyncRead, AsyncWrite};
 
-use crate::CwSerializable;
+use crate::{ReadCwData, WriteCwData};
 use crate::utils::constants::SIZE_BLOCK;
 use crate::utils::io_extensions::{ReadStruct, WriteStruct};
 
@@ -49,26 +48,32 @@ macro_rules! bulk_impl {
 	}
 }
 
-impl<Element: CwSerializable + Send + Sync> CwSerializable for Vec<Element>
+impl<Element, Readable: ReadCwData<Element>> ReadCwData<Vec<Element>> for Readable
 	where [(); size_of::<Element>()]:
 {
-	async fn read_from<Readable: AsyncRead + Unpin + Send>(readable: &mut Readable) -> io::Result<Self> {
-		let count = readable.read_struct::<i32>().await?;
+	//todo: relax to iterable
+	async fn read_cw_data(&mut self) -> io::Result<Vec<Element>>
+		where [(); size_of::<Element>()]:
+	{
+		let count = self.read_struct::<i32>().await?;
 		let mut vec = Vec::with_capacity(count as usize);
 		for _ in 0..count {
-			vec.push(Element::read_from(readable).await?); //todo: figure out how to do this functional style (probably create and collect an Iter)
+			vec.push(self.read_cw_data().await?); //todo: figure out how to do this functional style (probably create and collect an Iter)
 		}
 		Ok(vec)
 	}
+}
 
-	async fn write_to<Writable: AsyncWrite + Unpin + Send>(&self, writable: &mut Writable) -> io::Result<()> {
-		writable.write_struct(&(self.len() as i32)).await?;
-		for element in self {
-			element.write_to(writable).await?;
+impl<Element, Writable: WriteCwData<Element>> WriteCwData<Vec<Element>> for Writable {//todo: relax to iterable
+	async fn write_cw_data(&mut self, elements: &Vec<Element>) -> io::Result<()> {
+		self.write_struct(&(elements.len() as i32)).await?;
+		for element in elements {
+			self.write_cw_data(element).await?;
 		}
 		Ok(())
 	}
 }
+
 
 #[repr(C)]
 #[derive(Debug, PartialEq, Eq, Clone)]

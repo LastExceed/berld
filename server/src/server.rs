@@ -1,6 +1,6 @@
 use std::collections::HashMap;
 use std::io::ErrorKind::{InvalidData, InvalidInput};
-use std::mem::{size_of, transmute};
+use std::mem::transmute;
 use std::ptr;
 use std::sync::Arc;
 use std::sync::atomic::Ordering;
@@ -16,7 +16,7 @@ use tokio::net::tcp::{OwnedReadHalf, OwnedWriteHalf};
 use tokio::sync::RwLock;
 use tokio::time::sleep;
 
-use protocol::{CwSerializable, packet, Packet};
+use protocol::{Packet, WriteCwData};
 use protocol::nalgebra::{Point2, Point3};
 use protocol::packet::{*, Hit};
 use protocol::packet::common::{CreatureId, Item};
@@ -25,7 +25,7 @@ use protocol::packet::world_update::drops::Drop;
 use protocol::packet::world_update::Sound;
 use protocol::packet::world_update::sound::Kind::*;
 use protocol::utils::constants::SIZE_ZONE;
-use protocol::utils::io_extensions::{ReadStruct, WriteStruct};
+use protocol::utils::io_extensions::{ReadPacket, WritePacket, WriteStruct};
 
 use crate::addons::{enable_pvp, freeze_time};
 use crate::server::creature::Creature;
@@ -79,12 +79,12 @@ impl Server {
 		let mut reader = BufReader::new(read_half);
 		let mut writer = BufWriter::new(write_half);
 
-		if reader.read_struct::<packet::Id>().await? != ProtocolVersion::ID {
+		if reader.read_id().await? != ProtocolVersion::ID {
 			return Err(InvalidData.into());
 		}
-		if ProtocolVersion::read_from(&mut reader).await?.0 != 3 {
-			ProtocolVersion(3).write_to_with_id(&mut writer).await?; //todo: log this!
-			writer.flush().await?;
+
+		if reader.read_packet::<ProtocolVersion>().await?.0 != 3 {
+			writer.write_packet(&ProtocolVersion(3)).await?;
 			return Err(InvalidInput.into());
 		}
 		let assigned_id = self.id_pool.write().await.claim();
@@ -94,14 +94,13 @@ impl Server {
 	}
 
 	async fn handle_new_player(&self, assigned_id: CreatureId, mut reader: BufReader<OwnedReadHalf>, mut writer: BufWriter<OwnedWriteHalf>) -> io::Result<()> {
-		ConnectionAcceptance {}.write_to_with_id(&mut writer).await?;
+		writer.write_packet(&ConnectionAcceptance).await?;
 		write_abnormal_creature_update(&mut writer, assigned_id).await?;
-		writer.flush().await?;
 
-		if reader.read_struct::<packet::Id>().await? != CreatureUpdate::ID {
+		if reader.read_id().await? != CreatureUpdate::ID {
 			return Err(InvalidData.into())
 		}
-		let full_creature_update = CreatureUpdate::read_from(&mut reader).await?;
+		let full_creature_update = reader.read_packet::<CreatureUpdate>().await?;
 		let Some(character) = Creature::maybe_from(&full_creature_update) else {
 			return Err(InvalidInput.into());
 		};
@@ -145,7 +144,9 @@ impl Server {
 		Ok(())
 	}
 
-	pub async fn broadcast<Packet: FromServer + Sync>(&self, packet: &Packet, player_to_skip: Option<&Player>) where [(); size_of::<Packet>()]: {
+	pub async fn broadcast<Packet: FromServer>(&self, packet: &Packet, player_to_skip: Option<&Player>)
+		where BufWriter<OwnedWriteHalf>: WriteCwData<Packet>//todo: specialization could obsolete this
+	{
 		future::join_all(self.players.read().await.iter().filter_map(|player| {
 			if let Some(pts) = player_to_skip && ptr::eq(player.as_ref(), pts) {
 				return None;
@@ -222,18 +223,18 @@ impl Server {
 		}, None).await;
 	}
 
-	async fn read_packets_forever(&self, source: &Player, mut readable: BufReader<OwnedReadHalf>) -> io::Result<()> {
+	async fn read_packets_forever(&self, source: &Player, mut reader: BufReader<OwnedReadHalf>) -> io::Result<()> {
 		loop {
 			//todo: copypasta
-			match readable.read_struct::<packet::Id>().await? {
-				CreatureUpdate       ::ID => self.handle_packet(source, CreatureUpdate       ::read_from(&mut readable).await?).await,
-				CreatureAction       ::ID => self.handle_packet(source, CreatureAction       ::read_from(&mut readable).await?).await,
-				Hit                  ::ID => self.handle_packet(source, Hit                  ::read_from(&mut readable).await?).await,
-				StatusEffect         ::ID => self.handle_packet(source, StatusEffect         ::read_from(&mut readable).await?).await,
-				Projectile           ::ID => self.handle_packet(source, Projectile           ::read_from(&mut readable).await?).await,
-				ChatMessageFromClient::ID => self.handle_packet(source, ChatMessageFromClient::read_from(&mut readable).await?).await,
-				ZoneDiscovery        ::ID => self.handle_packet(source, ZoneDiscovery        ::read_from(&mut readable).await?).await,
-				RegionDiscovery      ::ID => self.handle_packet(source, RegionDiscovery      ::read_from(&mut readable).await?).await,
+			match reader.read_id().await? {
+				CreatureUpdate       ::ID => self.handle_packet(source, reader.read_packet::<CreatureUpdate       >().await?).await,
+				CreatureAction       ::ID => self.handle_packet(source, reader.read_packet::<CreatureAction       >().await?).await,
+				Hit                  ::ID => self.handle_packet(source, reader.read_packet::<Hit                  >().await?).await,
+				StatusEffect         ::ID => self.handle_packet(source, reader.read_packet::<StatusEffect         >().await?).await,
+				Projectile           ::ID => self.handle_packet(source, reader.read_packet::<Projectile           >().await?).await,
+				ChatMessageFromClient::ID => self.handle_packet(source, reader.read_packet::<ChatMessageFromClient>().await?).await,
+				ZoneDiscovery        ::ID => self.handle_packet(source, reader.read_packet::<ZoneDiscovery        >().await?).await,
+				RegionDiscovery      ::ID => self.handle_packet(source, reader.read_packet::<RegionDiscovery      >().await?).await,
 				unexpected_packet_id => panic!("unexpected packet id {:?}", unexpected_packet_id)
 			};
 
@@ -274,6 +275,7 @@ impl Server {
 async fn write_abnormal_creature_update<Writable: AsyncWrite + Unpin + Send>(writable: &mut Writable, assigned_id: CreatureId) -> io::Result<()> {
 	writable.write_struct(&CreatureUpdate::ID).await?;
 	writable.write_struct(&assigned_id).await?; //luckily the only thing the alpha client does with this data is acquiring its assigned CreatureId
-	writable.write_all(&[0u8; 4456]).await //so we can simply zero out everything else and not worry about the missing bytes
+	writable.write_all(&[0u8; 4456]).await?; //so we can simply zero out everything else and not worry about the missing bytes
+	writable.flush().await
 	//TODO: move this to protocol crate and construct this from an actual [CreatureUpdate]
 }

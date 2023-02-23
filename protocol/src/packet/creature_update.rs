@@ -14,18 +14,19 @@ use crate::packet::common::EulerAngles;
 use crate::packet::creature_update::equipment::Slot;
 use crate::packet::creature_update::multipliers::Multiplier;
 use crate::packet::creature_update::skill_tree::Skill;
+use crate::ReadCwData;
 use crate::utils::ArrayWrapper;
 
 pub mod equipment;
 pub mod skill_tree;
 pub mod multipliers;
 
-impl CwSerializable for CreatureUpdate {
-	async fn read_from<Readable: AsyncRead + Unpin + Send>(readable: &mut Readable) -> io::Result<Self> {
+impl<Readable: AsyncRead + Unpin> ReadCwData<CreatureUpdate> for Readable {
+	async fn read_cw_data(&mut self) -> io::Result<CreatureUpdate> {
 		//todo: can't decode from network stream directly because ???
-		let size = readable.read_struct::<i32>().await?;
+		let size = self.read_struct::<i32>().await?;
 		let mut buffer = vec![0u8; size as usize];
-		readable.read_exact(&mut buffer).await?;
+		self.read_exact(&mut buffer).await?;
 
 		let mut decoder = ZlibDecoder::new(buffer.as_slice());
 
@@ -33,7 +34,7 @@ impl CwSerializable for CreatureUpdate {
 		let bitfield = decoder.read_struct::<u64>().await?;
 
 		//todo: macro
-		let instance = Self {
+		let instance = CreatureUpdate {
 			id,
 			position          : if bitfield & (1 <<  0) > 0 { Some(decoder.read_struct().await?) } else { None },
 			rotation          : if bitfield & (1 <<  1) > 0 { Some(decoder.read_struct().await?) } else { None },
@@ -105,130 +106,133 @@ impl CwSerializable for CreatureUpdate {
 		}
 		Ok(instance)
 	}
+}
 
-	async fn write_to<Writable: AsyncWrite + Unpin + Send>(&self, writable: &mut Writable) -> io::Result<()> {
+impl<Writable: AsyncWrite + Unpin> WriteCwData<CreatureUpdate> for Writable {
+	async fn write_cw_data(&mut self, creature_update: &CreatureUpdate) -> std::io::Result<()> {
 		let mut bitfield = 0u64;
 
 		//todo: macro
-		bitfield |= (self.position          .is_some() as u64) <<  0;
-		bitfield |= (self.rotation          .is_some() as u64) <<  1;
-		bitfield |= (self.velocity          .is_some() as u64) <<  2;
-		bitfield |= (self.acceleration      .is_some() as u64) <<  3;
-		bitfield |= (self.velocity_extra    .is_some() as u64) <<  4;
-		bitfield |= (self.head_tilt         .is_some() as u64) <<  5;
-		bitfield |= (self.flags_physics     .is_some() as u64) <<  6;
-		bitfield |= (self.affiliation       .is_some() as u64) <<  7;
-		bitfield |= (self.race              .is_some() as u64) <<  8;
-		bitfield |= (self.animation         .is_some() as u64) <<  9;
-		bitfield |= (self.animation_time    .is_some() as u64) << 10;
-		bitfield |= (self.combo             .is_some() as u64) << 11;
-		bitfield |= (self.combo_timeout     .is_some() as u64) << 12;
-		bitfield |= (self.appearance        .is_some() as u64) << 13;
-		bitfield |= (self.flags             .is_some() as u64) << 14;
-		bitfield |= (self.effect_time_dodge .is_some() as u64) << 15;
-		bitfield |= (self.effect_time_stun  .is_some() as u64) << 16;
-		bitfield |= (self.effect_time_fear  .is_some() as u64) << 17;
-		bitfield |= (self.effect_time_chill .is_some() as u64) << 18;
-		bitfield |= (self.effect_time_wind  .is_some() as u64) << 19;
-		bitfield |= (self.show_patch_time   .is_some() as u64) << 20;
-		bitfield |= (self.occupation        .is_some() as u64) << 21;
-		bitfield |= (self.specialization    .is_some() as u64) << 22;
-		bitfield |= (self.mana_charge       .is_some() as u64) << 23;
-		bitfield |= (self.unknown24         .is_some() as u64) << 24;
-		bitfield |= (self.unknown25         .is_some() as u64) << 25;
-		bitfield |= (self.aim_offset        .is_some() as u64) << 26;
-		bitfield |= (self.health            .is_some() as u64) << 27;
-		bitfield |= (self.mana              .is_some() as u64) << 28;
-		bitfield |= (self.blocking_gauge    .is_some() as u64) << 29;
-		bitfield |= (self.multipliers       .is_some() as u64) << 30;
-		bitfield |= (self.unknown31         .is_some() as u64) << 31;
-		bitfield |= (self.unknown32         .is_some() as u64) << 32;
-		bitfield |= (self.level             .is_some() as u64) << 33;
-		bitfield |= (self.experience        .is_some() as u64) << 34;
-		bitfield |= (self.master            .is_some() as u64) << 35;
-		bitfield |= (self.unknown36         .is_some() as u64) << 36;
-		bitfield |= (self.rarity            .is_some() as u64) << 37;
-		bitfield |= (self.unknown38         .is_some() as u64) << 38;
-		bitfield |= (self.home_zone         .is_some() as u64) << 39;
-		bitfield |= (self.home              .is_some() as u64) << 40;
-		bitfield |= (self.zone_to_reveal    .is_some() as u64) << 41;
-		bitfield |= (self.unknown42         .is_some() as u64) << 42;
-		bitfield |= (self.consumable        .is_some() as u64) << 43;
-		bitfield |= (self.equipment         .is_some() as u64) << 44;
-		bitfield |= (self.name              .is_some() as u64) << 45;
-		bitfield |= (self.skill_tree        .is_some() as u64) << 46;
-		bitfield |= (self.mana_cubes        .is_some() as u64) << 47;
+		bitfield |= (creature_update.position         .is_some() as u64) <<  0;
+		bitfield |= (creature_update.rotation         .is_some() as u64) <<  1;
+		bitfield |= (creature_update.velocity         .is_some() as u64) <<  2;
+		bitfield |= (creature_update.acceleration     .is_some() as u64) <<  3;
+		bitfield |= (creature_update.velocity_extra   .is_some() as u64) <<  4;
+		bitfield |= (creature_update.head_tilt        .is_some() as u64) <<  5;
+		bitfield |= (creature_update.flags_physics    .is_some() as u64) <<  6;
+		bitfield |= (creature_update.affiliation      .is_some() as u64) <<  7;
+		bitfield |= (creature_update.race             .is_some() as u64) <<  8;
+		bitfield |= (creature_update.animation        .is_some() as u64) <<  9;
+		bitfield |= (creature_update.animation_time   .is_some() as u64) << 10;
+		bitfield |= (creature_update.combo            .is_some() as u64) << 11;
+		bitfield |= (creature_update.combo_timeout    .is_some() as u64) << 12;
+		bitfield |= (creature_update.appearance       .is_some() as u64) << 13;
+		bitfield |= (creature_update.flags            .is_some() as u64) << 14;
+		bitfield |= (creature_update.effect_time_dodge.is_some() as u64) << 15;
+		bitfield |= (creature_update.effect_time_stun .is_some() as u64) << 16;
+		bitfield |= (creature_update.effect_time_fear .is_some() as u64) << 17;
+		bitfield |= (creature_update.effect_time_chill.is_some() as u64) << 18;
+		bitfield |= (creature_update.effect_time_wind .is_some() as u64) << 19;
+		bitfield |= (creature_update.show_patch_time  .is_some() as u64) << 20;
+		bitfield |= (creature_update.occupation       .is_some() as u64) << 21;
+		bitfield |= (creature_update.specialization   .is_some() as u64) << 22;
+		bitfield |= (creature_update.mana_charge      .is_some() as u64) << 23;
+		bitfield |= (creature_update.unknown24        .is_some() as u64) << 24;
+		bitfield |= (creature_update.unknown25        .is_some() as u64) << 25;
+		bitfield |= (creature_update.aim_offset       .is_some() as u64) << 26;
+		bitfield |= (creature_update.health           .is_some() as u64) << 27;
+		bitfield |= (creature_update.mana             .is_some() as u64) << 28;
+		bitfield |= (creature_update.blocking_gauge   .is_some() as u64) << 29;
+		bitfield |= (creature_update.multipliers      .is_some() as u64) << 30;
+		bitfield |= (creature_update.unknown31        .is_some() as u64) << 31;
+		bitfield |= (creature_update.unknown32        .is_some() as u64) << 32;
+		bitfield |= (creature_update.level            .is_some() as u64) << 33;
+		bitfield |= (creature_update.experience       .is_some() as u64) << 34;
+		bitfield |= (creature_update.master           .is_some() as u64) << 35;
+		bitfield |= (creature_update.unknown36        .is_some() as u64) << 36;
+		bitfield |= (creature_update.rarity           .is_some() as u64) << 37;
+		bitfield |= (creature_update.unknown38        .is_some() as u64) << 38;
+		bitfield |= (creature_update.home_zone        .is_some() as u64) << 39;
+		bitfield |= (creature_update.home             .is_some() as u64) << 40;
+		bitfield |= (creature_update.zone_to_reveal   .is_some() as u64) << 41;
+		bitfield |= (creature_update.unknown42        .is_some() as u64) << 42;
+		bitfield |= (creature_update.consumable       .is_some() as u64) << 43;
+		bitfield |= (creature_update.equipment        .is_some() as u64) << 44;
+		bitfield |= (creature_update.name             .is_some() as u64) << 45;
+		bitfield |= (creature_update.skill_tree       .is_some() as u64) << 46;
+		bitfield |= (creature_update.mana_cubes       .is_some() as u64) << 47;
 
 		let mut buffer = vec![];
 		{
 			let mut encoder = ZlibEncoder::new(&mut buffer);
 
-			encoder.write_struct(&self.id).await?;
+			encoder.write_struct(&creature_update.id).await?;
 			encoder.write_struct(&bitfield).await?;
 
 			//todo: macro
-			if let Some(it) = &self.position           { encoder.write_struct(it).await?; }
-			if let Some(it) = &self.rotation           { encoder.write_struct(it).await?; }
-			if let Some(it) = &self.velocity           { encoder.write_struct(it).await?; }
-			if let Some(it) = &self.acceleration       { encoder.write_struct(it).await?; }
-			if let Some(it) = &self.velocity_extra     { encoder.write_struct(it).await?; }
-			if let Some(it) = &self.head_tilt          { encoder.write_struct(it).await?; }
-			if let Some(it) = &self.flags_physics      { encoder.write_struct(it).await?; }
-			if let Some(it) = &self.affiliation        { encoder.write_struct(it).await?; }
-			if let Some(it) = &self.race               { encoder.write_struct(&(*it as i32)).await?; } //see de-serialization
-			if let Some(it) = &self.animation          { encoder.write_struct(it).await?; }
-			if let Some(it) = &self.animation_time     { encoder.write_struct(it).await?; }
-			if let Some(it) = &self.combo              { encoder.write_struct(it).await?; }
-			if let Some(it) = &self.combo_timeout      { encoder.write_struct(it).await?; }
-			if let Some(it) = &self.appearance         { encoder.write_struct(it).await?; }
-			if let Some(it) = &self.flags              { encoder.write_struct(it).await?; }
-			if let Some(it) = &self.effect_time_dodge  { encoder.write_struct(it).await?; }
-			if let Some(it) = &self.effect_time_stun   { encoder.write_struct(it).await?; }
-			if let Some(it) = &self.effect_time_fear   { encoder.write_struct(it).await?; }
-			if let Some(it) = &self.effect_time_chill  { encoder.write_struct(it).await?; }
-			if let Some(it) = &self.effect_time_wind   { encoder.write_struct(it).await?; }
-			if let Some(it) = &self.show_patch_time    { encoder.write_struct(it).await?; }
-			if let Some(it) = &self.occupation         { encoder.write_struct(it).await?; }
-			if let Some(it) = &self.specialization     { encoder.write_struct(it).await?; }
-			if let Some(it) = &self.mana_charge        { encoder.write_struct(it).await?; }
-			if let Some(it) = &self.unknown24          { encoder.write_struct(it).await?; }
-			if let Some(it) = &self.unknown25          { encoder.write_struct(it).await?; }
-			if let Some(it) = &self.aim_offset         { encoder.write_struct(it).await?; }
-			if let Some(it) = &self.health             { encoder.write_struct(it).await?; }
-			if let Some(it) = &self.mana               { encoder.write_struct(it).await?; }
-			if let Some(it) = &self.blocking_gauge     { encoder.write_struct(it).await?; }
-			if let Some(it) = &self.multipliers        { encoder.write_struct(it).await?; }
-			if let Some(it) = &self.unknown31          { encoder.write_struct(it).await?; }
-			if let Some(it) = &self.unknown32          { encoder.write_struct(it).await?; }
-			if let Some(it) = &self.level              { encoder.write_struct(it).await?; }
-			if let Some(it) = &self.experience         { encoder.write_struct(it).await?; }
-			if let Some(it) = &self.master             { encoder.write_struct(it).await?; }
-			if let Some(it) = &self.unknown36          { encoder.write_struct(it).await?; }
-			if let Some(it) = &self.rarity             { encoder.write_struct(it).await?; }
-			if let Some(it) = &self.unknown38          { encoder.write_struct(it).await?; }
-			if let Some(it) = &self.home_zone          { encoder.write_struct(it).await?; }
-			if let Some(it) = &self.home               { encoder.write_struct(it).await?; }
-			if let Some(it) = &self.zone_to_reveal     { encoder.write_struct(it).await?; }
-			if let Some(it) = &self.unknown42          { encoder.write_struct(it).await?; }
-			if let Some(it) = &self.consumable         { encoder.write_struct(it).await?; }
-			if let Some(it) = &self.equipment          { encoder.write_struct(it).await?; }
-			if let Some(it) = &self.name               {
+			if let Some(it) = &creature_update.position          { encoder.write_struct(it).await?; }
+			if let Some(it) = &creature_update.rotation          { encoder.write_struct(it).await?; }
+			if let Some(it) = &creature_update.velocity          { encoder.write_struct(it).await?; }
+			if let Some(it) = &creature_update.acceleration      { encoder.write_struct(it).await?; }
+			if let Some(it) = &creature_update.velocity_extra    { encoder.write_struct(it).await?; }
+			if let Some(it) = &creature_update.head_tilt         { encoder.write_struct(it).await?; }
+			if let Some(it) = &creature_update.flags_physics     { encoder.write_struct(it).await?; }
+			if let Some(it) = &creature_update.affiliation       { encoder.write_struct(it).await?; }
+			if let Some(it) = &creature_update.race              { encoder.write_struct(&(*it as i32)).await?; } //see de-serialization
+			if let Some(it) = &creature_update.animation         { encoder.write_struct(it).await?; }
+			if let Some(it) = &creature_update.animation_time    { encoder.write_struct(it).await?; }
+			if let Some(it) = &creature_update.combo             { encoder.write_struct(it).await?; }
+			if let Some(it) = &creature_update.combo_timeout     { encoder.write_struct(it).await?; }
+			if let Some(it) = &creature_update.appearance        { encoder.write_struct(it).await?; }
+			if let Some(it) = &creature_update.flags             { encoder.write_struct(it).await?; }
+			if let Some(it) = &creature_update.effect_time_dodge { encoder.write_struct(it).await?; }
+			if let Some(it) = &creature_update.effect_time_stun  { encoder.write_struct(it).await?; }
+			if let Some(it) = &creature_update.effect_time_fear  { encoder.write_struct(it).await?; }
+			if let Some(it) = &creature_update.effect_time_chill { encoder.write_struct(it).await?; }
+			if let Some(it) = &creature_update.effect_time_wind  { encoder.write_struct(it).await?; }
+			if let Some(it) = &creature_update.show_patch_time   { encoder.write_struct(it).await?; }
+			if let Some(it) = &creature_update.occupation        { encoder.write_struct(it).await?; }
+			if let Some(it) = &creature_update.specialization    { encoder.write_struct(it).await?; }
+			if let Some(it) = &creature_update.mana_charge       { encoder.write_struct(it).await?; }
+			if let Some(it) = &creature_update.unknown24         { encoder.write_struct(it).await?; }
+			if let Some(it) = &creature_update.unknown25         { encoder.write_struct(it).await?; }
+			if let Some(it) = &creature_update.aim_offset        { encoder.write_struct(it).await?; }
+			if let Some(it) = &creature_update.health            { encoder.write_struct(it).await?; }
+			if let Some(it) = &creature_update.mana              { encoder.write_struct(it).await?; }
+			if let Some(it) = &creature_update.blocking_gauge    { encoder.write_struct(it).await?; }
+			if let Some(it) = &creature_update.multipliers       { encoder.write_struct(it).await?; }
+			if let Some(it) = &creature_update.unknown31         { encoder.write_struct(it).await?; }
+			if let Some(it) = &creature_update.unknown32         { encoder.write_struct(it).await?; }
+			if let Some(it) = &creature_update.level             { encoder.write_struct(it).await?; }
+			if let Some(it) = &creature_update.experience        { encoder.write_struct(it).await?; }
+			if let Some(it) = &creature_update.master            { encoder.write_struct(it).await?; }
+			if let Some(it) = &creature_update.unknown36         { encoder.write_struct(it).await?; }
+			if let Some(it) = &creature_update.rarity            { encoder.write_struct(it).await?; }
+			if let Some(it) = &creature_update.unknown38         { encoder.write_struct(it).await?; }
+			if let Some(it) = &creature_update.home_zone         { encoder.write_struct(it).await?; }
+			if let Some(it) = &creature_update.home              { encoder.write_struct(it).await?; }
+			if let Some(it) = &creature_update.zone_to_reveal    { encoder.write_struct(it).await?; }
+			if let Some(it) = &creature_update.unknown42         { encoder.write_struct(it).await?; }
+			if let Some(it) = &creature_update.consumable        { encoder.write_struct(it).await?; }
+			if let Some(it) = &creature_update.equipment         { encoder.write_struct(it).await?; }
+			if let Some(it) = &creature_update.name              {
 				let bytes = it.as_bytes();
 				if bytes.len() > 16 { return Err(InvalidData.into()) }
 				encoder.write_all(bytes).await?;
 				encoder.write_all(&vec![0u8; 16 - bytes.len()]).await?;
 				//todo: check what happens with non-ascii characters
 			}
-			if let Some(it) = &self.skill_tree         { encoder.write_struct(it).await?; }
-			if let Some(it) = &self.mana_cubes         { encoder.write_struct(it).await?; }
+			if let Some(it) = &creature_update.skill_tree        { encoder.write_struct(it).await?; }
+			if let Some(it) = &creature_update.mana_cubes        { encoder.write_struct(it).await?; }
 
 			encoder.shutdown().await?;
 		}
 
-		writable.write_struct(&(buffer.len() as i32)).await?;
-		writable.write_all(&buffer).await
+		self.write_struct(&(buffer.len() as i32)).await?;
+		self.write_all(&buffer).await
 	}
 }
+
 
 #[repr(u32)]
 #[derive(Debug, PartialEq, Eq, Clone, Copy)]
