@@ -454,11 +454,11 @@ pub(super) fn inspect_show_patch_time(show_patch_time: &i32, former_state: &Crea
 	Ok(())
 }
 pub(super) fn inspect_occupation(occupation: &Occupation, former_state: &Creature, updated_state: &Creature, ac_data: &mut PlayerACData) -> anti_cheat::Result {
-	occupation.ensure_one_of([Warrior, Ranger, Mage, Rogue].as_slice(), "combat_class_major")?;
+	occupation.ensure_one_of([Warrior, Ranger, Mage, Rogue].as_slice(), "occupation")?;
 	inspect_equipment(&updated_state.equipment, former_state, updated_state, ac_data)
 }
 pub(super) fn inspect_specialization(specialization: &Specialization, former_state: &Creature, updated_state: &Creature, ac_data: &mut PlayerACData) -> anti_cheat::Result {
-	specialization.ensure_one_of([Default, Alternative].as_slice(), "combat_class_minor")
+	specialization.ensure_one_of([Default, Alternative].as_slice(), "specialization")
 }
 pub(super) fn inspect_mana_charge(mana_charge: &f32, former_state: &Creature, updated_state: &Creature, ac_data: &mut PlayerACData) -> anti_cheat::Result {
 	mana_charge.ensure_at_most(updated_state.mana, "mana_charge")
