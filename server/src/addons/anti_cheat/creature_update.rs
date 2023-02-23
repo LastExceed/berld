@@ -42,7 +42,7 @@ pub(crate) fn inspect_rotation(rotation: &EulerAngles, former_state: &Creature, 
 		.is_finite()
 		.ok_or("rotation.yaw wasn't finite")?;
 	rotation.roll
-		.ensure_within(&(-90f32..=90f32), "rotation.roll")?;
+		.ensure_within(&(-90.0..=90.0), "rotation.roll")?;
 	rotation.yaw//normally -180..=180, but over-/underflows while attacking
 		.is_finite()
 		.ok_or("rotation.yaw wasn't finite".to_string())

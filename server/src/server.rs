@@ -184,7 +184,7 @@ impl Server {
 		//the proper way to remove a creature requires updating all remaining creatures which is expensive on bandwidth
 		self.broadcast(&CreatureUpdate {
 			id: creature_id.to_owned(),
-			health: Some(0f32), //makes the creature intangible
+			health: Some(0.0), //makes the creature intangible
 			affiliation: Some(Affiliation::Neutral), //ensures it doesnt show up on the map
 			..Default::default()
 		}, None).await;

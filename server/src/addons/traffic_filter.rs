@@ -52,11 +52,11 @@ pub fn filter(packet: &mut CreatureUpdate, former_state: &Creature, updated_stat
 		if updated_state.flags.get(CreatureFlag::Climbing) {
 			false
 		} else if updated_state.flags_physics.get(PhysicsFlag::Swimming) {
-			velocity.z > 1f32 && velocity.z - (updated_state.acceleration.z / 80f32 * 12f32) > 1f32 //wip
+			velocity.z > 1.0 && velocity.z - (updated_state.acceleration.z / 80.0 * 12.0) > 1.0 //wip
 		} else if velocity.z < former_state.velocity.z {
 			false
 		} else if updated_state.flags_physics.get(PhysicsFlag::OnGround) {
-			velocity.z > 0f32
+			velocity.z > 0.0
 		} else { //airborne
 			true
 		}
@@ -86,7 +86,7 @@ pub fn filter(packet: &mut CreatureUpdate, former_state: &Creature, updated_stat
 		velocity_extra
 			.iter()
 			.zip(former_state.velocity_extra.iter())
-			.any(|(new, old)| !(0f32..1f32).contains(&(new / old)))//todo: there gotta be a better way to do this
+			.any(|(new, old)| !(0.0..1.0).contains(&(new / old)))//todo: there gotta be a better way to do this
 	});
 
 	packet.effect_time_dodge = packet.effect_time_dodge.filter(|value| *value > former_state.effect_time_dodge);

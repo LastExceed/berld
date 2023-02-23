@@ -16,19 +16,19 @@ pub mod flagset;
 pub mod constants;
 
 fn something(level: f32) -> f32 {
-	1f32 / (0.05f32 * (level - 1f32) + 1f32)
+	1.0 / (0.05 * (level - 1.0) + 1.0)
 }
 
 pub fn level_scaling_factor(level: f32) -> f32 {
-	2f32.powf((1f32 - something(level)) * 3f32)
+	2.0_f32.powf((1.0 - something(level)) * 3.0)
 }
 
 pub fn rarity_scaling_factor(rarity: u8) -> f32 {
-	2f32.powf(rarity as f32 * 0.25)
+	2.0_f32.powf(rarity as f32 * 0.25)
 }
 
 pub fn power_of(level: i32) -> i32 {
-	(101f32 - 100f32 * something(level as f32)) as i32
+	(101.0 - 100.0 * something(level as f32)) as i32
 }
 
 pub fn maximum_experience_of(level: i32) -> i32 {
