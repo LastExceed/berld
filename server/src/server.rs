@@ -88,13 +88,7 @@ impl Server {
 		writer.write_packet(&ConnectionAcceptance).await?;
 		write_abnormal_creature_update(&mut writer, assigned_id).await?;
 
-		if reader.read_id().await? != CreatureUpdate::ID {
-			return Err(InvalidData.into())
-		}
-		let full_creature_update = reader.read_packet::<CreatureUpdate>().await?;
-		let Some(character) = Creature::maybe_from(&full_creature_update) else {
-			return Err(InvalidInput.into());
-		};
+		let (full_creature_update, character) = read_character_data(&mut reader).await?;
 
 		let new_player = Player::new(
 			assigned_id,
@@ -291,4 +285,18 @@ async fn write_abnormal_creature_update<Writable: AsyncWrite + Unpin + Send>(wri
 	writable.write_all(&[0u8; 4456]).await?; //so we can simply zero out everything else and not worry about the missing bytes
 	writable.flush().await
 	//TODO: move this to protocol crate and construct this from an actual [CreatureUpdate]
+}
+
+async fn read_character_data(reader: &mut impl ReadPacket) -> io::Result<(CreatureUpdate, Creature)> {
+	if reader.read_id().await? != CreatureUpdate::ID {
+		return Err(InvalidData.into());
+	}
+
+	let creature_update = reader.read_packet::<CreatureUpdate>().await?;
+
+	let Some(character) = Creature::maybe_from(&creature_update) else {
+		return Err(InvalidInput.into());
+	};
+
+	Ok((creature_update, character))
 }
