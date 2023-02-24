@@ -1,5 +1,6 @@
 use protocol::nalgebra::Vector3;
-use protocol::packet::{creature_action, CreatureAction, WorldUpdate};
+use protocol::packet::{CreatureAction, WorldUpdate};
+use protocol::packet::common::item::Kind::Void;
 use protocol::packet::creature_action::Kind::*;
 use protocol::packet::world_update::{Pickup, sound, Sound};
 use protocol::utils::constants::SIZE_BLOCK;
@@ -11,7 +12,7 @@ use crate::server::Server;
 impl HandlePacket<CreatureAction> for Server {
 	async fn handle_packet(&self, source: &Player, packet: CreatureAction) {
 		match packet.kind {
-			creature_action::Kind::Bomb => {
+			Bomb => {
 				source.notify("bombs are disabled").await;
 
 				//the player consumed a bomb, so we need to reimburse it
@@ -38,6 +39,10 @@ impl HandlePacket<CreatureAction> for Server {
 				}).await;
 			}
 			Drop => {
+				if packet.item.kind == Void {
+					self.kick(source, "void item dropped".to_string()).await;
+					return;
+				}
 				let creature_guard = source.character.read().await;
 
 				self.add_drop(
