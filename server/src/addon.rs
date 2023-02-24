@@ -12,6 +12,7 @@ use crate::server::Server;
 pub mod anti_cheat;
 pub mod traffic_filter;
 pub mod balancing;
+pub mod discord_integration;
 
 pub fn enable_pvp(creature_update: &mut CreatureUpdate) {
 	if let Some(ref mut flags) = creature_update.flags {

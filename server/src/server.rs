@@ -29,6 +29,7 @@ use protocol::utils::io_extensions::{ReadPacket, WriteArbitrary, WritePacket};
 
 use crate::addon::{enable_pvp, freeze_time};
 use crate::addon::anti_cheat::AntiCheat;
+use crate::addon::discord_integration::DiscordIntegration;
 use crate::server::creature::Creature;
 use crate::server::creature_id_pool::CreatureIdPool;
 use crate::server::handle_packet::HandlePacket;
@@ -43,7 +44,8 @@ pub struct Server {
 	id_pool: RwLock<CreatureIdPool>,
 	players: RwLock<Vec<Arc<Player>>>,
 	drops: RwLock<HashMap<Point2<i32>, Vec<Drop>>>,
-	anti_cheat: AntiCheat
+	anti_cheat: AntiCheat,
+	discord_integration: DiscordIntegration
 }
 
 impl Server {
@@ -52,7 +54,8 @@ impl Server {
 			id_pool: RwLock::new(CreatureIdPool::new()),
 			players: RwLock::new(Vec::new()),
 			drops: RwLock::new(HashMap::new()),
-			anti_cheat: AntiCheat::new()
+			anti_cheat: AntiCheat::new(),
+			discord_integration: DiscordIntegration::new()
 		}
 	}
 
@@ -61,6 +64,7 @@ impl Server {
 
 		let listener = TcpListener::bind("0.0.0.0:12345").await.expect("unable to bind listening socket");
 
+		self.discord_integration.run(&self).await;
 		freeze_time(&self);
 
 		loop {
@@ -217,6 +221,7 @@ impl Server {
 
 	async fn announce(&self, text: String) {
 		white_ln!("{}", text);
+		self.discord_integration.post(format!("*{text}*")).await;
 		self.broadcast(&ChatMessageFromServer {
 			source: CreatureId(0),
 			text
