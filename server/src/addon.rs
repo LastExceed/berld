@@ -5,6 +5,8 @@ use tokio::time::sleep;
 
 use protocol::packet::{CreatureUpdate, IngameDatetime};
 use protocol::packet::creature_update::CreatureFlag;
+use crate::addon::anti_cheat::AntiCheat;
+use crate::addon::discord_integration::DiscordIntegration;
 
 use crate::server::creature::Creature;
 use crate::server::Server;
@@ -13,6 +15,20 @@ pub mod anti_cheat;
 pub mod traffic_filter;
 pub mod balancing;
 pub mod discord_integration;
+
+pub struct Addons {
+	pub anti_cheat: AntiCheat,
+	pub discord_integration: DiscordIntegration
+}
+
+impl Addons {
+	pub fn new() -> Self {
+		Self {
+			anti_cheat: AntiCheat::new(),
+			discord_integration: DiscordIntegration::new()
+		}
+	}
+}
 
 pub fn enable_pvp(creature_update: &mut CreatureUpdate) {
 	if let Some(ref mut flags) = creature_update.flags {

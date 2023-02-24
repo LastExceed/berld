@@ -27,9 +27,7 @@ use protocol::packet::world_update::sound::Kind::*;
 use protocol::utils::constants::SIZE_ZONE;
 use protocol::utils::io_extensions::{ReadPacket, WriteArbitrary, WritePacket};
 
-use crate::addon::{enable_pvp, freeze_time};
-use crate::addon::anti_cheat::AntiCheat;
-use crate::addon::discord_integration::DiscordIntegration;
+use crate::addon::{Addons, enable_pvp, freeze_time};
 use crate::server::creature::Creature;
 use crate::server::creature_id_pool::CreatureIdPool;
 use crate::server::handle_packet::HandlePacket;
@@ -44,8 +42,7 @@ pub struct Server {
 	id_pool: RwLock<CreatureIdPool>,
 	players: RwLock<Vec<Arc<Player>>>,
 	drops: RwLock<HashMap<Point2<i32>, Vec<Drop>>>,
-	anti_cheat: AntiCheat,
-	discord_integration: DiscordIntegration
+	addons: Addons
 }
 
 impl Server {
@@ -54,8 +51,7 @@ impl Server {
 			id_pool: RwLock::new(CreatureIdPool::new()),
 			players: RwLock::new(Vec::new()),
 			drops: RwLock::new(HashMap::new()),
-			anti_cheat: AntiCheat::new(),
-			discord_integration: DiscordIntegration::new()
+			addons: Addons::new()
 		}
 	}
 
@@ -64,7 +60,7 @@ impl Server {
 
 		let listener = TcpListener::bind("0.0.0.0:12345").await.expect("unable to bind listening socket");
 
-		self.discord_integration.run(&self).await;
+		self.addons.discord_integration.run(&self).await;
 		freeze_time(&self);
 
 		loop {
@@ -114,7 +110,7 @@ impl Server {
 		self.remove_player(&new_player_arc).await;
 
 		self.announce(format!("[-] {}", new_player_arc.character.read().await.name)).await;
-		self.anti_cheat.on_leave(&new_player_arc).await;
+		self.addons.anti_cheat.on_leave(&new_player_arc).await;
 
 		Ok(())
 	}
@@ -221,7 +217,7 @@ impl Server {
 
 	async fn announce(&self, text: String) {
 		white_ln!("{}", text);
-		self.discord_integration.post(format!("*{text}*")).await;
+		self.addons.discord_integration.post(format!("*{text}*")).await;
 		self.broadcast(&ChatMessageFromServer {
 			source: CreatureId(0),
 			text
@@ -238,7 +234,7 @@ impl Server {
 	}
 
 	async fn on_join(&self, player: &Player, full_creature_update: CreatureUpdate) -> io::Result<()> {
-		self.anti_cheat.on_join(player).await;
+		self.addons.anti_cheat.on_join(player).await;
 		self.handle_packet(player, full_creature_update).await;
 
 		if player.should_disconnect.load(Ordering::Relaxed) {//todo: this is very error prone. need proper kick logic asap
