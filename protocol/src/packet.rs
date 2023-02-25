@@ -239,10 +239,12 @@ impl Packet for ChatMessageFromClient { const ID: Id = Id(10); }
 impl Packet for ChatMessageFromServer { const ID: Id = Id(10); }
 impl Packet for ZoneDiscovery         { const ID: Id = Id(11); }
 impl Packet for RegionDiscovery       { const ID: Id = Id(12); }
-impl Packet for MapSeed               { const ID: Id = Id(15); } //to this day 13 and 14 have never been discovered
+impl Packet for MapSeed               { const ID: Id = Id(15); }
 impl Packet for ConnectionAcceptance  { const ID: Id = Id(16); }
 impl Packet for ProtocolVersion       { const ID: Id = Id(17); }
 impl Packet for ConnectionRejection   { const ID: Id = Id(18); }
+//to this day [Id] 13 and 14 have never been discovered
+//if they do exist, then they must be either 0 sized or C->S only (or both)
 
 //these are just for type safety to prevent sending packets in the wrong direction
 pub trait FromServer: Packet {}
