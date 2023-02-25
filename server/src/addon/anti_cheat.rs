@@ -43,7 +43,9 @@ impl AntiCheat {
 	}
 
 
-	pub async fn inspect_creature_update(&self, packet: &CreatureUpdate, former_state: &Creature, updated_state: &Creature) -> Result {
+	pub async fn inspect_creature_update(&self, source: &Player, packet: &CreatureUpdate, former_state: &Creature, updated_state: &Creature) -> Result {
+		packet.id.ensure_exact(&source.id, "creature_id")?;
+
 		let mut map_guard = self.ac_datas.write().await;
 		let Some(ac_data) = map_guard.get_mut(&packet.id)
 			else { unreachable!() };//should be unreachable

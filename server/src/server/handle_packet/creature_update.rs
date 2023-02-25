@@ -14,7 +14,7 @@ impl HandlePacket<CreatureUpdate> for Server {
 		character.update(&packet);
 		let character = character.downgrade();
 
-		if let Err(message) = self.addons.anti_cheat.inspect_creature_update(&packet, &snapshot, &character).await {
+		if let Err(message) = self.addons.anti_cheat.inspect_creature_update(source, &packet, &snapshot, &character).await {
 			dbg!(&message);
 			self.kick(source, message).await;
 			return;
