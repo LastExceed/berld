@@ -215,7 +215,9 @@ impl Server {
 		}
 	}
 
-	async fn announce(&self, text: String) {
+	async fn announce(&self, text: impl Into<String>) {
+		let text = text.into();//todo: is there a way to prevent this boilerplate?
+
 		white_ln!("{}", text);
 		self.addons.discord_integration.post(format!("*{text}*")).await;
 		self.broadcast(&ChatMessageFromServer {
@@ -224,8 +226,8 @@ impl Server {
 		}, None).await;
 	}
 
-	pub(crate) async fn kick(&self, player: &Player, reason: String) {
-		self.announce(format!("kicked {} because {}", player.character.read().await.name, reason)).await;
+	pub(crate) async fn kick(&self, player: &Player, reason: impl Into<String>) {
+		self.announce(format!("kicked {} because {}", player.character.read().await.name, reason.into())).await;
 		//wait a bit to make sure the message arrives at the player about to be kicked
 		sleep(Duration::from_millis(100)).await;
 
