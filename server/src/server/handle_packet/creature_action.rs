@@ -40,7 +40,7 @@ impl HandlePacket<CreatureAction> for Server {
 			}
 			Drop => {
 				if packet.item.kind == Void {
-					self.kick(source, "void item dropped".to_string()).await;
+					self.kick(source, "void item dropped").await;
 					return;
 				}
 				let creature_guard = source.character.read().await;
