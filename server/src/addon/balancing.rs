@@ -1,14 +1,108 @@
+use std::collections::HashMap;
 use std::ptr;
+use std::time::{Duration, Instant};
+use tokio::sync::RwLock;
 
 use protocol::packet::{Hit, StatusEffect, WorldUpdate};
+use protocol::packet::common::CreatureId;
 use protocol::packet::common::item::Kind::*;
 use protocol::packet::common::item::kind::Weapon::*;
+use protocol::packet::creature_update::CreatureFlag::{Climbing, Gliding};
 use protocol::packet::creature_update::equipment::Slot::RightWeapon;
-use protocol::packet::status_effect::Kind::Swiftness;
+use protocol::packet::creature_update::Occupation::Rogue;
+use protocol::packet::creature_update::PhysicsFlag::{OnGround, Swimming};
+use protocol::packet::status_effect::Kind::{Anger, Swiftness};
+use protocol::packet::world_update::Sound;
+use protocol::packet::world_update::sound::Kind::{Magic01, SpikeTrap};
 use protocol::utils::constants::combat_classes::*;
 
 use crate::server::creature::Creature;
+use crate::server::player::Player;
 use crate::server::Server;
+
+pub struct AirTimeTracker {
+	airtime_map: RwLock<HashMap<CreatureId, (Instant, bool)>>//todo: figure out a proper name
+}
+
+impl AirTimeTracker {
+	pub fn new() -> Self {
+		Self {
+			airtime_map: RwLock::new(HashMap::new())
+		}
+	}
+
+	pub async fn on_creature_update(&self, source: &Player) {
+		let character = source.character.read().await;
+
+		if character.occupation != Rogue {
+			return;
+		}
+
+		let mut airtime_map = self.airtime_map.write().await;
+		if character.flags_physics.get(OnGround) ||
+			character.flags_physics.get(Swimming) ||
+			character.flags.get(Gliding) ||
+			character.flags.get(Climbing)
+		{
+			airtime_map.remove(&source.id);
+			return;
+		}
+
+		let Some((timestamp, warned)) = airtime_map.get_mut(&source.id)
+			else {
+				airtime_map.insert(source.id, (Instant::now(), false));
+				return;
+			};
+
+		let airtime = timestamp.elapsed();
+
+		if airtime > Duration::from_secs(3) && !*warned {
+			//todo: default
+			let anger = StatusEffect {
+				source: CreatureId(0),
+				target: source.id,
+				kind: Anger,
+				modifier: 0.0,
+				duration: 2000,
+				creature_id3: source.id,//todo: is this needed?
+			};
+			let sound = Sound::at(
+				character.position,
+				Magic01
+			);
+			let world_update = WorldUpdate {
+				status_effects: vec![anger],
+				sounds: vec![sound],
+				..Default::default()
+			};
+			source.send_ignoring(&world_update).await;
+
+			*warned = true;
+			return;
+		}
+
+		if airtime > Duration::from_secs(5) {
+			let stun = Hit {
+				target: source.id,
+				stuntime: 3000,
+				..Default::default()
+			};
+			let sound = Sound::at(
+				character.position,
+				SpikeTrap
+			);
+			let world_update = WorldUpdate {
+				hits: vec![stun],
+				sounds: vec![sound],
+				..Default::default()
+			};
+			source.send_ignoring(&world_update).await;
+			source.notify("you have been punished for glitching in the air too long").await;
+
+			airtime_map.remove(&source.id);
+		}
+	}
+}
 
 pub async fn buff_warfrenzy(warfrenzy: &StatusEffect, server: &Server) {
 	let swiftness = StatusEffect {

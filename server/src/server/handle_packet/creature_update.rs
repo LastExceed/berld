@@ -20,13 +20,14 @@ impl HandlePacket<CreatureUpdate> for Server {
 			return;
 		}
 
-		enable_pvp(&mut packet);
-
 		if !filter(&mut packet, &snapshot, &character) {
 			return;
 		}
 
+		enable_pvp(&mut packet);
 		fix_cutoff_animations(&mut packet, &snapshot);
+		self.addons.air_time_tracker.on_creature_update(source).await;
+
 		self.broadcast(&packet, Some(source)).await;
 	}
 }
