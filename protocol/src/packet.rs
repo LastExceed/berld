@@ -180,9 +180,8 @@ pub struct Projectile {
 	pub is_yellow: bool,
 	//pad3
 	pub kind: projectile::Kind,
-	pub unknown_c: i32,
-	pub unknown_d: f32,
-	pub unknown_e: f32
+	//pad4 - contains uninit memory
+	pub unknown_c: i64 //always 0 ?
 }
 
 #[derive(Debug, Clone, Default)]
