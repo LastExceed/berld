@@ -34,6 +34,9 @@ pub fn filter(packet: &mut CreatureUpdate, former_state: &Creature, updated_stat
 	//- name
 
 	//todo:
+	//- position
+	//- velocity
+	//- acceleration
 	//- combo
 	//- showPatchtime
 	//- manaCharge
@@ -47,36 +50,34 @@ pub fn filter(packet: &mut CreatureUpdate, former_state: &Creature, updated_stat
 	//- unknown38
 	//- unknown42
 
-	//x and y are always overridden by acceleration
-	let need_velocity_z = packet.velocity.map_or(false, |velocity| {
-		if updated_state.flags.get(CreatureFlag::Climbing) {
-			false
-		} else if updated_state.flags_physics.get(PhysicsFlag::Swimming) {
-			velocity.z > 1.0 && velocity.z - (updated_state.acceleration.z / 80.0 * 12.0) > 1.0 //wip
-		} else if velocity.z < former_state.velocity.z {
-			false
-		} else if updated_state.flags_physics.get(PhysicsFlag::OnGround) {
-			velocity.z > 0.0
-		} else { //airborne
-			true
-		}
-	});
-	let glider_hovering = need_velocity_z && updated_state.flags.get(CreatureFlag::Gliding);
-	let movement_changed = packet.acceleration.map_or(false, |acceleration| acceleration.metric_distance(&former_state.acceleration) > 0f32);//todo: compare to last sent (4)
-	let teleported = packet.position.map_or(false, |position| distance::<f64, 3>(&position.cast(), &former_state.position.cast()) > SIZE_BLOCK as f64 * 4.0);
-	let new_animation_started = packet.animation_time.map_or(false, |animation_time| animation_time < former_state.animation_time);
-	let dodge_started = packet.effect_time_dodge.map_or(false, |effect_time_dodge| effect_time_dodge > former_state.effect_time_dodge);
-	let intercepting = updated_state.animation == Animation::Intercept;
+//	let need_velocity_z = packet.velocity.map_or(false, |velocity| {
+//		if updated_state.flags.get(CreatureFlag::Climbing) {
+//			false
+//		} else if updated_state.flags_physics.get(PhysicsFlag::Swimming) {
+//			velocity.z > 1.0 && velocity.z - (updated_state.acceleration.z / 80.0 * 12.0) > 1.0 //wip
+//		} else if velocity.z < former_state.velocity.z {
+//			false
+//		} else if updated_state.flags_physics.get(PhysicsFlag::OnGround) {
+//			velocity.z > 0.0
+//		} else { //airborne
+//			true
+//		}
+//	});
+//	let glider_hovering = need_velocity_z && updated_state.flags.get(CreatureFlag::Gliding);
+//	let movement_changed = packet.acceleration.map_or(false, |acceleration| acceleration.metric_distance(&former_state.acceleration) > 0f32);//todo: compare to last sent (4)
+//	let teleported = packet.position.map_or(false, |position| distance::<f64, 3>(&position.cast(), &former_state.position.cast()) > SIZE_BLOCK as f64 * 4.0);
+//	let dodge_started = packet.effect_time_dodge.map_or(false, |effect_time_dodge| effect_time_dodge > former_state.effect_time_dodge);
+//	let intercepting = updated_state.animation == Animation::Intercept;
 
-	if !movement_changed {
-		packet.acceleration = None;
-		if !glider_hovering && !teleported {
-			packet.position = None;
-		}
-	}
-	if !need_velocity_z && !dodge_started && !intercepting {
-		packet.velocity = None;
-	}
+//	if !movement_changed {
+//		packet.acceleration = None;
+//		if !glider_hovering && !teleported {
+//			packet.position = None;
+//		}
+//	}
+//	if !need_velocity_z && !dodge_started && !intercepting {
+//		packet.velocity = None;
+//	}
 
 	if !new_animation_started {
 		packet.animation_time = None;
