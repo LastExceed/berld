@@ -1,23 +1,21 @@
-use protocol::nalgebra::distance;
-use protocol::packet::creature_update::{Animation, CreatureFlag, PhysicsFlag};
+use protocol::packet::creature_update::CreatureFlag;
 use protocol::packet::CreatureUpdate;
-use protocol::utils::constants::SIZE_BLOCK;
 
 use crate::server::creature::Creature;
 
 pub fn filter(packet: &mut CreatureUpdate, former_state: &Creature, updated_state: &Creature) -> bool {
-	packet.rotation              = None;
-	packet.head_tilt             = None;
-	packet.flags_physics         = None;
-	packet.combo_timeout         = None;
-	packet.mana                  = None;
-	packet.blocking_gauge        = None;
-	packet.experience            = None;
-	packet.home_zone             = None;
-	packet.home                  = None;
-	packet.zone_to_reveal        = None;
-	packet.skill_tree            = None;
-	packet.mana_cubes            = None;
+	packet.rotation       = None;//this would be useful if it worked as intended, but unfortunately it has no effect
+	packet.head_tilt      = None;
+	packet.flags_physics  = None;
+	packet.combo_timeout  = None;
+	packet.mana           = None;
+	packet.blocking_gauge = None;
+	packet.experience     = None;
+	packet.home_zone      = None;
+	packet.home           = None;
+	packet.zone_to_reveal = None;
+	packet.skill_tree     = None;
+	packet.mana_cubes     = None;
 	//always keep:
 	//- affiliation
 	//- race
@@ -32,6 +30,7 @@ pub fn filter(packet: &mut CreatureUpdate, former_state: &Creature, updated_stat
 	//- consumable
 	//- equipment
 	//- name
+	//- rarity
 
 	//todo:
 	//- position
@@ -46,7 +45,6 @@ pub fn filter(packet: &mut CreatureUpdate, former_state: &Creature, updated_stat
 	//- unknown21
 	//- master
 	//- unknown36
-	//- powerBase
 	//- unknown38
 	//- unknown42
 
@@ -79,22 +77,22 @@ pub fn filter(packet: &mut CreatureUpdate, former_state: &Creature, updated_stat
 //		packet.velocity = None;
 //	}
 
-	if !new_animation_started {
-		packet.animation_time = None;
-	}
+	let new_animation_started = updated_state.animation_time < former_state.animation_time;
 
-	packet.velocity_extra = packet.velocity_extra.filter(|velocity_extra| {
-		velocity_extra
-			.iter()
-			.zip(former_state.velocity_extra.iter())
-			.any(|(new, old)| !(0.0..1.0).contains(&(new / old)))//todo: there gotta be a better way to do this
+	packet.animation_time.filter_in_place(|_| new_animation_started);
+
+	packet.velocity_extra.filter_in_place(|velocity_extra| {
+		former_state.velocity_extra
+			.into_iter()
+			.zip(velocity_extra)
+			.any(|(old, new)| !(0.0..1.0).contains(&(new / old)))//todo: there gotta be a better way to do this
 	});
 
-	packet.effect_time_dodge = packet.effect_time_dodge.filter(|value| *value > former_state.effect_time_dodge);
-	packet.effect_time_stun  = packet.effect_time_stun .filter(|value| *value > former_state.effect_time_stun );
-	packet.effect_time_fear  = packet.effect_time_fear .filter(|value| *value > former_state.effect_time_fear );
-	packet.effect_time_chill = packet.effect_time_chill.filter(|value| *value > former_state.effect_time_chill);
-	packet.effect_time_wind  = packet.effect_time_wind .filter(|value| *value > former_state.effect_time_wind );
+	packet.effect_time_dodge.filter_in_place(|value| *value > former_state.effect_time_dodge);
+	packet.effect_time_stun .filter_in_place(|value| *value > former_state.effect_time_stun );
+	packet.effect_time_fear .filter_in_place(|value| *value > former_state.effect_time_fear );
+	packet.effect_time_chill.filter_in_place(|value| *value > former_state.effect_time_chill);
+	packet.effect_time_wind .filter_in_place(|value| *value > former_state.effect_time_wind );
 
 	//there is a bug in the game where starting a new animation for a foreign dodging creature doesn't cancel their dodge roll
 	//this normally stays unnoticed as the creature will eventually report the end of their dodge roll on their own,
@@ -104,7 +102,7 @@ pub fn filter(packet: &mut CreatureUpdate, former_state: &Creature, updated_stat
 		packet.effect_time_dodge = Some(0);
 	}
 
-	packet.aim_offset = packet.aim_offset.filter(|_| updated_state.flags.get(CreatureFlag::Aiming));//todo: compare to last sent (2)
+	packet.aim_offset.filter_in_place(|_| updated_state.flags.get(CreatureFlag::Aiming));//todo: compare to last sent (2)
 
 
 
@@ -158,4 +156,16 @@ pub fn filter(packet: &mut CreatureUpdate, former_state: &Creature, updated_stat
 	packet.skill_tree        .is_some() ||
 	packet.mana_cubes        .is_some()
 	//returns whether any data is remaining
+}
+
+trait FilterInPlace<T> {
+	fn filter_in_place<P: FnOnce(&T) -> bool>(&mut self, predicate: P);
+}
+
+impl<T> FilterInPlace<T> for Option<T> {
+	fn filter_in_place<P: FnOnce(&T) -> bool>(&mut self, predicate: P) {
+		if let Some(value) = self && !predicate(value) {
+			*self = None;
+		}
+	}
 }
