@@ -49,6 +49,9 @@ impl AntiCheat {
 		let mut map_guard = self.ac_datas.write().await;
 		let Some(ac_data) = map_guard.get_mut(&packet.id)
 			else { unreachable!() };//should be unreachable
+		if former_state.health == 0.0 && updated_state.health > 0.0 {
+			ac_data.last_combo_update = Some(Instant::now()); //clocks freeze on death, so there's a desync on respawn
+		}
 
 		//todo: macro
 		if let Some(ref value) = packet.position          { inspect_position         (value, former_state, updated_state, ac_data)? };
