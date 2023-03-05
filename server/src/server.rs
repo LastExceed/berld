@@ -6,7 +6,6 @@ use std::sync::Arc;
 use std::sync::atomic::Ordering;
 use std::time::Duration;
 
-use colour::white_ln;
 use futures::future;
 use tokio::io;
 use tokio::io::{AsyncWrite, AsyncWriteExt};
@@ -37,6 +36,7 @@ mod creature_id_pool;
 pub(crate) mod player;
 mod handle_packet;
 pub mod creature;
+pub mod utils;
 
 pub struct Server {
 	id_pool: RwLock<CreatureIdPool>,
@@ -213,26 +213,6 @@ impl Server {
 				return Err(InvalidInput.into());
 			}
 		}
-	}
-
-	async fn announce(&self, text: impl Into<String>) {
-		let text = text.into();//todo: is there a way to prevent this boilerplate?
-
-		white_ln!("{}", text);
-		self.addons.discord_integration.post(format!("*{text}*")).await;
-		self.broadcast(&ChatMessageFromServer {
-			source: CreatureId(0),
-			text
-		}, None).await;
-	}
-
-	pub(crate) async fn kick(&self, player: &Player, reason: impl Into<String>) {
-		self.announce(format!("kicked {} because {}", player.character.read().await.name, reason.into())).await;
-		//wait a bit to make sure the message arrives at the player about to be kicked
-		sleep(Duration::from_millis(100)).await;
-
-		player.should_disconnect.store(true, Ordering::Relaxed);
-		//remove_player will be called by the reading task
 	}
 
 	async fn on_join(&self, player: &Player, full_creature_update: CreatureUpdate) -> io::Result<()> {

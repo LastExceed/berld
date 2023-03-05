@@ -3,12 +3,8 @@ use std::future::Future;
 use std::pin::Pin;
 use std::str::SplitWhitespace;
 
-use protocol::packet::{CreatureUpdate, WorldUpdate};
-use protocol::packet::common::CreatureId;
-use protocol::packet::creature_update::Affiliation;
-use protocol::packet::world_update::Kill;
-
 use crate::server::player::Player;
+use crate::server::utils::give_xp;
 
 type ParseFn = for <'a> fn(&'a Player, &mut SplitWhitespace) -> ParseResult<'a>;
 type ParseResult<'a> = Result<CmdFut<'a>, &'static str>;
@@ -68,22 +64,4 @@ fn xp_command<'a>(source: &'a Player, params: &mut SplitWhitespace) -> Result<Cm
 		.parse().map_err(|_| "invalid amount")?;
 
 	Ok(Box::pin(give_xp(source, amount)))
-}
-
-async fn give_xp(source: &Player, experience: i32) {//todo: move to server utils or sth
-	let dummy = CreatureUpdate {
-		id: CreatureId(9999),
-		affiliation: Some(Affiliation::Enemy),
-		..Default::default()
-	};
-	source.send_ignoring(&dummy).await;
-
-	let kill = Kill {
-		killer: source.id,
-		unknown: 0,
-		victim: dummy.id,
-		experience
-	};
-
-	source.send_ignoring(&WorldUpdate::from(kill)).await;
 }
