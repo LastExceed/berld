@@ -5,10 +5,11 @@ use tokio::time::sleep;
 
 use protocol::packet::{CreatureUpdate, IngameDatetime};
 use protocol::packet::creature_update::CreatureFlag;
+
 use crate::addon::anti_cheat::AntiCheat;
 use crate::addon::balancing::AirTimeTracker;
+use crate::addon::commands::CommandManager;
 use crate::addon::discord_integration::DiscordIntegration;
-
 use crate::server::creature::Creature;
 use crate::server::Server;
 
@@ -16,19 +17,22 @@ pub mod anti_cheat;
 pub mod traffic_filter;
 pub mod balancing;
 pub mod discord_integration;
+pub mod commands;
 
 pub struct Addons {
 	pub anti_cheat: AntiCheat,
 	pub discord_integration: DiscordIntegration,
-	pub air_time_tracker: AirTimeTracker
+	pub air_time_tracker: AirTimeTracker,
+	pub command_manager: CommandManager
 }
 
 impl Addons {
-	pub fn new() -> Self {
+	pub fn new() -> Self {//todo: boilerplate, maybe use Default trait ?
 		Self {
 			anti_cheat: AntiCheat::new(),
 			discord_integration: DiscordIntegration::new(),
-			air_time_tracker: AirTimeTracker::new()
+			air_time_tracker: AirTimeTracker::new(),
+			command_manager: CommandManager::new()
 		}
 	}
 }
