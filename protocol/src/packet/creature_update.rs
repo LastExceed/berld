@@ -300,20 +300,20 @@ pub enum Animation {
 	Idle,
 	DualWieldM1a,
 	DualWieldM1b,
-	Unknown003, //like daggers
-	Unknown004,
+	AltDaggerM1a, //used by humanoids - like daggerM1, but yellow dmg + mana drain
+	AltDatterM1b, //used by humanoids - like daggerM1, but yellow dmg + mana drain
 	LongswordM2,
-	UnarmedM1a, //fists use these
+	UnarmedM1a, //also used with fists
 	UnarmedM1b,
 	ShieldM2Charging,
 	ShieldM1a,
 	ShieldM1b,
 	UnarmedM2,
-	Unknown012, //swords rip apart
+	UnusedDualWieldAttack, //animation is like ripping swords apart
 	LongswordM1a,
 	LongswordM1b,
-	Unknown015, //probably for greatweapon A1
-	Unknown016, //same as 17
+	UnusedGreatweapon1, //probably for greatweapon A1
+	UnusedDaggerM2, //same as normal DaggerM2, but without poison
 	DaggerM2,
 	DaggerM1a,
 	DaggerM1b,
@@ -322,18 +322,18 @@ pub enum Animation {
 	ShootArrow,
 	CrossbowM2,
 	CrossbowM2Charging,
-	BowM2Charging,
+	BowM2Charging,//also used by snout beetles
 	BoomerangThrow,
 	BoomerangM2Charging,
-	BeamDraining,
-	Unknown029, //nothing
-	StaffFireM1,
+	BeamDraining,//used by rune giant
+	//29 nothing
+	StaffFireM1 = 30,
 	StaffFireM2,
 	StaffWaterM1,
 	StaffWaterM2,
 	HealingStream,
-	Unknown035, //summon animation
-	Unknown036, //wand charging?
+	UnusedSummon,
+	UnusedCharging1,
 	BraceletFireM2,
 	WandFireM1,
 	BraceletsFireM1a,
@@ -344,70 +344,70 @@ pub enum Animation {
 	WandWaterM1,
 	WandWaterM2,
 	WandFireM2,
-	Unknown047, //same as smash
+	UnusedSmash, //same as normal smash, but without jump or damage
 	Intercept,
 	Teleport,
-	Unknown050, //BowM2 but slower
-	Unknown051, //mob attack?
-	Unknown052, //nothing, immediately switches to 0
-	Unknown053, //nothing
-	Smash,
-	BowM2,
-	Unknown056, //nothing, causes rotation lock
-	GreatweaponM1a,
+	UnusedBowM2, //BowM2 but slower
+	VolantAttack, //mob attack?
+	UnusedIdle, //immediately switches to Idle
+	//53 nothing
+	Smash = 54,
+	BowM2,//also used by snout beetles
+	//56 nothing
+	GreatweaponM1a = 57,
 	GreatweaponM1c,
 	GreatweaponM2Charging,
 	GreatweaponM2Berserker,
 	GreatweaponM2Guardian,
-	Unknown062, //probably for greatweapon A2
+	UnusedStab, //very similar to daggerM1b, but very fast
 	UnarmedM2Charging, //also used for DualWieldM2Charging
-	Unknown064, //some sort of dualwield charge?
-	Unknown065, //probably for greatweapon B1
-	Unknown066, //probably for greatweapon B2
+	UnusedCharging2, //some sort of dualwield charging?
+	UnusedGreatweapon2,
+	UnusedGreatweapon3,
 	GreatweaponM1b,
-	BossCharge1,
-	BossCharge2,
-	BossSpinkick,
-	BossBlock,
-	BossSpin,
-	BossCry,
-	BossStomp,
-	BossKick,
-	BossKnockdownForward,
-	BossKnockdownLeft,
-	BossKnockdownRight,
+	Charge1,
+	Charge2,
+	UnusedSpinkick,
+	TurtleBlock,//unused
+	TurtleSpin,
+	LichScream,
+	UnusedStomp,
+	QuadrupedAttack,
+	ChargeFrontFlip,
+	ChargeLeftFlip,
+	ChargeRightFlip,
 	Stealth,
-	Drinking,
-	Eating,
+	Drink,
+	Eat,
 	PetFoodPresent,
-	Sitting,
-	Sleeping,
-	Unknown085, //nothing
-	Cyclone,
-	FireExplosionLong,
+	Sit,
+	Sleep,
+	//85 nothing
+	Cyclone = 86,
+	FireExplosionLong,//used by bosses
 	FireExplosionShort,
-	Lava,
-	Splash,
-	EarthQuake,
+	Lava,//used by bosses
+	UnusedSplash,
+	EarthQuake,//used by troll
 	Clone,
-	Unknown093, //same as intercept
-	FireBeam,
-	FireRay,
+	ChargeM2, //does UnarmedM2, DaggerM2, or GreatweaponM2Guardian during the run, depending on equipped weapons
+	FireBeam,//unused, future wand m1
+	FireRay,//used by wizards and witches, future wand m2
 	Shuriken,
-	Unknown097, //nothing, rotation lock
-	Unknown098, //parry? causes blocking
-	Unknown099, //nothing, rotation lock
-	Unknown100, //nothing
-	SuperBulwalk, //casues bulwalk
-	Unknown102, //nothing
-	SuperManaShield, //causes manashield
+	//97 nothing
+	UnusedBlock = 98,//looks different depending on leftweapon slot being empty or not
+	//99 nothing
+	//100 nothing
+	SuperBulwalk = 101, //unused, casts bulwalk
+	//102 nothing
+	SuperManaShield = 103, //unused - casts manashield
 	ShieldM2,
 	TeleportToCity,
 	Riding,
-	Sailing,
+	Sail,
 	Boulder,
 	ManaCubePickup,
-	Unknown110 //mob attack?
+	UnusedQuadrupedAttack //same as normal QuadrupedAttack except no sound nor damage
 }
 
 #[repr(C)]
@@ -453,18 +453,20 @@ pub struct Appearance {
 pub enum AppearanceFlag {
 	FourLegged,
 	CanFly,
-
-
-
-
-	Trainer = 6,
-
-	Immovable = 8, //found on dummies
+	Unknown2,//seen on rune giant
+	Unknown3,//snout beetle, owl, slimes, zombies, most non-humanoid bipedals (NOT bunny)
+	Unknown4,//insect guard, onionling, all tamable
+	Unknown5,//town animals, town neutrals, ogre, witch, radishling
+	Trainer,
+	Unknown7,
+	Immovable, //found on dummies
 	BossGlow,
-
-
-	//#12 found on bosses
-	Invincible = 13, //found on dummies
+	Unknown10,
+	Unknown11,//on clones
+	DungeonMonster,
+	Unknown13,//marked on map ?
+	Unknown14,
+	Unknown15
 }
 impl From<AppearanceFlag> for u16 {
 	fn from(it: AppearanceFlag) -> Self {

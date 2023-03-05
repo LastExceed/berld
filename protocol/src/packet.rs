@@ -124,7 +124,7 @@ pub struct CreatureAction {
 	pub zone: Point2<i32>,
 	pub item_index: i32,
 	pub unknown_a: i32,
-	pub kind: creature_action::Kind
+	pub kind: creature_action::Kind //definitely u8
 	//pad3
 }
 

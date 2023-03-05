@@ -102,10 +102,10 @@ pub(super) fn inspect_animation_time(animation_time: &i32, former_state: &Creatu
 	const TIMELESS_ANIMATIONS: [Animation; 12] = [
 		Idle,
 		Stealth,
-		Sailing,
-		Sitting,
+		Sail,
+		Sit,
 		PetFoodPresent,
-		Sleeping,
+		Sleep,
 		//todo: separate?
 		ShieldM2Charging,
 		GreatweaponM2Charging,
