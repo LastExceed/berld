@@ -20,7 +20,7 @@ use protocol::utils::{maximum_experience_of, power_of};
 use protocol::utils::constants::combat_classes::*;
 use protocol::utils::constants::PLAYABLE_RACES;
 use protocol::utils::constants::rarity::*;
-use protocol::utils::flagset::{FlagSet16, FlagSet32};
+use protocol::utils::flagset::FlagSet;
 
 use crate::addon::anti_cheat;
 use crate::addon::anti_cheat::*;
@@ -82,7 +82,7 @@ pub(super) fn inspect_head_tilt(head_tilt: &f32, former_state: &Creature, update
 	head_tilt
 		.ensure_within(&(-32.5..=45.0), "head_tilt")//negative when attacking downwards
 }
-pub(super) fn inspect_flags_physics(flags_physics: &FlagSet32<PhysicsFlag>, former_state: &Creature, updated_state: &Creature, ac_data: &mut PlayerACData) -> anti_cheat::Result {
+pub(super) fn inspect_flags_physics(flags_physics: &FlagSet<u32, PhysicsFlag>, former_state: &Creature, updated_state: &Creature, ac_data: &mut PlayerACData) -> anti_cheat::Result {
 	Ok(())
 }
 pub(super) fn inspect_affiliation(affiliation: &Affiliation, former_state: &Creature, updated_state: &Creature, ac_data: &mut PlayerACData) -> anti_cheat::Result {
@@ -417,7 +417,7 @@ pub(super) fn inspect_appearance(appearance: &Appearance, former_state: &Creatur
 	appearance.weapon_size  .ensure_exact (&allowed_weapon_size  , "appearance.weaponSize")
 
 }
-pub(super) fn inspect_flags(flags: &FlagSet16<CreatureFlag>, former_state: &Creature, updated_state: &Creature, ac_data: &mut PlayerACData) -> anti_cheat::Result {
+pub(super) fn inspect_flags(flags: &FlagSet<u16, CreatureFlag>, former_state: &Creature, updated_state: &Creature, ac_data: &mut PlayerACData) -> anti_cheat::Result {
 	flags.get(CreatureFlag::FriendlyFire)
 		.ensure_exact(&false, "flags[FriendlyFire]")?;
 

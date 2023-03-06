@@ -109,7 +109,7 @@ pub enum ItemFlag {
 	Adapted
 }
 
-impl From<ItemFlag> for u8 {
+impl From<ItemFlag> for usize {
 	fn from(it: ItemFlag) -> Self {
 		it as Self
 	}

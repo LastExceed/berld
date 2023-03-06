@@ -1,7 +1,7 @@
 use nalgebra::{Point2, Point3, Vector3};
 
 use crate::{bulk_impl, Packet, WriteCwData};
-use crate::utils::flagset::{FlagSet16, FlagSet32};
+use crate::utils::flagset::FlagSet;
 use crate::utils::io_extensions::{ReadArbitrary, WriteArbitrary};
 
 use self::airship_traffic::*;
@@ -31,7 +31,7 @@ pub struct CreatureUpdate {
 	pub velocity_extra: Option<Vector3<f32>>,
 	///used for climbing, vertical attacking, stuns, respawns, and maybe more
 	pub head_tilt: Option<f32>,
-	pub flags_physics: Option<FlagSet32<PhysicsFlag>>,
+	pub flags_physics: Option<FlagSet<u32, PhysicsFlag>>,
 	pub affiliation: Option<Affiliation>,
 	pub race: Option<Race>,
 	pub animation: Option<Animation>,
@@ -39,7 +39,7 @@ pub struct CreatureUpdate {
 	pub combo: Option<i32>,
 	pub combo_timeout: Option<i32>,
 	pub appearance: Option<Appearance>,
-	pub flags: Option<FlagSet16<CreatureFlag>>,
+	pub flags: Option<FlagSet<u16, CreatureFlag>>,
 	pub effect_time_dodge: Option<i32>,
 	pub effect_time_stun: Option<i32>,
 	pub effect_time_fear: Option<i32>,

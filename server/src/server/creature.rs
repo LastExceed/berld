@@ -8,7 +8,7 @@ use protocol::packet::creature_update::Specialization::Alternative;
 use protocol::packet::CreatureUpdate;
 use protocol::utils::{level_scaling_factor, rarity_scaling_factor};
 use protocol::utils::constants::CombatClass;
-use protocol::utils::flagset::{FlagSet16, FlagSet32};
+use protocol::utils::flagset::FlagSet;
 
 #[derive(Clone)]
 pub struct Creature {
@@ -19,7 +19,7 @@ pub struct Creature {
 	/**used by the 'retreat' ability*/
 	pub velocity_extra: Vector3<f32>,
 	pub head_tilt: f32,
-	pub flags_physics: FlagSet32<PhysicsFlag>,
+	pub flags_physics: FlagSet<u32, PhysicsFlag>,
 	pub affiliation: Affiliation,
 	pub race: Race,
 	pub animation: Animation,
@@ -27,7 +27,7 @@ pub struct Creature {
 	pub combo: i32,
 	pub combo_timeout: i32,
 	pub appearance: Appearance,
-	pub flags: FlagSet16<CreatureFlag>,
+	pub flags: FlagSet<u16, CreatureFlag>,
 	pub effect_time_dodge: i32,
 	pub effect_time_stun: i32,
 	pub effect_time_fear: i32,

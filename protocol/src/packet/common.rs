@@ -1,6 +1,6 @@
 use strum_macros::EnumIter;
 
-use crate::utils::flagset::FlagSet8;
+use crate::utils::flagset::FlagSet;
 
 use self::item::*;
 
@@ -180,7 +180,7 @@ pub struct Item {
 	pub _recipe: RecipeDummy,
 	pub rarity: u8,
 	pub material: Material,
-	pub flags: FlagSet8<ItemFlag>,
+	pub flags: FlagSet<u8, ItemFlag>,
 	//pad1 (ephemeral)
 	pub level: i16,
 	//pad2 (ephemeral)

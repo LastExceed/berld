@@ -277,7 +277,7 @@ pub enum PhysicsFlag {
 	PushingObject,
 	Unknown7//might not exist
 }
-impl From<PhysicsFlag> for u32 {
+impl From<PhysicsFlag> for usize {
 	fn from(it: PhysicsFlag) -> Self {
 		it as Self
 	}
@@ -417,7 +417,7 @@ pub struct Appearance {
 	pub unknown: i16,
 	pub hair_color: RGB<u8>,
 	//pad1
-	pub flags: FlagSet16<AppearanceFlag>,
+	pub flags: FlagSet<u16, AppearanceFlag>,
 	pub creature_size: Hitbox,
 	pub head_model: i16,
 	pub hair_model: i16,
@@ -469,7 +469,7 @@ pub enum AppearanceFlag {
 	Unknown14,//might not exist
 	Unknown15//might not exist
 }
-impl From<AppearanceFlag> for u16 {
+impl From<AppearanceFlag> for usize {
 	fn from(it: AppearanceFlag) -> Self {
 		it as Self
 	}
@@ -496,7 +496,7 @@ pub enum CreatureFlag {
 	Unknown14,//might not exist
 	Unknown15//might not exist
 }
-impl From<CreatureFlag> for u16 {
+impl From<CreatureFlag> for usize {
 	fn from(it: CreatureFlag) -> Self {
 		it as Self
 	}
