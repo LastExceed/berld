@@ -271,10 +271,11 @@ pub enum PhysicsFlag {
 	OnGround,
 	Swimming,
 	TouchingWall,
-
-	//#4 always true
-	PushingWall = 5,
-	PushingObject
+	Unknown3,
+	CanBreathe,
+	PushingWall,
+	PushingObject,
+	Unknown7//might not exist
 }
 impl From<PhysicsFlag> for u32 {
 	fn from(it: PhysicsFlag) -> Self {
@@ -451,22 +452,22 @@ pub struct Appearance {
 #[repr(u16)]
 #[derive(Debug, PartialEq, Eq, Clone, Copy)]
 pub enum AppearanceFlag {
-	FourLegged,
-	CanFly,
+	Quadruped,
+	Volant,
 	Unknown2,//seen on rune giant
-	Unknown3,//snout beetle, owl, slimes, zombies, most non-humanoid bipedals (NOT bunny)
+	Unknown3,//fast attacks (not humanoid style)? skeleton, all slimes, all runners, peacock, cornling/radishling, imp, mole, biter, coala, squirrel, raccoon, owl, penguin, werewofl, zombie, snout beetle, crab/seacrab, rune giant
 	Unknown4,//insect guard, onionling, all tamable
 	Unknown5,//town animals, town neutrals, ogre, witch, radishling
 	Trainer,
-	Unknown7,
-	Immovable, //found on dummies
+	Unknown7,//might not exist
+	Immovable,
 	BossGlow,
-	Unknown10,
+	EyeGlow,
 	Unknown11,//on clones
 	DungeonMonster,
-	Unknown13,//marked on map ?
-	Unknown14,
-	Unknown15
+	MissionObjective,
+	Unknown14,//might not exist
+	Unknown15//might not exist
 }
 impl From<AppearanceFlag> for u16 {
 	fn from(it: AppearanceFlag) -> Self {
@@ -478,17 +479,22 @@ impl From<AppearanceFlag> for u16 {
 #[derive(Debug, PartialEq, Eq, Clone, Copy)]
 pub enum CreatureFlag {
 	Climbing,
-
-	Aiming = 2,
-
-	Gliding = 4,
+	Unknown1,
+	Aiming,
+	Unknown3,
+	Gliding,
 	FriendlyFire,
 	Sprinting,
 	///causes all incoming hits to "miss". only works when this creature is [Affiliation::Enemy]
 	Unreachable,
-
-	Lamp = 9,
+	Unkown8,
+	Lamp,
 	Sniping,
+	Unknown11,//might not exist
+	Unknown12,//might not exist
+	Unknown13,//might not exist
+	Unknown14,//might not exist
+	Unknown15//might not exist
 }
 impl From<CreatureFlag> for u16 {
 	fn from(it: CreatureFlag) -> Self {
