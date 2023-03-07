@@ -250,6 +250,15 @@ impl From<Projectile> for WorldUpdate {
 	}
 }
 
+impl From<WorldObject> for WorldUpdate {
+	fn from(value: WorldObject) -> Self {
+		Self {
+			world_objects: vec![value],
+			..Default::default()
+		}
+	}
+}
+
 impl From<(Point2<i32>, Vec<drops::Drop>)> for WorldUpdate {
 	fn from(value: (Point2<i32>, Vec<drops::Drop>)) -> Self {
 		Self {
