@@ -4,9 +4,12 @@ use std::time::Duration;
 use colour::white_ln;
 use tokio::time::sleep;
 
-use protocol::packet::{ChatMessageFromServer, CreatureUpdate, WorldUpdate};
+use protocol::nalgebra::Point3;
+use protocol::packet::{ChatMessageFromServer, CreatureUpdate, ServerTick, WorldUpdate};
 use protocol::packet::common::CreatureId;
 use protocol::packet::creature_update::Affiliation;
+use protocol::packet::creature_update::Affiliation::Pet;
+use protocol::packet::creature_update::Animation::Riding;
 use protocol::packet::world_update::Kill;
 
 use crate::server::player::Player;
@@ -31,6 +34,23 @@ impl Server {
 
 		player.should_disconnect.store(true, Ordering::Relaxed);
 		//remove_player will be called by the reading task
+	}
+
+	pub async fn teleport(&self, player: &Player, destination: Point3<i64>) {
+		let server_creature = CreatureUpdate {
+			id: CreatureId(0),
+			position: Some(destination),
+			affiliation: Some(Pet),
+			animation: Some(Riding),
+			..Default::default()
+		};
+		player.send_ignoring(&server_creature).await;
+		sleep(Duration::from_millis(100)).await;
+		player.send_ignoring(&ServerTick).await;
+		player.send_ignoring(&ServerTick).await;
+		for other_player in self.players.read().await.iter() {//todo: "on_reload" ?
+			player.send_ignoring(&other_player.character.read().await.to_update(other_player.id)).await;
+		}
 	}
 }
 

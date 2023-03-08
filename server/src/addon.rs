@@ -1,6 +1,7 @@
 use std::intrinsics::transmute;
 use std::time::Duration;
 
+use tap::Tap;
 use tokio::time::sleep;
 
 use protocol::packet::{CreatureUpdate, IngameDatetime};
@@ -10,6 +11,7 @@ use crate::addon::anti_cheat::AntiCheat;
 use crate::addon::balancing::AirTimeTracker;
 use crate::addon::commands::CommandManager;
 use crate::addon::discord_integration::DiscordIntegration;
+use crate::addon::warps::Warpgate;
 use crate::server::creature::Creature;
 use crate::server::Server;
 
@@ -17,6 +19,7 @@ pub mod anti_cheat;
 pub mod traffic_filter;
 pub mod balancing;
 pub mod discord_integration;
+pub mod warps;
 pub mod commands;
 
 pub struct Addons {
@@ -33,6 +36,7 @@ impl Addons {
 			discord_integration: DiscordIntegration::new(),
 			air_time_tracker: AirTimeTracker::new(),
 			command_manager: CommandManager::new()
+				.tap_mut(|cm| cm.register(Warpgate::new()))
 		}
 	}
 }

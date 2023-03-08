@@ -10,7 +10,7 @@ use crate::server::Server;
 use crate::server::utils::give_xp;
 
 type CommandFuture<'a> = Pin<Box<dyn Future<Output=CommandResult> + Send + 'a>>;
-type CommandResult = Result<(), &'static str>;
+pub type CommandResult = Result<(), &'static str>;
 
 
 pub struct CommandManager {
