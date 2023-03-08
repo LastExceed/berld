@@ -1,67 +1,71 @@
 use std::collections::HashMap;
 use std::future::Future;
 use std::pin::Pin;
-use std::str::SplitWhitespace;
 
 use crate::server::player::Player;
+use crate::server::Server;
 use crate::server::utils::give_xp;
 
-type ParseFn = for <'a> fn(&'a Player, &mut SplitWhitespace) -> ParseResult<'a>;
-type ParseResult<'a> = Result<CmdFut<'a>, &'static str>;
-type CmdFut<'a> = Pin<Box<dyn Future<Output=()> + Send + 'a>>;
+type CommandFuture<'a> = Pin<Box<dyn Future<Output=()> + Send + 'a>>;
 
 pub struct CommandManager {
-	pub commands: HashMap<&'static str, ParseFn>
+	commands: HashMap<&'static str, Box<dyn ObjectSafeCommand>>
 }
 
 impl CommandManager {
 	pub fn new() -> Self {
-		let mut commands: HashMap<&'static str, ParseFn> = HashMap::new();
-		commands.insert("xp", xp_command);
 		Self {
-			commands
+			commands: HashMap::from([
+				("xp", Box::new(Xp) as Box<dyn ObjectSafeCommand>)
+			])
 		}
 	}
 
-	pub async fn on_chat_message(&self, source: &Player, text: &str) -> bool {
+	pub async fn on_chat_message(&self, server: &Server, caller: &Player, text: &str) -> bool {
 		if !text.starts_with('/') {
 			return false;
 		}
 
-		let mut fragments = text[1..].split_whitespace();
-
-		let Some(command) = fragments.next()
-			else {
-				//todo: empty command
-				return true;
-			};
-
-		let Some(parse_command) = self.commands.get(command)
-			else {
-				source.notify("unknown command").await;
-				return true;
-			};
-
-		let parse_result = parse_command(source, &mut fragments);
-
-		if fragments.next().is_some() {
-			source.notify("too many arguments").await;
-			return true;
-		}
-
-		match parse_result {
-			Ok(command_future) => command_future.await,
-			Err(message) => source.notify(message).await,
-		}
+		text[1..]
+			.split_whitespace()
+			.next()
+			.and_then(|frag| self.commands.get(frag))
+			.map(async move |command| command.get_execution_future(server, caller).await);
 
 		true
 	}
 }
 
-fn xp_command<'a>(source: &'a Player, params: &mut SplitWhitespace) -> Result<CmdFut<'a>, &'static str> {
-	let amount = params
-		.next().ok_or("too few arguments")?
-		.parse().map_err(|_| "invalid amount")?;
+pub trait Command {
+	const ADMIN_ONLY: bool;
 
-	Ok(Box::pin(give_xp(source, amount)))
+	fn execute<'fut>(&'fut self, server: &'fut Server, caller: &'fut Player) -> impl Future<Output=()> + Send + 'fut;//if you see an error here, ignore it -> https://github.com/intellij-rust/intellij-rust/issues/10216
+}
+
+//neither associated constants nor async functions are object safe, so we need a proxy for both
+trait ObjectSafeCommand: Send + Sync {//todo: Sync bound is only because of discord spaghetti {
+	fn get_admin_only(&self) -> bool;
+
+	fn get_execution_future<'fut>(&'fut self, server: &'fut Server, caller: &'fut Player) -> CommandFuture<'fut>;
+}
+
+impl<T: Command + Send + Sync> ObjectSafeCommand for T {
+	fn get_admin_only(&self) -> bool {
+		T::ADMIN_ONLY
+	}
+
+	fn get_execution_future<'fut>(&'fut self, server: &'fut Server, caller: &'fut Player) -> CommandFuture<'fut> {
+		Box::pin(self.execute(server, caller))
+	}
+}
+
+
+struct Xp;
+
+impl Command for Xp {
+	const ADMIN_ONLY: bool = false;
+
+	async fn execute(&self, _server: &Server, caller: &Player) {
+		give_xp(caller, 42).await;
+	}
 }
