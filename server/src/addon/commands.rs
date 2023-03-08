@@ -3,6 +3,8 @@ use std::future::Future;
 use std::pin::Pin;
 use std::str::SplitWhitespace;
 
+use tap::Tap;
+
 use crate::server::player::Player;
 use crate::server::Server;
 use crate::server::utils::give_xp;
@@ -10,17 +12,21 @@ use crate::server::utils::give_xp;
 type CommandFuture<'a> = Pin<Box<dyn Future<Output=CommandResult> + Send + 'a>>;
 type CommandResult = Result<(), &'static str>;
 
+
 pub struct CommandManager {
 	commands: HashMap<&'static str, Box<dyn ObjectSafeCommand>>
 }
 
+
 impl CommandManager {
 	pub fn new() -> Self {
 		Self {
-			commands: HashMap::from([
-				("xp", Box::new(Xp) as Box<dyn ObjectSafeCommand>)
-			])
-		}
+			commands: HashMap::new()
+		}.tap_mut(|x|x.register(Xp))
+	}
+
+	pub fn register<C: Command + 'static>(&mut self, command: C) {//todo: can the lifetime be relaxed?
+		self.commands.insert(C::LITERAL, Box::new(command));
 	}
 
 	pub async fn on_chat_message(&self, server: &Server, caller: &Player, text: &str) -> bool {
@@ -56,7 +62,8 @@ impl CommandManager {
 	}
 }
 
-pub trait Command {
+pub trait Command: Send + Sync {
+	const LITERAL: &'static str;
 	const ADMIN_ONLY: bool;
 
 	fn execute<'fut>(&'fut self, server: &'fut Server, caller: &'fut Player, params: &'fut mut SplitWhitespace<'fut>) -> impl Future<Output=CommandResult> + Send + 'fut;//if you see an error here, ignore it -> https://github.com/intellij-rust/intellij-rust/issues/10216
@@ -69,7 +76,7 @@ trait ObjectSafeCommand: Send + Sync {//todo: Sync bound is only because of disc
 	fn get_execution_future<'fut>(&'fut self, server: &'fut Server, caller: &'fut Player, params: &'fut mut SplitWhitespace<'fut>) -> CommandFuture<'fut>;
 }
 
-impl<T: Command + Send + Sync> ObjectSafeCommand for T {
+impl<T: Command> ObjectSafeCommand for T {
 	fn get_admin_only(&self) -> bool {
 		T::ADMIN_ONLY
 	}
@@ -83,6 +90,7 @@ impl<T: Command + Send + Sync> ObjectSafeCommand for T {
 struct Xp;
 
 impl Command for Xp {
+	const LITERAL: &'static str = "xp";
 	const ADMIN_ONLY: bool = false;
 
 	async fn execute(&self, _server: &Server, caller: &Player, params: &mut SplitWhitespace<'_>) -> CommandResult {
