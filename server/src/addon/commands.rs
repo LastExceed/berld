@@ -6,7 +6,8 @@ use crate::server::player::Player;
 use crate::server::Server;
 use crate::server::utils::give_xp;
 
-type CommandFuture<'a> = Pin<Box<dyn Future<Output=()> + Send + 'a>>;
+type CommandFuture<'a> = Pin<Box<dyn Future<Output=CommandResult> + Send + 'a>>;
+type CommandResult = Result<(), &'static str>;
 
 pub struct CommandManager {
 	commands: HashMap<&'static str, Box<dyn ObjectSafeCommand>>
@@ -26,11 +27,22 @@ impl CommandManager {
 			return false;
 		}
 
-		text[1..]
+		let result = text[1..]
 			.split_whitespace()
 			.next()
-			.and_then(|frag| self.commands.get(frag))
-			.map(async move |command| command.get_execution_future(server, caller).await);
+			.ok_or("no command specified")
+			.and_then(|frag| self.commands.get(frag).ok_or("unknown command"));
+//			.and_then(|command| command.get_execution_future(server, caller).await)
+//			.map_err(async move |error| caller.notify(error).await)
+
+		let result = match result {//unfortunately mapping functions dont support async/await, so we need to fallback to `match`
+			Ok(command) => command.get_execution_future(server, caller).await,
+			Err(e) => Err(e)
+		};
+
+		if let Err(error) = result {
+			caller.notify(error).await;
+		}
 
 		true
 	}
@@ -39,7 +51,7 @@ impl CommandManager {
 pub trait Command {
 	const ADMIN_ONLY: bool;
 
-	fn execute<'fut>(&'fut self, server: &'fut Server, caller: &'fut Player) -> impl Future<Output=()> + Send + 'fut;//if you see an error here, ignore it -> https://github.com/intellij-rust/intellij-rust/issues/10216
+	fn execute<'fut>(&'fut self, server: &'fut Server, caller: &'fut Player) -> impl Future<Output=CommandResult> + Send + 'fut;//if you see an error here, ignore it -> https://github.com/intellij-rust/intellij-rust/issues/10216
 }
 
 //neither associated constants nor async functions are object safe, so we need a proxy for both
@@ -65,7 +77,9 @@ struct Xp;
 impl Command for Xp {
 	const ADMIN_ONLY: bool = false;
 
-	async fn execute(&self, _server: &Server, caller: &Player) {
+	async fn execute(&self, _server: &Server, caller: &Player) -> CommandResult {
 		give_xp(caller, 42).await;
+
+		Ok(())
 	}
 }
