@@ -111,6 +111,7 @@ impl Server {
 
 		self.announce(format!("[-] {}", new_player_arc.character.read().await.name)).await;
 		self.addons.anti_cheat.on_leave(&new_player_arc).await;
+		self.addons.command_manager.on_leave(&new_player_arc).await;
 
 		Ok(())
 	}

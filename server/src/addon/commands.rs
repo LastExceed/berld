@@ -1,11 +1,16 @@
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
+use std::fs;
 use std::future::Future;
+use std::io::ErrorKind::NotFound;
 use std::pin::Pin;
 use std::str::SplitWhitespace;
 
+use boolinator::Boolinator;
 use tap::Tap;
+use tokio::sync::RwLock;
 
 use protocol::packet::ChatMessageFromClient;
+use protocol::packet::common::CreatureId;
 
 use crate::server::player::Player;
 use crate::server::Server;
@@ -16,16 +21,33 @@ pub type CommandResult = Result<(), &'static str>;
 
 
 pub struct CommandManager {
-	commands: HashMap<&'static str, Box<dyn ObjectSafeCommand>>
+	commands: HashMap<&'static str, Box<dyn ObjectSafeCommand>>,
+	admins: RwLock<HashSet<CreatureId>>,
+	admin_password: String
 }
 
 
 impl CommandManager {
 	const PREFIX: char = '/';
+	const FILE_PATH: &'static str = "admin_password.txt";
 
 	pub fn new() -> Self {
+		let admin_password = match fs::read_to_string(Self::FILE_PATH) {
+			Ok(content) => content,
+
+			Err(error) if error.kind() == NotFound => {
+				"change-me"
+					.tap(|content| fs::write(Self::FILE_PATH, content).unwrap())
+					.to_string()
+			}
+
+			Err(error) => panic!("failed to load {} - {}", Self::FILE_PATH, error)
+		};
+
 		Self {
-			commands: HashMap::new()
+			commands: HashMap::new(),
+			admins: RwLock::new(HashSet::new()),
+			admin_password
 		}.tap_mut(|x|x.register(Xp))
 	}
 
@@ -47,6 +69,13 @@ impl CommandManager {
 		is_command
 	}
 
+	pub async fn on_leave(&self, player: &Player) {
+		self.admins
+			.write()
+			.await
+			.remove(&player.id);
+	}
+
 	async fn handle_command(&self, server: &Server, caller: &Player, text: &str) -> CommandResult {
 		let mut fragments = text[1..].split_whitespace();
 
@@ -54,20 +83,25 @@ impl CommandManager {
 			.next()
 			.ok_or("no command specified")?;
 
-		//implementing /help as a regular command struct would effectively require inserting a reference to the command map into itself
-		if command_literal == "help" {
-			self.on_help(caller).await;
+		match command_literal {
+			//implementing these as regular command structs would effectively require inserting a reference to the command map into itself
+			"help" => self.on_help(caller).await,
+			"login" => self.attempt_login(caller, &mut fragments).await,
+			_ => {
+				let command = self.commands
+					.get(command_literal)
+					.ok_or("unknown command")?;
 
-			return Ok(());
+				if command.get_admin_only() && !self.admins.read().await.contains(&caller.id) {
+					return Err("no permission");
+				}
+
+				command.get_execution_future(server, caller, &mut fragments).await
+			}
 		}
-
-		self.commands
-			.get(command_literal)
-			.ok_or("unknown command")?
-			.get_execution_future(server, caller, &mut fragments)
-			.await
 	}
-	async fn on_help(&self, caller: &Player) {
+
+	async fn on_help(&self, caller: &Player) -> CommandResult {
 		let mut message = String::new();
 		message.push(Self::PREFIX);
 		message.push_str("help");
@@ -79,6 +113,21 @@ impl CommandManager {
 		}
 
 		caller.notify(message).await;
+
+		Ok(())
+	}
+
+	async fn attempt_login(&self, caller: &Player, params: &mut SplitWhitespace<'_>) -> CommandResult {
+		params
+			.next()
+			.ok_or("no password specified")?
+			.eq(&self.admin_password)
+			.ok_or("wrong password")?;
+
+		self.admins.write().await.insert(caller.id);
+		caller.notify("login successful").await;
+
+		Ok(())
 	}
 }
 
