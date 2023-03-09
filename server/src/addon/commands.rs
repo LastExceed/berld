@@ -5,6 +5,8 @@ use std::str::SplitWhitespace;
 
 use tap::Tap;
 
+use protocol::packet::ChatMessageFromClient;
+
 use crate::server::player::Player;
 use crate::server::Server;
 use crate::server::utils::give_xp;
@@ -19,6 +21,8 @@ pub struct CommandManager {
 
 
 impl CommandManager {
+	const PREFIX: char = '/';
+
 	pub fn new() -> Self {
 		Self {
 			commands: HashMap::new()
@@ -29,34 +33,52 @@ impl CommandManager {
 		self.commands.insert(C::LITERAL, Box::new(command));
 	}
 
-	pub async fn on_chat_message(&self, server: &Server, caller: &Player, text: &str) -> bool {
-		if !text.starts_with('/') {
-			return false;
+	pub async fn on_chat_message(&self, server: &Server, caller: &Player, packet: &ChatMessageFromClient) -> bool {
+		let is_command = packet.text.starts_with(Self::PREFIX);
+
+		if is_command {
+			let result = self.handle_command(server, caller, &packet.text).await;
+
+			if let Err(error) = result {
+				caller.notify(error).await;
+			}
 		}
 
+		is_command
+	}
+
+	async fn handle_command(&self, server: &Server, caller: &Player, text: &str) -> CommandResult {
 		let mut fragments = text[1..].split_whitespace();
 
-		let result = fragments
+		let command_literal = fragments
 			.next()
-			.ok_or("no command specified")
-			.and_then(|frag| {
-				self.commands
-					.get(frag)
-					.ok_or("unknown command")
-			});
-//			.and_then(|command| command.get_execution_future(server, caller).await)
-//			.map_err(async move |error| caller.notify(error).await)
+			.ok_or("no command specified")?;
 
-		let result = match result {//unfortunately mapping functions dont support async/await, so we need to fallback to matching
-			Ok(command) => command.get_execution_future(server, caller, &mut fragments).await,
-			Err(e) => Err(e)
-		};
+		//implementing /help as a regular command struct would effectively require inserting a reference to the command map into itself
+		if command_literal == "help" {
+			self.on_help(caller).await;
 
-		if let Err(error) = result {
-			caller.notify(error).await;
+			return Ok(());
 		}
 
-		true
+		self.commands
+			.get(command_literal)
+			.ok_or("unknown command")?
+			.get_execution_future(server, caller, &mut fragments)
+			.await
+	}
+	async fn on_help(&self, caller: &Player) {
+		let mut message = String::new();
+		message.push(Self::PREFIX);
+		message.push_str("help");
+
+		for command_literal in self.commands.keys() {
+			message.push(' ');
+			message.push(Self::PREFIX);
+			message.push_str(command_literal);
+		}
+
+		caller.notify(message).await;
 	}
 }
 
