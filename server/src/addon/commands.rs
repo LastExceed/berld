@@ -34,8 +34,6 @@ impl CommandManager {
 			return false;
 		}
 
-//		let mut fragments: Vec<_> = text[1..].split_whitespace()
-//			.map(|fragment| fragment.to_string()).collect(); //todo: figure out how to pass fragments by refer
 		let mut fragments = text[1..].split_whitespace();
 
 		let result = fragments
@@ -49,7 +47,7 @@ impl CommandManager {
 //			.and_then(|command| command.get_execution_future(server, caller).await)
 //			.map_err(async move |error| caller.notify(error).await)
 
-		let result = match result {//unfortunately mapping functions dont support async/await, so we need to fallback to `match`
+		let result = match result {//unfortunately mapping functions dont support async/await, so we need to fallback to matching
 			Ok(command) => command.get_execution_future(server, caller, &mut fragments).await,
 			Err(e) => Err(e)
 		};
