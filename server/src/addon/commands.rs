@@ -106,7 +106,18 @@ impl CommandManager {
 		message.push(Self::PREFIX);
 		message.push_str("help");
 
-		for command_literal in self.commands.keys() {
+		let caller_is_admin = self.admins.read().await.contains(&caller.id);
+		let literals = self.commands
+			.iter()
+			.filter_map(|(literal, command)| {
+				if command.get_admin_only() && !caller_is_admin {
+					return None;
+				}
+
+				Some(literal)
+			});
+
+		for command_literal in literals {
 			message.push(' ');
 			message.push(Self::PREFIX);
 			message.push_str(command_literal);
