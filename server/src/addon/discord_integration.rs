@@ -1,5 +1,6 @@
 use std::fs;
 use std::mem::transmute;
+
 use serenity::async_trait;
 use serenity::model::channel::Message;
 use serenity::model::gateway::Ready;
@@ -7,8 +8,10 @@ use serenity::model::prelude::ChannelId;
 use serenity::prelude::*;
 use tokio::sync::mpsc;
 use tokio::sync::mpsc::{Receiver, Sender};
+
 use protocol::packet::ChatMessageFromServer;
 use protocol::packet::common::CreatureId;
+
 use crate::server::Server;
 
 //todo: this entire file is horrible, partly because serenity is
@@ -20,6 +23,8 @@ pub struct DiscordIntegration {
 }
 
 impl DiscordIntegration {
+	const FILE_PATH: &'static str = "discord_bot_token.txt";
+
 	pub fn new() -> Self {
 		let (tx, rx) = mpsc::channel(4);
 
@@ -27,9 +32,9 @@ impl DiscordIntegration {
 	}
 
 	pub async fn run(&self, server: &Server) {
-		let Ok(token) = fs::read_to_string("discord_bot_token") else {
-			fs::write("discord_bot_token", "insert token here").unwrap();
-			panic!("no discord bot token found");
+		let Ok(token) = fs::read_to_string(Self::FILE_PATH) else {
+			fs::write(Self::FILE_PATH, "insert token here").unwrap();
+			panic!("{} not found, created dummy file", Self::FILE_PATH);
 		};
 		let rx = self.rx.lock().unwrap().take().unwrap();
 
