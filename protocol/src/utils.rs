@@ -32,7 +32,7 @@ pub fn power_of(level: i32) -> i32 {
 }
 
 pub fn maximum_experience_of(level: i32) -> i32 {
-	1050 - 1000 * something(level as f32) as i32
+	(1050.0 - 1000.0 * something(level as f32)) as i32
 }
 
 pub fn sound_position_of(position: Point3<i64>) -> Point3<f32> { //todo: move to SoundEffect ?
