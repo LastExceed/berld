@@ -40,7 +40,7 @@ pub mod utils;
 
 pub struct Server {
 	id_pool: RwLock<CreatureIdPool>,
-	players: RwLock<Vec<Arc<Player>>>,
+	pub players: RwLock<Vec<Arc<Player>>>,
 	drops: RwLock<HashMap<Point2<i32>, Vec<Drop>>>,
 	addons: Addons
 }

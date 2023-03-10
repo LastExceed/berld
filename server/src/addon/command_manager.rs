@@ -12,7 +12,7 @@ use tokio::sync::RwLock;
 use protocol::packet::ChatMessageFromClient;
 use protocol::packet::common::CreatureId;
 
-use crate::addon::command_manager::commands::{Warp, Xp};
+use crate::addon::command_manager::commands::*;
 use crate::server::player::Player;
 use crate::server::Server;
 
@@ -51,7 +51,10 @@ impl CommandManager {
 			admins: RwLock::new(HashSet::new()),
 			admin_password
 		}.tap_mut(|cm| {
+			cm.register(Who);
 			cm.register(Xp);
+			cm.register(Level);
+			cm.register(Countdown);
 			cm.register(Warp::new())
 		})
 	}
