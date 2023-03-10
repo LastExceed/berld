@@ -32,11 +32,11 @@ impl Command for Xp {
 }
 
 
-pub struct Warpgate {
+pub struct Warp {
 	locations: HashMap<String, Point3<i64>>
 }
 
-impl Warpgate {
+impl Warp {
 	const FILE_PATH: &'static str = "warps.csv";
 
 	pub fn new() -> Self {//todo: error handling (not that important, we want panics here anyway)
@@ -74,7 +74,7 @@ impl Warpgate {
 	}
 }
 
-impl Command for Warpgate {
+impl Command for Warp {
 	const LITERAL: &'static str = "warp";
 	const ADMIN_ONLY: bool = false;
 
