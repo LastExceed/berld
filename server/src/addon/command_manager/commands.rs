@@ -10,6 +10,7 @@ mod who;
 mod gear;
 mod kick;
 mod player;
+mod tp;
 
 pub struct Who;
 pub struct Player;
@@ -26,3 +27,5 @@ pub struct Warp {
 pub struct Gear;
 
 pub struct Kick;
+
+pub struct Tp;

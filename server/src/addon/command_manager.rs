@@ -60,6 +60,7 @@ impl CommandManager {
 			cm.register(Warp::new());
 			cm.register(Gear);
 			cm.register(Kick);
+			cm.register(Tp);
 		})
 	}
 
