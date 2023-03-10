@@ -9,8 +9,10 @@ mod countdown;
 mod who;
 mod gear;
 mod kick;
+mod player;
 
 pub struct Who;
+pub struct Player;
 
 pub struct Xp;
 pub struct Level;
