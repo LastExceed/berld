@@ -12,16 +12,18 @@ use tokio::sync::RwLock;
 use protocol::packet::ChatMessageFromClient;
 use protocol::packet::common::CreatureId;
 
+use crate::addon::command_manager::commands::{Warpgate, Xp};
 use crate::server::player::Player;
 use crate::server::Server;
-use crate::server::utils::give_xp;
+
+mod commands;
 
 type CommandFuture<'a> = Pin<Box<dyn Future<Output=CommandResult> + Send + 'a>>;
 pub type CommandResult = Result<(), &'static str>;
 
 
 pub struct CommandManager {
-	commands: HashMap<&'static str, Box<dyn ObjectSafeCommand>>,
+	commands: HashMap<&'static str, Box<dyn CommandProxy>>,
 	admins: RwLock<HashSet<CreatureId>>,
 	admin_password: String
 }
@@ -48,7 +50,10 @@ impl CommandManager {
 			commands: HashMap::new(),
 			admins: RwLock::new(HashSet::new()),
 			admin_password
-		}.tap_mut(|x|x.register(Xp))
+		}.tap_mut(|cm| {
+			cm.register(Xp);
+			cm.register(Warpgate::new())
+		})
 	}
 
 	pub fn register<C: Command + 'static>(&mut self, command: C) {//todo: can the lifetime be relaxed?
@@ -149,39 +154,20 @@ pub trait Command: Send + Sync {
 	fn execute<'fut>(&'fut self, server: &'fut Server, caller: &'fut Player, params: &'fut mut SplitWhitespace<'fut>) -> impl Future<Output=CommandResult> + Send + 'fut;//if you see an error here, ignore it -> https://github.com/intellij-rust/intellij-rust/issues/10216
 }
 
-//neither associated constants nor async functions are object safe, so we need a proxy for both
-trait ObjectSafeCommand: Send + Sync {//todo: Sync bound is only because of discord spaghetti {
+
+//`Command` isn't object safe so we need a proxy
+trait CommandProxy: Send + Sync {//todo: Sync bound is only because of discord spaghetti {
 	fn get_admin_only(&self) -> bool;
 
 	fn get_execution_future<'fut>(&'fut self, server: &'fut Server, caller: &'fut Player, params: &'fut mut SplitWhitespace<'fut>) -> CommandFuture<'fut>;
 }
 
-impl<T: Command> ObjectSafeCommand for T {
+impl<T: Command> CommandProxy for T {
 	fn get_admin_only(&self) -> bool {
 		T::ADMIN_ONLY
 	}
 
 	fn get_execution_future<'fut>(&'fut self, server: &'fut Server, caller: &'fut Player, params: &'fut mut SplitWhitespace<'fut>) -> CommandFuture<'fut> {
 		Box::pin(self.execute(server, caller, params))
-	}
-}
-
-
-struct Xp;
-
-impl Command for Xp {
-	const LITERAL: &'static str = "xp";
-	const ADMIN_ONLY: bool = false;
-
-	async fn execute(&self, _server: &Server, caller: &Player, params: &mut SplitWhitespace<'_>) -> CommandResult {
-		let amount: i32 = params
-			.next()
-			.ok_or("no amount specified")?
-			.parse()
-			.map_err(|_| "invalid amount specified")?;
-
-		give_xp(caller, amount).await;
-
-		Ok(())
 	}
 }

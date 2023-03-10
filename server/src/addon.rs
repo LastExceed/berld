@@ -9,9 +9,8 @@ use protocol::packet::creature_update::CreatureFlag;
 
 use crate::addon::anti_cheat::AntiCheat;
 use crate::addon::balancing::AirTimeTracker;
-use crate::addon::commands::CommandManager;
+use crate::addon::command_manager::CommandManager;
 use crate::addon::discord_integration::DiscordIntegration;
-use crate::addon::warps::Warpgate;
 use crate::server::creature::Creature;
 use crate::server::Server;
 
@@ -19,8 +18,7 @@ pub mod anti_cheat;
 pub mod traffic_filter;
 pub mod balancing;
 pub mod discord_integration;
-pub mod warps;
-pub mod commands;
+pub mod command_manager;
 
 pub struct Addons {
 	pub anti_cheat: AntiCheat,
@@ -36,7 +34,6 @@ impl Addons {
 			discord_integration: DiscordIntegration::new(),
 			air_time_tracker: AirTimeTracker::new(),
 			command_manager: CommandManager::new()
-				.tap_mut(|cm| cm.register(Warpgate::new()))
 		}
 	}
 }

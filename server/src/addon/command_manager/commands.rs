@@ -2,15 +2,35 @@ use std::collections::HashMap;
 use std::fs;
 use std::io::ErrorKind::NotFound;
 use std::str::SplitWhitespace;
-use std::string::ToString;
 
 use tap::Tap;
 
 use protocol::nalgebra::Point3;
 
-use crate::addon::commands::{Command, CommandResult};
+use crate::addon::command_manager::{Command, CommandResult};
 use crate::server::player::Player;
 use crate::server::Server;
+use crate::server::utils::give_xp;
+
+pub struct Xp;
+
+impl Command for Xp {
+	const LITERAL: &'static str = "xp";
+	const ADMIN_ONLY: bool = false;
+
+	async fn execute(&self, _server: &Server, caller: &Player, params: &mut SplitWhitespace<'_>) -> CommandResult {
+		let amount: i32 = params
+			.next()
+			.ok_or("no amount specified")?
+			.parse()
+			.map_err(|_| "invalid amount specified")?;
+
+		give_xp(caller, amount).await;
+
+		Ok(())
+	}
+}
+
 
 pub struct Warpgate {
 	locations: HashMap<String, Point3<i64>>
@@ -59,15 +79,13 @@ impl Command for Warpgate {
 	const ADMIN_ONLY: bool = false;
 
 	async fn execute<'fut>(&'fut self, server: &'fut Server, caller: &'fut Player, params: &'fut mut SplitWhitespace<'fut>) -> CommandResult {
-		let location_name =
-			params
-				.next()
-				.ok_or("no destination specified")?;
+		let location_name = params
+			.next()
+			.ok_or("no destination specified")?;
 
-		let coordinates =
-			self.locations
-				.get(location_name)
-				.ok_or("unkown destination")?;
+		let coordinates = self.locations
+			.get(location_name)
+			.ok_or("unkown destination")?;
 
 		server.teleport(caller, *coordinates).await;
 
