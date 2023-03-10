@@ -147,7 +147,7 @@ impl CommandManager {
 	}
 }
 
-pub trait Command: Send + Sync {
+pub trait Command: Send + Sync {//todo: move to commands.rs ?
 	const LITERAL: &'static str;
 	const ADMIN_ONLY: bool;
 
