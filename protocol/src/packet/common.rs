@@ -172,7 +172,7 @@ pub enum Race {
 }
 
 #[repr(C)]
-#[derive(Debug, PartialEq, Eq, Clone)]
+#[derive(Debug, PartialEq, Eq, Clone, Default)]
 pub struct Item {
 	pub kind: Kind,
 	//pad 2 (ephemeral)

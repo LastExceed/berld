@@ -7,6 +7,7 @@ mod warp;
 mod level;
 mod countdown;
 mod who;
+mod gear;
 
 pub struct Who;
 
@@ -18,3 +19,5 @@ pub struct Countdown;
 pub struct Warp {
 	locations: HashMap<String, Point3<i64>>
 }
+
+pub struct Gear;

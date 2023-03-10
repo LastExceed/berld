@@ -55,7 +55,8 @@ impl CommandManager {
 			cm.register(Xp);
 			cm.register(Level);
 			cm.register(Countdown);
-			cm.register(Warp::new())
+			cm.register(Warp::new());
+			cm.register(Gear);
 		})
 	}
 
