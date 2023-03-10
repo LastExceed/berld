@@ -1,7 +1,6 @@
 use std::intrinsics::transmute;
 use std::time::Duration;
 
-use tap::Tap;
 use tokio::time::sleep;
 
 use protocol::packet::{CreatureUpdate, IngameDatetime};
