@@ -17,6 +17,7 @@ use crate::server::player::Player;
 use crate::server::Server;
 
 mod commands;
+mod utils;
 
 type CommandFuture<'a> = Pin<Box<dyn Future<Output=CommandResult> + Send + 'a>>;
 pub type CommandResult = Result<(), &'static str>;
@@ -57,6 +58,7 @@ impl CommandManager {
 			cm.register(Countdown);
 			cm.register(Warp::new());
 			cm.register(Gear);
+			cm.register(Kick);
 		})
 	}
 

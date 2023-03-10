@@ -8,6 +8,7 @@ mod level;
 mod countdown;
 mod who;
 mod gear;
+mod kick;
 
 pub struct Who;
 
@@ -21,3 +22,5 @@ pub struct Warp {
 }
 
 pub struct Gear;
+
+pub struct Kick;
