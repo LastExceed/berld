@@ -16,7 +16,7 @@ impl HandlePacket<ChatMessageFromClient> for Server {
 			return;
 		}
 
-		self.addons.discord_integration.post(format!("**{}:** {}", character_guard.name, packet.text)).await;
+		self.addons.discord_integration.post(&format!("**{}:** {}", character_guard.name, packet.text)).await;
 
 		self.broadcast(&packet.into_reverse(source.id), None).await;
 	}

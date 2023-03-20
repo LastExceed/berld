@@ -20,7 +20,7 @@ impl Server {
 		let text = text.into();//todo: is there a way to prevent this boilerplate?
 
 		white_ln!("{}", text);
-		self.addons.discord_integration.post(format!("*{text}*")).await;
+		self.addons.discord_integration.post(&format!("*{text}*")).await;
 		self.broadcast(&ChatMessageFromServer {
 			source: CreatureId(0),
 			text

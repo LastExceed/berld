@@ -60,7 +60,7 @@ impl Server {
 
 		let listener = TcpListener::bind("0.0.0.0:12345").await.expect("unable to bind listening socket");
 
-		self.addons.discord_integration.run(&self).await;
+		self.addons.discord_integration.run(&self);
 		freeze_time(&self);
 
 		loop {
