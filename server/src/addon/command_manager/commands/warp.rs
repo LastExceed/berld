@@ -9,6 +9,7 @@ use protocol::nalgebra::Point3;
 
 use crate::addon::command_manager::{Command, CommandResult};
 use crate::addon::command_manager::commands::Warp;
+use crate::addon::command_manager::utils::INGAME_ONLY;
 use crate::server::player::Player;
 use crate::server::Server;
 
@@ -54,7 +55,9 @@ impl Command for Warp {
 	const LITERAL: &'static str = "warp";
 	const ADMIN_ONLY: bool = false;
 
-	async fn execute<'fut>(&'fut self, server: &'fut Server, caller: &'fut Player, params: &'fut mut SplitWhitespace<'fut>) -> CommandResult {
+	async fn execute<'fut>(&'fut self, server: &'fut Server, caller: Option<&'fut Player>, params: &'fut mut SplitWhitespace<'fut>) -> CommandResult {//todo: lifetime redundant?
+		let caller = caller.ok_or(INGAME_ONLY)?;
+
 		let location_name = params
 			.next()
 			.ok_or("no destination specified")?;
@@ -65,6 +68,6 @@ impl Command for Warp {
 
 		server.teleport(caller, *coordinates).await;
 
-		Ok(())
+		Ok(None)
 	}
 }

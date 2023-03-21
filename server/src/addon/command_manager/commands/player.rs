@@ -1,17 +1,15 @@
 use std::str::SplitWhitespace;
 use protocol::utils::constants::combat_classes::*;
-use protocol::utils::constants::CombatClass;
 use crate::addon::command_manager::{Command, CommandResult};
 use crate::addon::command_manager::commands::Player as PlayerCommand;
 use crate::server::player::Player;
 use crate::server::Server;
-use crate::server::utils::give_xp;
 
 impl Command for PlayerCommand {
 	const LITERAL: &'static str = "player";
 	const ADMIN_ONLY: bool = false;
 
-	async fn execute(&self, server: &Server, caller: &Player, params: &mut SplitWhitespace<'_>) -> CommandResult {
+	async fn execute(&self, server: &Server, _caller: Option<&Player>, params: &mut SplitWhitespace<'_>) -> CommandResult {
 		let player = server
 			.find_player(params.next().ok_or("no target specified")?).await
 			.ok_or("target not found")?;
@@ -43,8 +41,6 @@ mana: {}/{} ({} charged)
 			(character.mana * 100.0) as i32, 100, (character.mana_charge * 100.0) as i32
 		);
 
-		caller.notify(display).await;
-
-		Ok(())
+		Ok(Some(display))
 	}
 }

@@ -8,7 +8,7 @@ impl Command for Kick {
 	const LITERAL: &'static str = "kick";
 	const ADMIN_ONLY: bool = true;
 
-	async fn execute(&self, server: &Server, _caller: &Player, params: &mut SplitWhitespace<'_>) -> CommandResult {
+	async fn execute(&self, server: &Server, _caller: Option<&Player>, params: &mut SplitWhitespace<'_>) -> CommandResult {
 		let target_query = params.next().ok_or("no target specified")?;
 		let target = server
 			.find_player(target_query).await
@@ -20,6 +20,6 @@ impl Command for Kick {
 
 		server.kick(&target, reason).await;
 
-		Ok(())
+		Ok(None)
 	}
 }

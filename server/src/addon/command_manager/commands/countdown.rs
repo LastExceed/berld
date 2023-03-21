@@ -13,7 +13,7 @@ impl Command for Countdown {
 	const LITERAL: &'static str = "countdown";
 	const ADMIN_ONLY: bool = false;
 
-	async fn execute<'fut>(&'fut self, server: &'fut Server, _caller: &'fut Player, _params: &'fut mut SplitWhitespace<'fut>) -> CommandResult {
+	async fn execute<'fut>(&'fut self, server: &'fut Server, _caller: Option<&'fut Player>, _params: &'fut mut SplitWhitespace<'fut>) -> CommandResult {
 		let server_static: &'static Server = unsafe { transmute(server) };//todo: scoped task
 
 		tokio::spawn(async move {
@@ -29,6 +29,6 @@ impl Command for Countdown {
 			server_static.announce("go!").await;
 		});
 
-		Ok(())
+		Ok(None)
 	}
 }

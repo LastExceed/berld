@@ -11,7 +11,7 @@ impl Command for Who {
 	const LITERAL: &'static str = "who";
 	const ADMIN_ONLY: bool = false;
 
-	async fn execute(&self, server: &Server, caller: &Player, _params: &mut SplitWhitespace<'_>) -> CommandResult {
+	async fn execute(&self, server: &Server, _caller: Option<&Player>, _params: &mut SplitWhitespace<'_>) -> CommandResult {
 		let message = join_all(
 			server.players
 				.read().await
@@ -26,8 +26,6 @@ impl Command for Who {
 				})
 		).await.join(", ");
 
-		caller.notify(message).await;
-
-		Ok(())
+		Ok(Some(message))
 	}
 }

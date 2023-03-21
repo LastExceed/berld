@@ -43,7 +43,19 @@ impl DiscordIntegration {
 		tokio::spawn(async move {
 			loop {
 				match shard.next_event().await {
-					Ok(MessageCreate(message)) if !message.author.bot => {
+					Ok(MessageCreate(message)) if message.channel_id == Id::new(1067011357129580667) && !message.author.bot => {
+						let is_command = server_static.addons.command_manager.on_message(
+							server_static,
+							None,
+							&message.content,
+							'.',
+							|response| async move { server_static.addons.discord_integration.post(&response).await }//todo: oof
+						).await;
+
+						if is_command {
+							continue;
+						}
+
 						server_static.broadcast(&ChatMessageFromServer {//dont use server.announce() as that would cause an echo
 							source: CreatureId(0),
 							text: format!("<{}> {}", message.author.name, message.content)

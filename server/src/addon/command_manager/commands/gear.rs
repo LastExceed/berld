@@ -12,6 +12,7 @@ use protocol::utils::constants::rarity::LEGENDARY;
 
 use crate::addon::command_manager::{Command, CommandResult};
 use crate::addon::command_manager::commands::Gear;
+use crate::addon::command_manager::utils::INGAME_ONLY;
 use crate::server::player::Player;
 use crate::server::Server;
 
@@ -19,7 +20,8 @@ impl Command for Gear {
 	const LITERAL: &'static str = "gear";
 	const ADMIN_ONLY: bool = false;
 
-	async fn execute(&self, _server: &Server, caller: &Player, _params: &mut SplitWhitespace<'_>) -> CommandResult {
+	async fn execute(&self, _server: &Server, caller: Option<&Player>, _params: &mut SplitWhitespace<'_>) -> CommandResult {
+		let caller = caller.ok_or(INGAME_ONLY)?;
 		let character = caller.character.read().await;
 
 		let world_update = WorldUpdate {
@@ -34,7 +36,7 @@ impl Command for Gear {
 
 		caller.send_ignoring(&world_update).await;
 
-		Ok(())
+		Ok(Option::None)
 	}
 }
 

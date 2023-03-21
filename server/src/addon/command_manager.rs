@@ -9,10 +9,10 @@ use boolinator::Boolinator;
 use tap::Tap;
 use tokio::sync::RwLock;
 
-use protocol::packet::ChatMessageFromClient;
 use protocol::packet::common::CreatureId;
 
 use crate::addon::command_manager::commands::*;
+use crate::addon::command_manager::utils::INGAME_ONLY;
 use crate::server::player::Player;
 use crate::server::Server;
 
@@ -20,7 +20,7 @@ mod commands;
 mod utils;
 
 type CommandFuture<'a> = Pin<Box<dyn Future<Output=CommandResult> + Send + 'a>>;
-pub type CommandResult = Result<(), &'static str>;
+pub type CommandResult = Result<Option<String>, &'static str>;
 
 
 pub struct CommandManager {
@@ -31,7 +31,6 @@ pub struct CommandManager {
 
 
 impl CommandManager {
-	const PREFIX: char = '/';
 	const FILE_PATH: &'static str = "admin_password.txt";
 
 	pub fn new() -> Self {
@@ -68,14 +67,23 @@ impl CommandManager {
 		self.commands.insert(C::LITERAL, Box::new(command));
 	}
 
-	pub async fn on_chat_message(&self, server: &Server, caller: &Player, packet: &ChatMessageFromClient) -> bool {
-		let is_command = packet.text.starts_with(Self::PREFIX);
+	pub async fn on_message<Fut: Future<Output=()>, Cb: FnOnce(String) -> Fut>(//todo: figure out lifetimes to optimize this to &str
+		&self,
+		server: &Server,
+		caller: Option<&Player>,
+		text: &str,
+		command_prefix: char,
+		callback: Cb
+	) -> bool {
+		let is_command = text.starts_with(command_prefix);
 
 		if is_command {
-			let result = self.handle_command(server, caller, &packet.text).await;
-
-			if let Err(error) = result {
-				caller.notify(error).await;
+			match self.handle_command(server, caller, text).await {
+				Ok(Some(response)) => {
+					callback(response).await;
+				}
+				Ok(None) => {}
+				Err(error) => { callback(error.to_string()).await }
 			}
 		}
 
@@ -89,23 +97,28 @@ impl CommandManager {
 			.remove(&player.id);
 	}
 
-	async fn handle_command(&self, server: &Server, caller: &Player, text: &str) -> CommandResult {
+	async fn handle_command(&self, server: &Server, caller: Option<&Player>, text: &str) -> CommandResult {
 		let mut fragments = text[1..].split_whitespace();
 
 		let command_literal = fragments
 			.next()
 			.ok_or("no command specified")?;
 
+		let admin = match caller {
+			Some(player) => { self.admins.read().await.contains(&player.id) }
+			None => false
+		};
+
 		match command_literal {
 			//implementing these as regular command structs would effectively require inserting a reference to the command map into itself
-			"help" => self.on_help(caller).await,
+			"help" => self.on_help(admin).await,
 			"login" => self.attempt_login(caller, &mut fragments).await,
 			_ => {
 				let command = self.commands
 					.get(command_literal)
 					.ok_or("unknown command")?;
 
-				if command.get_admin_only() && !self.admins.read().await.contains(&caller.id) {
+				if command.get_admin_only() && !admin {
 					return Err("no permission");
 				}
 
@@ -114,34 +127,31 @@ impl CommandManager {
 		}
 	}
 
-	async fn on_help(&self, caller: &Player) -> CommandResult {
+	async fn on_help(&self, admin: bool) -> CommandResult {
 		let mut message = String::new();
-		message.push(Self::PREFIX);
 		message.push_str("help");
 
-		let caller_is_admin = self.admins.read().await.contains(&caller.id);
 		let literals = self.commands
 			.iter()
 			.filter_map(|(literal, command)| {
-				if command.get_admin_only() && !caller_is_admin {
+				if command.get_admin_only() && !admin {
 					return None;
 				}
 
 				Some(literal)
 			});
 
-		for command_literal in literals {
-			message.push(' ');
-			message.push(Self::PREFIX);
+		for command_literal in literals {//todo: there's probably a better way to do this
+			message.push_str(", ");
 			message.push_str(command_literal);
 		}
 
-		caller.notify(message).await;
-
-		Ok(())
+		Ok(Some(message))
 	}
 
-	async fn attempt_login(&self, caller: &Player, params: &mut SplitWhitespace<'_>) -> CommandResult {
+	async fn attempt_login(&self, caller: Option<&Player>, params: &mut SplitWhitespace<'_>) -> CommandResult {
+		let caller = caller.ok_or(INGAME_ONLY)?;
+
 		params
 			.next()
 			.ok_or("no password specified")?
@@ -149,9 +159,8 @@ impl CommandManager {
 			.ok_or("wrong password")?;
 
 		self.admins.write().await.insert(caller.id);
-		caller.notify("login successful").await;
 
-		Ok(())
+		Ok(Some("login successful".to_string()))
 	}
 }
 
@@ -159,7 +168,7 @@ pub trait Command: Send + Sync {//todo: move to commands.rs ?
 	const LITERAL: &'static str;
 	const ADMIN_ONLY: bool;
 
-	fn execute<'fut>(&'fut self, server: &'fut Server, caller: &'fut Player, params: &'fut mut SplitWhitespace<'fut>) -> impl Future<Output=CommandResult> + Send + 'fut;//if you see an error here, ignore it -> https://github.com/intellij-rust/intellij-rust/issues/10216
+	fn execute<'fut>(&'fut self, server: &'fut Server, caller: Option<&'fut Player>, params: &'fut mut SplitWhitespace<'fut>) -> impl Future<Output=CommandResult> + Send + 'fut;//if you see an error here, ignore it -> https://github.com/intellij-rust/intellij-rust/issues/10216
 }
 
 
@@ -167,7 +176,7 @@ pub trait Command: Send + Sync {//todo: move to commands.rs ?
 trait CommandProxy: Send + Sync {//todo: Sync bound is only because of discord spaghetti {
 	fn get_admin_only(&self) -> bool;
 
-	fn get_execution_future<'fut>(&'fut self, server: &'fut Server, caller: &'fut Player, params: &'fut mut SplitWhitespace<'fut>) -> CommandFuture<'fut>;
+	fn get_execution_future<'fut>(&'fut self, server: &'fut Server, caller: Option<&'fut Player>, params: &'fut mut SplitWhitespace<'fut>) -> CommandFuture<'fut>;
 }
 
 impl<T: Command> CommandProxy for T {
@@ -175,7 +184,7 @@ impl<T: Command> CommandProxy for T {
 		T::ADMIN_ONLY
 	}
 
-	fn get_execution_future<'fut>(&'fut self, server: &'fut Server, caller: &'fut Player, params: &'fut mut SplitWhitespace<'fut>) -> CommandFuture<'fut> {
+	fn get_execution_future<'fut>(&'fut self, server: &'fut Server, caller: Option<&'fut Player>, params: &'fut mut SplitWhitespace<'fut>) -> CommandFuture<'fut> {
 		Box::pin(self.execute(server, caller, params))
 	}
 }
