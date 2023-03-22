@@ -11,6 +11,7 @@ mod gear;
 mod kick;
 mod player;
 mod tp;
+mod test;
 
 pub struct Who;
 pub struct Player;
@@ -29,3 +30,5 @@ pub struct Gear;
 pub struct Kick;
 
 pub struct Tp;
+
+pub struct Test;

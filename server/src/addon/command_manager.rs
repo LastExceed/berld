@@ -60,6 +60,7 @@ impl CommandManager {
 			cm.register(Gear);
 			cm.register(Kick);
 			cm.register(Tp);
+			cm.register(Test);
 		})
 	}
 
