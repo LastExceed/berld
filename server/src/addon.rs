@@ -1,10 +1,14 @@
 use std::intrinsics::transmute;
 use std::time::Duration;
 
+use futures::future::join_all;
 use tokio::time::sleep;
 
-use protocol::packet::{CreatureUpdate, IngameDatetime};
+use protocol::packet::{CreatureUpdate, IngameDatetime, WorldUpdate};
 use protocol::packet::creature_update::CreatureFlag;
+use protocol::packet::world_update::Sound;
+use protocol::packet::world_update::sound::Kind::MenuSelect;
+use protocol::utils::sound_position_of;
 
 use crate::addon::anti_cheat::AntiCheat;
 use crate::addon::balancing::AirTimeTracker;
@@ -57,4 +61,20 @@ pub fn freeze_time(server: &Server) {
 			sleep(Duration::from_secs(6)).await;
 		}
 	});
+}
+
+impl Server {
+	pub async fn play_chat_sound(&self) {
+		let players = self.players.read().await;
+
+		//cant use broadcast as sound position is different for each player
+		join_all(players.iter().map(|player| async {
+			player.send_ignoring(&WorldUpdate::from(Sound {
+				position: sound_position_of(player.character.read().await.position),
+				kind: MenuSelect,
+				pitch: 2.0,
+				volume: 0.5,
+			})).await
+		})).await;
+	}
 }
