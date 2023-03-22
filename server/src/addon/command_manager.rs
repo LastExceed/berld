@@ -48,6 +48,7 @@ impl CommandManager {
 			admin_password
 		}.tap_mut(|cm| {
 			cm.register(Who);
+			cm.register(WhoIp);
 			cm.register(Player);
 			cm.register(Xp);
 			cm.register(Level);

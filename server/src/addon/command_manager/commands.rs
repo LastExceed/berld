@@ -14,6 +14,7 @@ mod tp;
 mod test;
 
 pub struct Who;
+pub struct WhoIp;
 pub struct Player;
 
 pub struct Xp;
