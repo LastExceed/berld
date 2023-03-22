@@ -18,6 +18,7 @@ pub struct Player {
 	pub id: CreatureId,
 	pub character: RwLock<Creature>,
 	writer: RwLock<BufWriter<OwnedWriteHalf>>,
+	pub admin: AtomicBool,
 	pub should_disconnect: AtomicBool,
 }
 
@@ -28,6 +29,7 @@ impl Player {
 			id,
 			character: RwLock::new(creature),
 			writer: RwLock::new(writer),
+			admin: AtomicBool::new(false),
 			should_disconnect: AtomicBool::new(false)
 		}
 	}

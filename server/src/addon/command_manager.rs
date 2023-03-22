@@ -1,15 +1,13 @@
-use std::collections::{HashMap, HashSet};
+use std::collections::HashMap;
 use std::fs;
 use std::future::Future;
 use std::io::ErrorKind::NotFound;
 use std::pin::Pin;
 use std::str::SplitWhitespace;
+use std::sync::atomic::Ordering::Relaxed;
 
 use boolinator::Boolinator;
 use tap::Tap;
-use tokio::sync::RwLock;
-
-use protocol::packet::common::CreatureId;
 
 use crate::addon::command_manager::commands::*;
 use crate::addon::command_manager::utils::INGAME_ONLY;
@@ -25,7 +23,6 @@ pub type CommandResult = Result<Option<String>, &'static str>;
 
 pub struct CommandManager {
 	commands: HashMap<&'static str, Box<dyn CommandProxy>>,
-	admins: RwLock<HashSet<CreatureId>>,
 	admin_password: String
 }
 
@@ -48,7 +45,6 @@ impl CommandManager {
 
 		Self {
 			commands: HashMap::new(),
-			admins: RwLock::new(HashSet::new()),
 			admin_password
 		}.tap_mut(|cm| {
 			cm.register(Who);
@@ -72,6 +68,7 @@ impl CommandManager {
 		&self,
 		server: &Server,
 		caller: Option<&Player>,
+		admin: bool,
 		text: &str,
 		command_prefix: char,
 		callback: Cb
@@ -79,7 +76,7 @@ impl CommandManager {
 		let is_command = text.starts_with(command_prefix);
 
 		if is_command {
-			match self.handle_command(server, caller, text).await {
+			match self.handle_command(server, caller, admin, text).await {
 				Ok(Some(response)) => {
 					callback(response).await;
 				}
@@ -91,24 +88,12 @@ impl CommandManager {
 		is_command
 	}
 
-	pub async fn on_leave(&self, player: &Player) {
-		self.admins
-			.write()
-			.await
-			.remove(&player.id);
-	}
-
-	async fn handle_command(&self, server: &Server, caller: Option<&Player>, text: &str) -> CommandResult {
+	async fn handle_command(&self, server: &Server, caller: Option<&Player>, admin: bool, text: &str) -> CommandResult {
 		let mut fragments = text[1..].split_whitespace();
 
 		let command_literal = fragments
 			.next()
 			.ok_or("no command specified")?;
-
-		let admin = match caller {
-			Some(player) => { self.admins.read().await.contains(&player.id) }
-			None => false
-		};
 
 		match command_literal {
 			//implementing these as regular command structs would effectively require inserting a reference to the command map into itself
@@ -159,7 +144,7 @@ impl CommandManager {
 			.eq(&self.admin_password)
 			.ok_or("wrong password")?;
 
-		self.admins.write().await.insert(caller.id);
+		caller.admin.store(true, Relaxed);
 
 		Ok(Some("login successful".to_string()))
 	}

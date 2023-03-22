@@ -12,7 +12,7 @@ impl HandlePacket<ChatMessageFromClient> for Server {
 		cyan!("{}: ", character_guard.name);
 		white_ln!("{}", packet.text);
 
-		if self.addons.command_manager.on_message(self, Some(source), &packet.text, '/', |message| { source.notify(message) }).await {
+		if self.addons.command_manager.on_message(self, Some(source), source.admin.load(Relaxed), &packet.text, '/', |message| { source.notify(message) }).await {
 			return;
 		}
 
