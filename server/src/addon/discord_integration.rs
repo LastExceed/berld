@@ -12,6 +12,9 @@ use protocol::packet::common::CreatureId;
 
 use crate::server::Server;
 
+const PUBLIC_CHANNEL_ID: u64 = 1067011357129580667;
+const ADMIN_CHANNEL_ID: u64 = 1088047136698011659;
+
 pub struct DiscordIntegration {
 	http: Client,
 	token: String
@@ -43,13 +46,20 @@ impl DiscordIntegration {
 		tokio::spawn(async move {
 			loop {
 				match shard.next_event().await {
-					Ok(MessageCreate(message)) if message.channel_id == Id::new(1067011357129580667) && !message.author.bot => {
+					Ok(MessageCreate(message)) if !message.author.bot => {
+						let admin = match message.channel_id.get() {
+							PUBLIC_CHANNEL_ID => false,
+							ADMIN_CHANNEL_ID => true,
+							_ => continue,
+						};
+
 						let is_command = server_static.addons.command_manager.on_message(
 							server_static,
 							None,
+							admin,
 							&message.content,
 							'.',
-							|response| async move { server_static.addons.discord_integration.post(&response).await }//todo: oof
+							|response| async move { server_static.addons.discord_integration.post(&response, admin).await }//todo: oof
 						).await;
 
 						if is_command {
@@ -76,8 +86,8 @@ impl DiscordIntegration {
 		});
 	}
 
-	pub async fn post(&self, message: &str) {
-		self.http.create_message(Id::new(1067011357129580667))
+	pub async fn post(&self, message: &str, admin: bool) {
+		self.http.create_message(Id::new(if admin { ADMIN_CHANNEL_ID } else { PUBLIC_CHANNEL_ID }))
 			.content(message)
 			.expect("setting content failed")
 			.await

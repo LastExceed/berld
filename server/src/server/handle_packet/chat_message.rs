@@ -1,3 +1,5 @@
+use std::sync::atomic::Ordering::Relaxed;
+
 use colour::{cyan, white_ln};
 
 use protocol::packet::ChatMessageFromClient;
@@ -16,7 +18,7 @@ impl HandlePacket<ChatMessageFromClient> for Server {
 			return;
 		}
 
-		self.addons.discord_integration.post(&format!("**{}:** {}", character_guard.name, packet.text)).await;
+		self.addons.discord_integration.post(&format!("**{}:** {}", character_guard.name, packet.text), false).await;
 
 		self.broadcast(&packet.into_reverse(source.id), None).await;
 		self.play_chat_sound().await;
