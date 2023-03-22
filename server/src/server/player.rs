@@ -1,3 +1,4 @@
+use std::net::SocketAddr;
 use std::sync::atomic::AtomicBool;
 
 use tokio::io;
@@ -13,6 +14,7 @@ use protocol::WriteCwData;
 use crate::server::creature::Creature;
 
 pub struct Player {
+	pub address: SocketAddr,
 	pub id: CreatureId,
 	pub character: RwLock<Creature>,
 	writer: RwLock<BufWriter<OwnedWriteHalf>>,
@@ -20,8 +22,9 @@ pub struct Player {
 }
 
 impl Player {
-	pub fn new(id: CreatureId, creature: Creature, writer: BufWriter<OwnedWriteHalf>) -> Self {
+	pub fn new(address: SocketAddr, id: CreatureId, creature: Creature, writer: BufWriter<OwnedWriteHalf>) -> Self {
 		Self {
+			address,
 			id,
 			character: RwLock::new(creature),
 			writer: RwLock::new(writer),

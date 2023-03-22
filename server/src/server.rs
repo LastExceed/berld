@@ -1,6 +1,7 @@
 use std::collections::HashMap;
 use std::io::ErrorKind::{InvalidData, InvalidInput};
 use std::mem::transmute;
+use std::net::SocketAddr;
 use std::ptr;
 use std::sync::Arc;
 use std::sync::atomic::Ordering;
@@ -64,36 +65,37 @@ impl Server {
 		freeze_time(&self);
 
 		loop {
-			let (stream, _) = listener.accept().await.unwrap();
+			let (stream, address) = listener.accept().await.unwrap();
 
 			let self_static: &'static Server = unsafe { transmute(&self) }; //todo: scoped task
 			tokio::spawn(async move {
-				if let Err(_) = self_static.handle_new_connection(stream).await {
+				if let Err(_) = self_static.handle_new_connection(stream, address).await {
 					//TODO: error logging
 				}
 			});
 		}
 	}
 
-	async fn handle_new_connection(&self, stream: TcpStream) -> io::Result<()> {
+	async fn handle_new_connection(&self, stream: TcpStream, address: SocketAddr) -> io::Result<()> {
 		stream.set_nodelay(true).unwrap();
 		let (mut reader, mut writer) = split_and_buffer(stream);
 
 		check_version(&mut reader, &mut writer).await?;
 
 		let assigned_id = self.id_pool.write().await.claim();
-		let result = self.handle_new_player(assigned_id, reader, writer).await;
+		let result = self.handle_new_player(assigned_id, reader, writer, address).await;
 		self.id_pool.write().await.free(assigned_id);
 		result
 	}
 
-	async fn handle_new_player(&self, assigned_id: CreatureId, mut reader: BufReader<OwnedReadHalf>, mut writer: BufWriter<OwnedWriteHalf>) -> io::Result<()> {
+	async fn handle_new_player(&self, assigned_id: CreatureId, mut reader: BufReader<OwnedReadHalf>, mut writer: BufWriter<OwnedWriteHalf>, address: SocketAddr) -> io::Result<()> {
 		writer.write_packet(&ConnectionAcceptance).await?;
 		write_abnormal_creature_update(&mut writer, assigned_id).await?;
 
 		let (full_creature_update, character) = read_character_data(&mut reader).await?;
 
 		let new_player = Player::new(
+			address,
 			assigned_id,
 			character,
 			writer,
@@ -111,7 +113,6 @@ impl Server {
 
 		self.announce(format!("[-] {}", new_player_arc.character.read().await.name)).await;
 		self.addons.anti_cheat.on_leave(&new_player_arc).await;
-		self.addons.command_manager.on_leave(&new_player_arc).await;
 
 		Ok(())
 	}
