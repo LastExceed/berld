@@ -52,11 +52,12 @@ pub(super) fn inspect_velocity(velocity: &Vector3<f32>, former_state: &Creature,
 	Ok(())
 }
 pub(super) fn inspect_acceleration(acceleration: &Vector3<f32>, former_state: &Creature, updated_state: &Creature, ac_data: &mut PlayerACData) -> anti_cheat::Result {
-	let limit_xy = Vector3::<f32>::new(80.0, 80.0, 0.0).magnitude() + 0.00001; //113,1370849898476; //todo: would epsilon suffice?
-	let actual_xy = acceleration.xy().magnitude();
-	if !updated_state.flags.get(CreatureFlag::Gliding) {
-		actual_xy.ensure_within(&(0.0..=limit_xy), "acceleration.horizontal")?;
-	}
+	//todo: investigate false positives
+//	let limit_xy = Vector3::<f32>::new(80.0, 80.0, 0.0).magnitude() + 0.00001; //113,1370849898476; //todo: would epsilon suffice?
+//	let actual_xy = acceleration.xy().magnitude();
+//	if !updated_state.flags.get(CreatureFlag::Gliding) {
+//		actual_xy.ensure_within(&(0.0..=limit_xy), "acceleration.horizontal")?;
+//	}
 	if updated_state.flags_physics.get(PhysicsFlag::Swimming) {
 		acceleration.z.ensure_within(&(-80.0..=80.0), "acceleration.vertical")
 	} else if updated_state.flags.get(CreatureFlag::Climbing) {
