@@ -505,8 +505,11 @@ pub(super) fn inspect_blocking_gauge(blocking_gauge: &f32, former_state: &Creatu
 	let blocking = blocking_via_shield || blocking_via_guardians_passive;
 
 	let max =
-		if blocking { former_state.blocking_gauge }
-		else        { 1.0 };
+		//in theory, one could legitimately achieve 100% blocking uptime server side + 99% recharge uptime client side
+		//by only blocking for 1ms every time packet construction snapshots the character state
+		if blocking {
+			former_state.blocking_gauge
+		} else { 1.0 };
 
 	blocking_gauge
 		.ensure_within(&(0.0..=max), "blocking_gauge") //todo: negative gauge glitch?
