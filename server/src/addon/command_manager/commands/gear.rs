@@ -100,7 +100,12 @@ fn create_items(occupation: Occupation, level: i16) -> Vec<Item> {
 		})
 		.collect_into(&mut items);
 
-	[Ring, Ring, Amulet, Weapon(Bracelet), Weapon(Bracelet)]
+	let mut accessories = vec![Ring, Ring, Amulet];
+	if occupation == Occupation::Mage {
+		accessories.push(Weapon(Bracelet));
+		accessories.push(Weapon(Bracelet));
+	}
+	accessories
 		.into_iter()
 		.flat_map(|kind| [Gold, Silver]
 			.map(|material|
