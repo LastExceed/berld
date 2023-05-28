@@ -1,5 +1,7 @@
 use std::str::SplitWhitespace;
+
 use protocol::utils::constants::combat_classes::*;
+
 use crate::addon::command_manager::{Command, CommandResult};
 use crate::addon::command_manager::commands::Player as PlayerCommand;
 use crate::server::player::Player;
@@ -17,26 +19,26 @@ impl Command for PlayerCommand {
 
 		//todo: impl display?
 		let class = match character.combat_class() {
-			BERSERKER  => "berserker",
-			GUARDIAN   => "guardian",
-			SNIPER     => "sniper",
-			SCOUT      => "scout",
-			FIRE_MAGE  => "fire mage",
-			WATER_MAGE => "water mage",
-			ASSASSIN   => "assassin",
-			NINJA      => "ninja",
-			_          => "unknown"
+			BERSERKER  => "Berserker",
+			GUARDIAN   => "Guardian",
+			SNIPER     => "Sniper",
+			SCOUT      => "Scout",
+			FIRE_MAGE  => "Fire Mage",
+			WATER_MAGE => "Water Mage",
+			ASSASSIN   => "Assassin",
+			NINJA      => "Ninja",
+			_          => "Unknown"
 		};
 
 		let display = format!(
 "---
 name: {} (#{})
-class: {} ({:?} -> {:?})
+class: {:?} ({})
 health: {}/{}
 mana: {}/{} ({} charged)
 ---",
 			character.name, player.id.0,
-			class, character.occupation, character.specialization,
+			character.occupation, class,
 			character.health as i32, character.maximum_health() as i32,
 			(character.mana * 100.0) as i32, 100, (character.mana_charge * 100.0) as i32
 		);
