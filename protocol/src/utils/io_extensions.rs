@@ -29,7 +29,7 @@ impl<Readable: AsyncRead + Unpin> ReadArbitrary for Readable {}
 impl<Writable: AsyncWrite + Unpin> WriteArbitrary for Writable {}
 
 
-pub trait ReadPacket: AsyncRead + Unpin + Sized {//todo: move to io extensions
+pub trait ReadPacket: AsyncRead + Unpin + Sized { //todo: move to io extensions
 	async fn read_packet<P: Packet>(&mut self) -> io::Result<P>
 		where
 			[(); size_of::<P>()]:,

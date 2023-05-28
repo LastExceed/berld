@@ -1,0 +1,9 @@
+use crate::generate_serialization_tests;
+
+generate_serialization_tests!(
+	IngameDatetime {
+		day: 0x12345678,
+		time: 0x11223344,
+	},
+	[0x78, 0x56, 0x34, 0x12, 0x44, 0x33, 0x22, 0x11]
+);

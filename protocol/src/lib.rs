@@ -21,8 +21,12 @@ use crate::utils::io_extensions::{ReadArbitrary, WriteArbitrary};
 
 pub mod packet;
 pub mod utils;
+#[cfg(test)]
+mod tests;
 
-pub trait Packet {
+pub trait Packet
+	//todo: where AsyncRead : ReadCwData<Self>
+{
 	const ID: packet::Id;//dedicated type ensures this can't be used in arithmetic operations
 }
 

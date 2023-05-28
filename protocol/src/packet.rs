@@ -81,16 +81,16 @@ pub struct CreatureUpdate {
 }
 
 #[repr(C)]
-#[derive(Debug, Clone, Default)]
+#[derive(Debug, Clone, Default, PartialEq, Eq)]
 pub struct MultiCreatureUpdate; //todo
 
-#[derive(Debug, Clone, Default)]
+#[derive(Debug, Clone, Default, PartialEq)]
 pub struct AirshipTraffic {
 	pub airships: Vec<Airship>
 }
 
 #[repr(C)]
-#[derive(Debug, Clone, Default)]
+#[derive(Debug, Clone, Default, PartialEq, Eq)]
 pub struct ServerTick;
 
 #[derive(Debug, Clone, Default)]
@@ -111,14 +111,14 @@ pub struct WorldUpdate {
 }
 
 #[repr(C)]
-#[derive(Debug, Clone, Default)]
+#[derive(Debug, Clone, Default, PartialEq, Eq)]
 pub struct IngameDatetime {
 	pub day: i32,
 	pub time: i32
 }
 
 #[repr(C)]
-#[derive(Debug, Clone)]//todo: Default
+#[derive(Debug, Clone, PartialEq, Eq)]//todo: Default
 pub struct CreatureAction {
 	pub item: Item,
 	pub zone: Point2<i32>,
@@ -129,7 +129,7 @@ pub struct CreatureAction {
 }
 
 #[repr(C)]
-#[derive(Debug, Clone, Default)]
+#[derive(Debug, Clone, Default, PartialEq)]
 pub struct Hit {
 	pub attacker: CreatureId,
 	pub target: CreatureId,
@@ -147,7 +147,7 @@ pub struct Hit {
 }
 
 #[repr(C)]
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct StatusEffect {
 	pub source: CreatureId,
 	pub target: CreatureId,
@@ -160,7 +160,7 @@ pub struct StatusEffect {
 }
 
 #[repr(C)]
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct Projectile {
 	pub attacker: u64,
 	pub zone: Point2<i32>,
@@ -195,27 +195,27 @@ pub struct ChatMessageFromServer {
 }
 
 #[repr(C)]
-#[derive(Debug, Clone, Default)]
+#[derive(Debug, Clone, Default, PartialEq, Eq)]
 pub struct ZoneDiscovery(pub Point2<i32>);
 
 #[repr(C)]
-#[derive(Debug, Clone, Default)]
+#[derive(Debug, Clone, Default, PartialEq, Eq)]
 pub struct RegionDiscovery(pub Point2<i32>);
 
 #[repr(C)]
-#[derive(Debug, Clone, Default)]
+#[derive(Debug, Clone, Default, PartialEq, Eq)]
 pub struct MapSeed(pub i32);
 
 #[repr(C)]
-#[derive(Debug, Clone, Default)]
+#[derive(Debug, Clone, Default, PartialEq, Eq)]
 pub struct ConnectionAcceptance;
 
 #[repr(C)]
-#[derive(Debug, Clone, Default)]
+#[derive(Debug, Clone, Default, PartialEq, Eq)]
 pub struct ProtocolVersion(pub i32);
 
 #[repr(C)]
-#[derive(Debug, Clone, Default)]
+#[derive(Debug, Clone, Default, PartialEq, Eq)]
 pub struct ConnectionRejection;
 
 
