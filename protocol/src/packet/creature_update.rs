@@ -349,7 +349,7 @@ pub enum Animation {
 	Intercept,
 	Teleport,
 	UnusedBowM2, //BowM2 but slower
-	VolantAttack, //mob attack?
+	VolantAttack, //monster default slow attack?
 	UnusedIdle, //immediately switches to Idle
 	//53 nothing
 	Smash = 54,
@@ -391,7 +391,7 @@ pub enum Animation {
 	UnusedSplash,
 	EarthQuake,//used by troll
 	Clone,
-	ChargeM2, //does UnarmedM2, DaggerM2, or GreatweaponM2Guardian during the run, depending on equipped weapons
+	ChargeM2, //does UnarmedM2, DaggerM2, or GreatweaponM2Guardian during the run, depending on equipped weapons. also applies camouflage-like visual effect. used by werewolves
 	FireBeam,//unused, future wand m1
 	FireRay,//used by wizards and witches, future wand m2
 	Shuriken,
