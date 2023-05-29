@@ -20,10 +20,8 @@ pub struct DiscordIntegration {
 	token: String
 }
 
-impl DiscordIntegration {
-	const FILE_PATH: &'static str = "discord_bot_token.txt";
-
-	pub fn new() -> Self {
+impl Default for DiscordIntegration {
+	fn default() -> Self {
 		let Ok(token) = fs::read_to_string(Self::FILE_PATH) else {
 			fs::write(Self::FILE_PATH, "insert token here").unwrap();
 			panic!("{} not found, created dummy file", Self::FILE_PATH);
@@ -34,6 +32,10 @@ impl DiscordIntegration {
 			token,
 		}
 	}
+}
+
+impl DiscordIntegration {
+	const FILE_PATH: &'static str = "discord_bot_token.txt";
 
 	pub fn run(&self, server: &Server) {
 		let mut shard = Shard::new(

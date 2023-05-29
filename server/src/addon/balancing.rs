@@ -1,6 +1,7 @@
 use std::collections::HashMap;
 use std::ptr;
 use std::time::{Duration, Instant};
+
 use tokio::sync::RwLock;
 
 use protocol::packet::{Hit, StatusEffect, WorldUpdate};
@@ -20,17 +21,12 @@ use crate::server::creature::Creature;
 use crate::server::player::Player;
 use crate::server::Server;
 
+#[derive(Default)]
 pub struct AirTimeTracker {
 	airtime_map: RwLock<HashMap<CreatureId, (Instant, bool)>>//todo: figure out a proper name
 }
 
 impl AirTimeTracker {
-	pub fn new() -> Self {
-		Self {
-			airtime_map: RwLock::new(HashMap::new())
-		}
-	}
-
 	pub async fn on_creature_update(&self, source: &Player) {
 		let character = source.character.read().await;
 

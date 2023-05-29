@@ -17,5 +17,5 @@ mod addon;
 #[tokio::main]
 async fn main() {
 	magenta_ln!("===== Berld =====");
-	Server::new().run().await;
+	Server::default().run().await;
 }

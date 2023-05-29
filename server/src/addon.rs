@@ -23,22 +23,12 @@ pub mod balancing;
 pub mod discord_integration;
 pub mod command_manager;
 
+#[derive(Default)]
 pub struct Addons {
 	pub anti_cheat: AntiCheat,
 	pub discord_integration: DiscordIntegration,
 	pub air_time_tracker: AirTimeTracker,
 	pub command_manager: CommandManager
-}
-
-impl Addons {
-	pub fn new() -> Self {//todo: boilerplate, maybe use Default trait ?
-		Self {
-			anti_cheat: AntiCheat::new(),
-			discord_integration: DiscordIntegration::new(),
-			air_time_tracker: AirTimeTracker::new(),
-			command_manager: CommandManager::new()
-		}
-	}
 }
 
 pub fn enable_pvp(creature_update: &mut CreatureUpdate) {

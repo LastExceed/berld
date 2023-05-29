@@ -21,17 +21,12 @@ struct PlayerACData {
 	last_combo_update: Option<Instant>
 }
 
+#[derive(Default)]
 pub struct AntiCheat {
 	ac_datas: RwLock<HashMap<CreatureId, PlayerACData>>
 }
 
 impl AntiCheat {
-	pub fn new() -> Self {
-		Self {
-			ac_datas: RwLock::new(HashMap::new())
-		}
-	}
-
 	pub async fn on_join(&self, player: &Player) {
 		self.ac_datas.write().await
 			.insert(player.id, PlayerACData { last_combo_update: None });

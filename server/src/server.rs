@@ -39,6 +39,7 @@ mod handle_packet;
 pub mod creature;
 pub mod utils;
 
+#[derive(Default)]
 pub struct Server {
 	id_pool: RwLock<CreatureIdPool>,
 	pub players: RwLock<Vec<Arc<Player>>>,
@@ -47,15 +48,6 @@ pub struct Server {
 }
 
 impl Server {
-	pub fn new() -> Self {
-		Self {
-			id_pool: RwLock::new(CreatureIdPool::new()),
-			players: RwLock::new(Vec::new()),
-			drops: RwLock::new(HashMap::new()),
-			addons: Addons::new()
-		}
-	}
-
 	pub async fn run(self) {
 		self.id_pool.write().await.claim(); //reserve 0 for the server itself
 

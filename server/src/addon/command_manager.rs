@@ -26,11 +26,8 @@ pub struct CommandManager {
 	admin_password: String
 }
 
-
-impl CommandManager {
-	const FILE_PATH: &'static str = "admin_password.txt";
-
-	pub fn new() -> Self {
+impl Default for CommandManager {
+	fn default() -> Self {
 		let admin_password = match fs::read_to_string(Self::FILE_PATH) {
 			Ok(content) => content,
 
@@ -60,6 +57,10 @@ impl CommandManager {
 			cm.register(Test);
 		})
 	}
+}
+
+impl CommandManager {
+	const FILE_PATH: &'static str = "admin_password.txt";
 
 	pub fn register<C: Command + 'static>(&mut self, command: C) {//todo: can the lifetime be relaxed?
 		self.commands.insert(C::LITERAL, Box::new(command));

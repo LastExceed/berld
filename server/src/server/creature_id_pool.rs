@@ -1,16 +1,11 @@
 use protocol::packet::common::CreatureId;
 
+#[derive(Default)]
 pub struct CreatureIdPool {
 	claimed_ids: Vec<i64>
 }
 
 impl CreatureIdPool {
-	pub fn new() -> Self {
-		Self {
-			claimed_ids: vec![]
-		}
-	}
-
 	pub fn claim(&mut self) -> CreatureId {
 		let mut x = 0i64;
 		while self.claimed_ids.contains(&x) {
