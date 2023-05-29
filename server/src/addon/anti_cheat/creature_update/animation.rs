@@ -73,8 +73,8 @@ fn weapon_specific_animations(combat_class: CombatClass, equipment: &Equipment) 
 		},
 		Void => {
 			let (mainhand_m1, mainhand_m2) = match combat_class {
-				FIRE_MAGE  => (&m1::BRACELET_FIRE[..] , &m2::BRACELET_FIRE[..]),
-				WATER_MAGE => (&m1::BRACELET_WATER[..], &m2::BRACELET_WATER[..]),
+				FIRE_MAGE  => (&m1::BRACELET_FIRE[..] , &m2::UNARMED[..]),
+				WATER_MAGE => (&m1::BRACELET_WATER[..], &m2::UNARMED[..]),
 				_          => (&m1::UNARMED[..]       , &m2::UNARMED[..])
 			};
 			let m2 =
