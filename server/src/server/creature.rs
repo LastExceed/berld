@@ -10,7 +10,7 @@ use protocol::utils::{level_scaling_factor, rarity_scaling_factor};
 use protocol::utils::constants::CombatClass;
 use protocol::utils::flagset::FlagSet;
 
-#[derive(Clone)]
+#[derive(Debug, PartialEq, Clone)]
 pub struct Creature {
 	pub position: Point3<i64>,
 	pub rotation: EulerAngles,

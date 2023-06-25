@@ -1,6 +1,6 @@
 use protocol::packet::common::CreatureId;
 
-#[derive(Default)]
+#[derive(Debug, PartialEq, Eq, Hash, Clone, Default)]
 pub struct CreatureIdPool {
 	claimed_ids: Vec<i64>
 }

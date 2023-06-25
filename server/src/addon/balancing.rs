@@ -21,7 +21,7 @@ use crate::server::creature::Creature;
 use crate::server::player::Player;
 use crate::server::Server;
 
-#[derive(Default)]
+#[derive(Debug, Default)]
 pub struct AirTimeTracker {
 	airtime_map: RwLock<HashMap<CreatureId, (Instant, bool)>>//todo: figure out a proper name
 }

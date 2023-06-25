@@ -42,7 +42,7 @@ impl<Readable: AsyncRead + Unpin> ReadCwData<Airship> for Readable {}
 impl<Writable: AsyncWrite + Unpin> WriteCwData<Airship> for Writable {}
 
 #[repr(i32)]
-#[derive(Debug, PartialEq, Eq, Clone)]
+#[derive(Debug, PartialEq, Eq, Hash, Clone, Copy)]
 pub enum State {//from cuwo
 	GoToStart,
 	Landing,

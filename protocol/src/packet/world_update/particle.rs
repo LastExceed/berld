@@ -1,5 +1,5 @@
 #[repr(i32)]
-#[derive(Debug, PartialEq, Eq, Clone, Copy)]
+#[derive(Debug, PartialEq, Eq, Hash, Clone, Copy)]
 pub enum Kind {
 	Normal,
 	Spark,

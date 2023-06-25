@@ -17,7 +17,7 @@ pub const SIZE_WORLD: i64 = SIZE_REGION * 1024;
 pub const SIZE_UNIVERSE: i64 = SIZE_WORLD * 256;
 //const SIZE_MULTIVERSE: i64 = SIZE_UNIVERSE * 65536; //overflows; it's basically u64::MAX + 1
 
-#[derive(Clone, PartialEq, Eq, Copy)]
+#[derive(Debug, PartialEq, Eq, Hash, Clone, Copy)]
 pub struct CombatClass {
 	pub occupation: Occupation,
 	pub specialization: Specialization

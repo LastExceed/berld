@@ -416,7 +416,7 @@ pub enum Animation {
 }
 
 #[repr(C)]
-#[derive(Debug, PartialEq, Clone)]
+#[derive(Debug, PartialEq, Clone, Default)]
 pub struct Appearance {
 	pub unknown: i16,
 	pub hair_color: RGB<u8>,
@@ -454,7 +454,7 @@ pub struct Appearance {
 }
 
 #[repr(u16)]
-#[derive(Debug, PartialEq, Eq, Clone, Copy)]
+#[derive(Debug, PartialEq, Eq, Hash, Clone, Copy)]
 pub enum AppearanceFlag {
 	Quadruped,
 	Volant,
@@ -480,7 +480,7 @@ impl From<AppearanceFlag> for usize {
 }
 
 #[repr(u16)]
-#[derive(Debug, PartialEq, Eq, Clone, Copy)]
+#[derive(Debug, PartialEq, Eq, Hash, Clone, Copy)]
 pub enum CreatureFlag {
 	Climbing,
 	Unknown1,
@@ -507,7 +507,7 @@ impl From<CreatureFlag> for usize {
 }
 
 #[repr(i8)]
-#[derive(Debug, PartialEq, Eq, Clone, Copy, EnumIter)]
+#[derive(Debug, PartialEq, Eq, Hash, Clone, Copy, EnumIter)]
 pub enum Occupation {
 	None,
 	Warrior,
@@ -528,7 +528,7 @@ pub enum Occupation {
 }
 
 #[repr(u8)]
-#[derive(Debug, PartialEq, Eq, Clone, Copy, EnumIter)]
+#[derive(Debug, PartialEq, Eq, Hash, Clone, Copy, EnumIter)]
 pub enum Specialization {
 	Default,
 	Alternative,

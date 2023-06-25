@@ -80,7 +80,7 @@ impl<Writable: AsyncWrite + Unpin> WriteCwData<WorldUpdate> for Writable {
 }
 
 #[repr(C)]
-#[derive(Debug, PartialEq, Eq, Clone)]
+#[derive(Debug, PartialEq, Eq, Hash, Clone)]
 pub struct Block {
 	pub position: Point3<i32>,
 	pub color: RGB<u8>,
@@ -130,21 +130,21 @@ pub struct WorldObject {
 	pub interactor: i64
 }
 
-#[derive(Debug, PartialEq, Eq, Clone)]
+#[derive(Debug, PartialEq, Eq, Hash, Clone, Default)]
 pub struct P48 {
 	pub zone: Point2<i32>,
 	pub sub_packets: Vec<P48sub>
 }
 
 #[repr(C)]
-#[derive(Debug, PartialEq, Eq, Clone)]
+#[derive(Debug, PartialEq, Eq, Hash, Clone, Default)]
 pub struct Pickup {
 	pub interactor: CreatureId,
 	pub item: Item
 }
 
 #[repr(C)]
-#[derive(Debug, PartialEq, Eq, Clone)]
+#[derive(Debug, PartialEq, Eq, Hash, Clone, Default)]
 pub struct Kill {
 	pub killer: CreatureId,
 	pub victim: CreatureId,
@@ -153,7 +153,7 @@ pub struct Kill {
 }
 
 #[repr(C)]
-#[derive(Debug, PartialEq, Clone)]
+#[derive(Debug, PartialEq, Clone, Default)]
 pub struct Attack {
 	pub target: i64,
 	pub attacker: i64,
@@ -162,7 +162,7 @@ pub struct Attack {
 }
 
 #[repr(C)]
-#[derive(Debug, PartialEq, Eq, Clone)]
+#[derive(Debug, PartialEq, Eq, Clone, Hash)]
 pub struct Mission {
 	pub sector: Point2<i32>,
 	pub unknown_a: i32,//always 0?

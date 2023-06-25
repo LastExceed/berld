@@ -13,6 +13,7 @@ use protocol::WriteCwData;
 
 use crate::server::creature::Creature;
 
+#[derive(Debug)]
 pub struct Player {
 	pub address: SocketAddr,
 	pub id: CreatureId,

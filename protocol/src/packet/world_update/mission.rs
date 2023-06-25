@@ -3,7 +3,7 @@ use crate::common::Race;
 
 ///all names (including the enum itself) are data mined
 #[repr(u32)]
-#[derive(Debug, PartialEq, Eq, Clone, Copy)]
+#[derive(Debug, PartialEq, Eq, Hash, Clone, Copy)]
 pub enum Objective {
 	///TODO: surrogate value
 	RemoveMission,
@@ -68,7 +68,7 @@ pub enum Objective {
 }
 
 #[repr(u8)]
-#[derive(Debug, PartialEq, Eq, Clone, Copy)]
+#[derive(Debug, PartialEq, Eq, Hash, Clone, Copy)]
 pub enum State {
 	Ready,
 	InProgress,

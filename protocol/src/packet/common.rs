@@ -6,11 +6,11 @@ use self::item::*;
 
 pub mod item;
 
-#[derive(Debug, PartialEq, Eq, Clone, Copy, Default, Hash)]
+#[derive(Debug, PartialEq, Eq, Hash, Clone, Copy, Default)]
 pub struct CreatureId(pub i64);
 
 #[repr(u8)]
-#[derive(Debug, PartialEq, Eq, Clone, Copy, Default, EnumIter)]
+#[derive(Debug, PartialEq, Eq, Hash, Clone, Copy, Default, EnumIter)]
 pub enum Race {
 	#[default]
 	ElfMale,
@@ -172,7 +172,7 @@ pub enum Race {
 }
 
 #[repr(C)]
-#[derive(Debug, PartialEq, Eq, Clone, Default)]
+#[derive(Debug, Clone, Default, PartialEq, Eq, Hash)]
 pub struct Item {
 	pub kind: Kind,
 	//pad 2 (ephemeral)
@@ -188,7 +188,7 @@ pub struct Item {
 	pub spirit_counter: i32
 }
 
-#[derive(Debug, PartialEq, Clone, Default)]
+#[derive(Debug, PartialEq, Clone, Copy, Default)]
 pub struct Hitbox {
 	///horizontal size in west/east direction. Note: this also scales the creature visually (whether this is a bug or intended behaviour is unclear)
 	pub width: f32,
@@ -199,7 +199,7 @@ pub struct Hitbox {
 }
 
 //todo: find a crate for this
-#[derive(Debug, PartialEq, Clone, Default)]
+#[derive(Debug, PartialEq, Clone, Copy, Default)]
 pub struct EulerAngles {
 	pub pitch: f32,
 	pub roll: f32,

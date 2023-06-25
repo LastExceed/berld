@@ -1,6 +1,6 @@
 use strum_macros::{EnumCount, EnumIter};
 
-#[derive(Debug, PartialEq, Eq, Clone, Copy, EnumIter, EnumCount)]
+#[derive(Debug, PartialEq, Eq, Hash, Clone, Copy, EnumIter, EnumCount)]
 pub enum Multiplier {
 	Health,
 	AttackSpeed,

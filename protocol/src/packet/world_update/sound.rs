@@ -5,7 +5,7 @@ use crate::packet::world_update::Sound;
 use crate::utils::sound_position_of;
 
 #[repr(i32)]
-#[derive(Debug, PartialEq, Eq, Clone, Copy, EnumIter)]
+#[derive(Debug, PartialEq, Eq, Hash, Clone, Copy, EnumIter)]
 pub enum Kind {
 	Hit,
 	Blade1,

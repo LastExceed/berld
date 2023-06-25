@@ -1,7 +1,7 @@
 use strum_macros::EnumIter;
 
 #[repr(u8)]
-#[derive(Debug, PartialEq, Eq, Clone, Copy, Default, EnumIter)]
+#[derive(Debug, PartialEq, Eq, Hash, Clone, Copy, Default, EnumIter)]
 pub enum Consumable {
 	#[default]
 	Cookie,
@@ -10,13 +10,13 @@ pub enum Consumable {
 	GinsengSoup,
 	SnowBerryMash,
 	MushroomSpit,
-	BOMB,
+	Bomb,
 	PineappleSlice,
 	PumpkinMuffin
 }
 
 #[repr(u8)]
-#[derive(Debug, PartialEq, Eq, Clone, Copy, Default, EnumIter)]
+#[derive(Debug, PartialEq, Eq, Hash, Clone, Copy, Default, EnumIter)]
 pub enum Weapon {
 	#[default]
 	Sword,
@@ -43,7 +43,7 @@ pub enum Weapon {
 }
 
 #[repr(u8)]
-#[derive(Debug, PartialEq, Eq, Clone, Copy, Default, EnumIter)]
+#[derive(Debug, PartialEq, Eq, Hash, Clone, Copy, Default, EnumIter)]
 pub enum Resource {
 	#[default]
 	Nugget,
@@ -77,7 +77,7 @@ pub enum Resource {
 }
 
 #[repr(u8)]
-#[derive(Debug, PartialEq, Eq, Clone, Copy, Default, EnumIter)]
+#[derive(Debug, PartialEq, Eq, Hash, Clone, Copy, Default, EnumIter)]
 pub enum Candle {
 	#[default]
 	Red,
@@ -85,7 +85,7 @@ pub enum Candle {
 }
 
 #[repr(u8)]
-#[derive(Debug, PartialEq, Eq, Clone, Copy, Default, EnumIter)]
+#[derive(Debug, PartialEq, Eq, Hash, Clone, Copy, Default, EnumIter)]
 pub enum Quest {
 	#[default]
 	AmuletYellow,
@@ -101,7 +101,7 @@ pub enum Quest {
 }
 
 #[repr(u8)]
-#[derive(Debug, PartialEq, Eq, Clone, Copy, Default, EnumIter)]
+#[derive(Debug, PartialEq, Eq, Hash, Clone, Copy, Default, EnumIter)]
 pub enum Special {
 	#[default]
 	HangGlider,

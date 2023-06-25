@@ -15,6 +15,7 @@ use crate::server::Server;
 const PUBLIC_CHANNEL_ID: u64 = 1067011357129580667;
 const ADMIN_CHANNEL_ID: u64 = 1088047136698011659;
 
+#[derive(Debug)]
 pub struct DiscordIntegration {
 	http: Client,
 	token: String

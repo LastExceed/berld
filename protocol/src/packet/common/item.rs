@@ -33,7 +33,7 @@ impl Validate<Item> for Validator {
 }
 
 #[repr(u8)]
-#[derive(Debug, PartialEq, Eq, Clone, Copy, Default, EnumIter)]
+#[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Hash, EnumIter)]
 pub enum Kind {
 	#[default]
 	Void,
@@ -65,7 +65,7 @@ pub enum Kind {
 }
 
 #[repr(i8)]
-#[derive(Debug, PartialEq, Eq, Clone, Copy, Default, EnumIter)]
+#[derive(Debug, PartialEq, Eq, Hash, Clone, Copy, Default, EnumIter)]
 pub enum Material {
 	#[default]
 	None,
@@ -104,7 +104,7 @@ pub enum Material {
 }
 
 #[repr(u8)]
-#[derive(Debug, PartialEq, Eq, Clone, Copy)]
+#[derive(Debug, PartialEq, Eq, Hash, Clone, Copy)]
 pub enum Flag {
 	Adapted
 }
@@ -116,7 +116,7 @@ impl From<Flag> for usize {
 }
 
 #[repr(C, align(4))]
-#[derive(Debug, PartialEq, Eq, Clone, Default)]
+#[derive(Debug, PartialEq, Eq, Hash, Clone, Default)]
 pub struct Spirit {
 	pub position: Point3<i8>,
 	pub material: Material,
@@ -126,10 +126,10 @@ pub struct Spirit {
 
 
 ///an awful workaround for the typesafety breaking inconsistency of formulas. initialize with `Default::default()`, and use the get/set functions afterwards
-#[derive(Debug, PartialEq, Eq, Clone, Default)]
+#[derive(Debug, PartialEq, Eq, Hash, Clone, Copy, Default)]
 pub struct RecipeDummy([u8;4]);
 
-#[derive(Debug)]
+#[derive(Debug, PartialEq, Eq, Hash, Clone, Copy, Default)]
 pub struct NotAFormula;
 
 #[expect(clippy::used_underscore_binding, reason="disgusting workaround for a problem i don't yet know how to solve")]
@@ -172,7 +172,7 @@ impl Item {
 }
 
 
-#[derive(Debug, PartialEq, Eq, Clone, Copy, EnumIter, EnumCount)]
+#[derive(Debug, PartialEq, Eq, Hash, Clone, Copy, EnumIter, EnumCount)]
 pub enum Stat {
 	Damage,
 	Armor,

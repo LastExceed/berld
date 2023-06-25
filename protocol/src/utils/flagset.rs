@@ -3,7 +3,7 @@ use std::marker::PhantomData;
 use num_traits::PrimInt;
 
 //todo: use size_of<flag> to infer inner, maybe [u8] ?
-#[derive(Debug, PartialEq, Eq, Clone)]
+#[derive(Debug, PartialEq, Eq, Hash, Clone)] //todo: default?
 pub struct FlagSet<Inner: PrimInt, Flag: Into<usize>>(Inner, PhantomData<Flag>);
 
 impl<Inner: PrimInt, Flag: Into<usize>> FlagSet<Inner, Flag> {

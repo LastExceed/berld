@@ -20,7 +20,7 @@ pub mod projectile;
 pub mod chat_message;
 pub mod common;
 
-#[derive(Debug, Clone, Default)]
+#[derive(Debug, PartialEq, Clone, Default)]
 pub struct CreatureUpdate {
 	pub id: CreatureId,
 	pub position: Option<Point3<i64>>,
@@ -81,19 +81,20 @@ pub struct CreatureUpdate {
 }
 
 #[repr(C)]
-#[derive(Debug, Clone, Default, PartialEq, Eq)]
+#[derive(Debug, PartialEq, Clone)]
+#[expect(clippy::derive_partial_eq_without_eq, reason="be conservative, this packet might not actually support it when its fully implemented")]
 pub struct MultiCreatureUpdate; //todo
 
-#[derive(Debug, Clone, Default, PartialEq)]
+#[derive(Debug, PartialEq, Clone, Default)]
 pub struct AirshipTraffic {
 	pub airships: Vec<Airship>
 }
 
 #[repr(C)]
-#[derive(Debug, Clone, Default, PartialEq, Eq)]
+#[derive(Debug, PartialEq, Eq, Hash, Clone, Default)]
 pub struct ServerTick;
 
-#[derive(Debug, Clone, Default)]
+#[derive(Debug, PartialEq, Clone, Default)]
 pub struct WorldUpdate {
 	pub blocks: Vec<Block>,
 	pub hits: Vec<Hit>,
@@ -111,14 +112,14 @@ pub struct WorldUpdate {
 }
 
 #[repr(C)]
-#[derive(Debug, Clone, Default, PartialEq, Eq)]
+#[derive(Debug, PartialEq, Eq, Hash, Clone, Default)]
 pub struct IngameDatetime {
 	pub day: i32,
 	pub time: i32
 }
 
 #[repr(C)]
-#[derive(Debug, Clone, PartialEq, Eq)]//todo: Default
+#[derive(Debug, PartialEq, Eq, Hash, Clone)]//todo: Default
 pub struct CreatureAction {
 	pub item: Item,
 	pub zone: Point2<i32>,
@@ -129,7 +130,7 @@ pub struct CreatureAction {
 }
 
 #[repr(C)]
-#[derive(Debug, Clone, Default, PartialEq)]
+#[derive(Debug, PartialEq, Clone, Default)]
 pub struct Hit {
 	pub attacker: CreatureId,
 	pub target: CreatureId,
@@ -147,7 +148,7 @@ pub struct Hit {
 }
 
 #[repr(C)]
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, PartialEq, Clone)]
 pub struct StatusEffect {
 	pub source: CreatureId,
 	pub target: CreatureId,
@@ -160,7 +161,7 @@ pub struct StatusEffect {
 }
 
 #[repr(C)]
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, PartialEq, Clone)]
 pub struct Projectile {
 	pub attacker: u64,
 	pub zone: Point2<i32>,
@@ -184,42 +185,42 @@ pub struct Projectile {
 	pub unknown_c: i64 //always 0 ?
 }
 
-#[derive(Debug, Clone, Default)]
+#[derive(Debug, PartialEq, Eq, Hash, Clone, Default)]
 pub struct ChatMessageFromClient {
 	pub text: String
 }
-#[derive(Clone)]
+#[derive(Debug, PartialEq, Eq, Hash, Clone, Default)]
 pub struct ChatMessageFromServer {
 	pub source: CreatureId,
 	pub text: String
 }
 
 #[repr(C)]
-#[derive(Debug, Clone, Default, PartialEq, Eq)]
+#[derive(Debug, PartialEq, Eq, Hash, Clone, Default)]
 pub struct ZoneDiscovery(pub Point2<i32>);
 
 #[repr(C)]
-#[derive(Debug, Clone, Default, PartialEq, Eq)]
+#[derive(Debug, PartialEq, Eq, Hash, Clone, Default)]
 pub struct RegionDiscovery(pub Point2<i32>);
 
 #[repr(C)]
-#[derive(Debug, Clone, Default, PartialEq, Eq)]
+#[derive(Debug, PartialEq, Eq, Hash, Clone, Default)]
 pub struct MapSeed(pub i32);
 
 #[repr(C)]
-#[derive(Debug, Clone, Default, PartialEq, Eq)]
+#[derive(Debug, PartialEq, Eq, Hash, Clone, Default)]
 pub struct ConnectionAcceptance;
 
 #[repr(C)]
-#[derive(Debug, Clone, Default, PartialEq, Eq)]
+#[derive(Debug, PartialEq, Eq, Hash, Clone, Default)]
 pub struct ProtocolVersion(pub i32);
 
 #[repr(C)]
-#[derive(Debug, Clone, Default, PartialEq, Eq)]
+#[derive(Debug, PartialEq, Eq, Hash, Clone, Default)]
 pub struct ConnectionRejection;
 
 
-#[derive(Debug, Eq, PartialEq)]
+#[derive(Debug, PartialEq, Eq, Hash, Clone, Default)]
 pub struct Id(i32);
 //the anonymous field is intentionally kept private to prevent manual construction
 //serialization isnt affected as it constructs this via transmutation

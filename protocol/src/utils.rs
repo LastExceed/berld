@@ -82,7 +82,7 @@ impl<Element, Writable: WriteCwData<Element>> WriteCwData<Vec<Element>> for Writ
 
 
 #[repr(C)]
-#[derive(Debug, PartialEq, Eq, Clone)]
+#[derive(Debug, PartialEq, Eq, Hash, Clone)]
 pub struct ArrayWrapper<Idx: Into<usize> + EnumCount, Element>([Element; Idx::COUNT], PhantomData<Idx>)
 	where [(); Idx::COUNT]:;
 

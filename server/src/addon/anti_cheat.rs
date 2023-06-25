@@ -17,11 +17,12 @@ use self::creature_update::*;
 
 pub mod creature_update;
 
+#[derive(Debug, PartialEq, Eq, Hash, Clone, Default)]
 struct PlayerACData {
 	last_combo_update: Option<Instant>
 }
 
-#[derive(Default)]
+#[derive(Debug, Default)]
 pub struct AntiCheat {
 	ac_datas: RwLock<HashMap<CreatureId, PlayerACData>>
 }
@@ -29,7 +30,7 @@ pub struct AntiCheat {
 impl AntiCheat {
 	pub async fn on_join(&self, player: &Player) {
 		self.ac_datas.write().await
-			.insert(player.id, PlayerACData { last_combo_update: None });
+			.insert(player.id, Default::default());
 	}
 
 	pub async fn on_leave(&self, player: &Player) {
