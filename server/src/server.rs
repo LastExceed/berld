@@ -49,7 +49,7 @@ pub struct Server {
 
 impl Server {
 	pub async fn run(self) {
-		self.id_pool.write().await.claim(); //reserve 0 for the server itself
+		let _ = self.id_pool.write().await.claim(); //reserve 0 for the server itself
 
 		let listener = TcpListener::bind("0.0.0.0:12345").await.expect("unable to bind listening socket");
 
@@ -99,7 +99,7 @@ impl Server {
 		let new_player_arc = Arc::new(new_player);
 		self.players.write().await.push(new_player_arc.clone());
 
-		let _ = self.read_packets_forever(&new_player_arc, reader).await
+		self.read_packets_forever(&new_player_arc, reader).await
 			.expect_err("impossible");
 
 		self.remove_player(&new_player_arc).await;

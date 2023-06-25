@@ -45,7 +45,7 @@ unused_import_braces = "warn"
 unused_lifetimes = "warn"
 unused_macro_rules = "warn"
 # unused_qualifications = "warn" # e.g. packet::Id
-unused_results = "warn"
+# unused_results = "warn" # [must-use] already covers this
 unused_tuple_struct_fields = "warn"
 variant_size_differences = "warn"
 
