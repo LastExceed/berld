@@ -80,7 +80,7 @@ impl Creature {
 		//todo: macro?
 		Some(Self {
 			position             : creature_update.position?,
-			rotation             : creature_update.rotation.clone()?,
+			rotation             : creature_update.rotation?,
 			velocity             : creature_update.velocity?,
 			acceleration         : creature_update.acceleration?,
 			velocity_extra       : creature_update.velocity_extra?,
@@ -134,7 +134,7 @@ impl Creature {
 	pub fn update(&mut self, packet: &CreatureUpdate) {
 		//todo: macro
 		if let Some(it) = packet.position              { self.position              = it }
-		if let Some(it) = packet.rotation.clone()      { self.rotation              = it }
+		if let Some(it) = packet.rotation              { self.rotation              = it }
 		if let Some(it) = packet.velocity              { self.velocity              = it }
 		if let Some(it) = packet.acceleration          { self.acceleration          = it }
 		if let Some(it) = packet.velocity_extra        { self.velocity_extra        = it }
@@ -187,7 +187,7 @@ impl Creature {
 		CreatureUpdate {
 			id,
 			position          : Some(self.position),
-			rotation          : Some(self.rotation.clone()),
+			rotation          : Some(self.rotation),
 			velocity          : Some(self.velocity),
 			acceleration      : Some(self.acceleration),
 			velocity_extra    : Some(self.velocity_extra),
