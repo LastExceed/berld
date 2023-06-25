@@ -14,3 +14,6 @@ strum_macros = "0.24.3"
 strum = "0.24.1"
 boolinator = "2.4.0"
 num-traits = "0.2.15"
+
+[lints]
+workspace = true

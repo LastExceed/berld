@@ -3,3 +3,134 @@ members = [
     "protocol",
     "server"
 ]
+resolver = "2"
+
+[workspace.lints.rust]
+# for some reason these are unknown. maybe the documentation is outdated?
+# fuzzy_provenance_casts = "warn"
+# lossy_provenance_casts = "warn"
+# multiple_supertrait_upcastable = "warn"
+# must_not_suspend = "warn?"
+# non_exhaustive_omitted_patterns = "warn"
+
+absolute_paths_not_starting_with_crate = "warn"
+box_pointers = "warn"
+elided_lifetimes_in_paths = "warn"
+explicit_outlives_requirements = "warn"
+ffi_unwind_calls = "warn"
+keyword_idents = "warn"
+let_underscore_drop = "warn"
+macro_use_extern_crate = "warn"
+meta_variable_misuse = "warn"
+missing_abi = "warn"
+# missing_copy_implementations = "warn" # bad practice imo
+missing_debug_implementations = "warn"
+# missing_docs = "warn"
+non_ascii_idents = "warn"
+noop_method_call = "warn"
+pointer_structural_match = "warn"
+rust_2021_incompatible_closure_captures = "warn"
+rust_2021_incompatible_or_patterns = "warn"
+rust_2021_prefixes_incompatible_syntax = "warn"
+rust_2021_prelude_collisions = "warn"
+single_use_lifetimes  = "warn"
+# trivial_casts = "warn" # inconvenient
+trivial_numeric_casts = "warn"
+unreachable_pub = "warn"
+# unsafe_code = "warn" # defo need this
+unsafe_op_in_unsafe_fn = "warn"
+unused_crate_dependencies = "warn"
+unused_extern_crates = "warn"
+unused_import_braces = "warn"
+unused_lifetimes = "warn"
+unused_macro_rules = "warn"
+# unused_qualifications = "warn" # e.g. packet::Id
+unused_results = "warn"
+unused_tuple_struct_fields = "warn"
+variant_size_differences = "warn"
+
+
+
+
+
+[workspace.lints.clippy]
+# start with EVERYTHING enabled (except deprecated lints ofc)
+cargo       = { level = "warn", priority = -1 }
+complexity  = { level = "warn", priority = -1 }
+correctness = { level = "warn", priority = -1 }
+nursery     = { level = "warn", priority = -1 }
+pedantic    = { level = "warn", priority = -1 }
+perf        = { level = "warn", priority = -1 }
+restriction = { level = "warn", priority = -1 }
+style       = { level = "warn", priority = -1 }
+suspicious  = { level = "warn", priority = -1 }
+
+# cargo exceptions
+multiple_crate_versions = "allow" # unpreventable
+cargo_common_metadata = "allow" # TODO (license)
+
+# pedantic exceptions
+enum_glob_use = "allow" # unsure
+wildcard_imports = "allow" # unsure
+unnested_or_patterns = "allow" # unsure
+large_futures = "allow" # unsure
+unchecked_duration_subtraction = "allow" # unsure
+missing_panics_doc = "allow" # unsure
+missing_errors_doc = "allow" # unsure
+cast_sign_loss = "allow" # TODO
+cast_possible_truncation = "allow" # TODO
+cast_lossless = "allow" # TODO
+cast_possible_wrap = "allow" # TODO
+cast_precision_loss = "allow" # TODO
+trivially_copy_pass_by_ref = "allow" # TODO
+unnecessary_wraps = "allow" # TODO
+unreadable_literal = "allow" # TODO
+
+# nursery exceptions
+or_fun_call = "allow" # unsure
+future_not_send = "allow" # TODO
+suboptimal_flops = "allow" # TODO
+
+# restrictions exceptions
+allow_attributes = "allow" # unusably buggy
+allow_attributes_without_reason = "allow" # unusably buggy
+missing_docs_in_private_items = "allow" # don't care yet
+default_numeric_fallback = "allow" # disagree
+let_underscore_untyped = "allow" # disagree
+std_instead_of_alloc = "allow" # not relevant
+std_instead_of_core = "allow" # not relevant
+float_arithmetic = "allow" # not relevant
+wildcard_enum_match_arm = "allow" # using `non-exhaustive` instead
+implicit_return = "allow" # disagree
+question_mark_used = "allow" # disagree
+separated_literal_suffix = "allow" # using unseparated instead
+missing_trait_methods = "allow" # not intended for global usage
+pub_use = "allow" # disagree
+exhaustive_structs = "allow" # disagree
+exhaustive_enums = "allow" # disagree
+missing_inline_in_public_items = "allow" # not relevant
+self_named_module_files = "allow" # using `mod_module_files` instead
+
+pattern_type_mismatch = "allow" # unsure
+multiple_inherent_impl = "allow" # unsure
+shadow_reuse = "allow" # unsure
+arithmetic_side_effects = "allow" # unsure
+integer_division = "allow" # unsure
+unwrap_used = "allow" # unsure
+expect_used = "allow" # unsure
+map_err_ignore = "allow" # unsure
+panic_in_result_fn = "allow" # unsure
+panic = "allow" # unsure
+unreachable = "allow" # unsure
+ref_patterns = "allow" # unsure
+multiple_unsafe_ops_per_block = "allow" # unsure
+partial_pub_fields = "allow" # unsure
+
+clone_on_ref_ptr = "allow" # TODO
+indexing_slicing = "allow" # TODO
+undocumented_unsafe_blocks = "allow" # TODO
+as_conversions = "allow" # TODO
+
+
+# suspicious exceptions
+blanket_clippy_restriction_lints = "allow" # disagree
