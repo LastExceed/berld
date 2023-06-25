@@ -30,7 +30,7 @@ pub struct AntiCheat {
 impl AntiCheat {
 	pub async fn on_join(&self, player: &Player) {
 		self.ac_datas.write().await
-			.insert(player.id, Default::default());
+			.insert(player.id, PlayerACData::default());
 	}
 
 	pub async fn on_leave(&self, player: &Player) {
