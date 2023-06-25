@@ -28,7 +28,7 @@ pub struct Level;
 #[derive(Debug, PartialEq, Eq, Hash, Clone, Default)]
 pub struct Countdown;
 
-#[derive(Debug, PartialEq, Eq, Hash, Clone, Default)]
+#[derive(Debug, PartialEq, Eq, Clone, Default)]
 pub struct Warp {
 	locations: HashMap<String, Point3<i64>>
 }

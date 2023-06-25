@@ -81,8 +81,7 @@ pub struct CreatureUpdate {
 }
 
 #[repr(C)]
-#[derive(Debug, PartialEq, Clone)]
-#[expect(clippy::derive_partial_eq_without_eq, reason="be conservative, this packet might not actually support it when its fully implemented")]
+#[derive(Debug, Clone)]
 pub struct MultiCreatureUpdate; //todo
 
 #[derive(Debug, PartialEq, Clone, Default)]
