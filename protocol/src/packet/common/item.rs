@@ -18,17 +18,17 @@ impl Validate<Item> for Validator {
 	fn validate(item: &Item) -> io::Result<()> {
 		match item.kind {
 			Kind::Void                   => Ok(()),
-			Kind::Consumable(consumable) => Validator::validate_enum(consumable),
-			Kind::Weapon(weapon)         => Validator::validate_enum(weapon),
-			Kind::Resource(resource)     => Validator::validate_enum(resource),
-			Kind::Candle(candle)         => Validator::validate_enum(candle),
-			Kind::Pet(race)              => Validator::validate_enum(race),
-			Kind::PetFood(race)          => Validator::validate_enum(race),
-			Kind::Quest(quest)           => Validator::validate_enum(quest),
-			Kind::Special(special)       => Validator::validate_enum(special),
-			_                            => Validator::validate_enum(item.kind)
+			Kind::Consumable(consumable) => Self::validate_enum(&consumable),
+			Kind::Weapon(weapon)         => Self::validate_enum(&weapon),
+			Kind::Resource(resource)     => Self::validate_enum(&resource),
+			Kind::Candle(candle)         => Self::validate_enum(&candle),
+			Kind::Pet(race) |
+			Kind::PetFood(race)          => Self::validate_enum(&race),
+			Kind::Quest(quest)           => Self::validate_enum(&quest),
+			Kind::Special(special)       => Self::validate_enum(&special),
+			_                            => Self::validate_enum(&item.kind)
 		}?;
-		Validator::validate_enum(item.material)
+		Self::validate_enum(&item.material)
 	}
 }
 
@@ -105,12 +105,12 @@ pub enum Material {
 
 #[repr(u8)]
 #[derive(Debug, PartialEq, Eq, Clone, Copy)]
-pub enum ItemFlag {
+pub enum Flag {
 	Adapted
 }
 
-impl From<ItemFlag> for usize {
-	fn from(it: ItemFlag) -> Self {
+impl From<Flag> for usize {
+	fn from(it: Flag) -> Self {
 		it as Self
 	}
 }
@@ -125,13 +125,14 @@ pub struct Spirit {
 }
 
 
-///an awful workaround for the typesafety breaking inconsistency of formulas. initialize with Default::default(), and use the get/set functions afterwards
+///an awful workaround for the typesafety breaking inconsistency of formulas. initialize with `Default::default()`, and use the get/set functions afterwards
 #[derive(Debug, PartialEq, Eq, Clone, Default)]
 pub struct RecipeDummy([u8;4]);
 
 #[derive(Debug)]
 pub struct NotAFormula;
 
+#[expect(clippy::used_underscore_binding, reason="disgusting workaround for a problem i don't yet know how to solve")]
 impl Item {
 	pub fn get_recipe(&self) -> Result<Kind, NotAFormula> {
 		if self.kind != Formula {
@@ -164,7 +165,7 @@ impl Item {
 			)[1] = recipe_bytes[1];
 
 			self._recipe.0[0] = recipe_bytes[0];
-		}
+		};
 
 		Ok(())
 	}
@@ -191,6 +192,7 @@ impl From<Stat> for usize {
 type Stats = ArrayWrapper<Stat, f32>;
 
 impl Item {
+	#[must_use]
 	pub fn stats(&self) -> Stats {
 		use Kind::*;
 		use kind::Weapon::*;
@@ -228,6 +230,7 @@ impl Item {
 				_                  => 1.0
 			};
 
+		#[expect(clippy::match_same_arms, reason="coincidence")]
 		let class_multiplier =
 			match self.kind {
 				Weapon(Longsword) |
@@ -239,6 +242,7 @@ impl Item {
 				_                 => 1.0,
 			};
 
+		#[expect(clippy::match_same_arms, reason="coincidence")]
 		let material_multiplier =
 			match self.material {
 				Iron    => (1.0 , 0.85, 2.0 , 0.0, 0.0, 0.0),
@@ -258,6 +262,7 @@ impl Item {
 
 		let spirit_bonus = self.spirit_counter as f32 * 0.1;
 
+		#[expect(clippy::shadow_unrelated, reason="kinda false positive")]
 		[
 			(4.0        , can_have_stat.0, false         , class_multiplier     , 0.0                     , true ),//dmg
 			(0.5        , can_have_stat.1, false         , material_multiplier.0, 0.0                     , true ),//armor

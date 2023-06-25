@@ -105,31 +105,23 @@ impl AntiCheat {
 type Result = result::Result<(), String>;
 
 trait Ensure {
-	fn ensure<'a>(
+	fn ensure(
 		&self,
-		property_name: &'a str,
+		property_name: &str,
 		actual_value: &impl Debug,
-		words: &'a str, //todo: come up with a better name (or drop this parameter entirely)
+		words: &str, //todo: come up with a better name (or drop this parameter entirely)
 		allowed: &(impl Debug + ?Sized)
 	) -> Result;
 }
 impl Ensure for bool {
-	fn ensure<'a>(
+	fn ensure(
 		&self,
-		property_name: &'a str,
+		property_name: &str,
 		actual: &impl Debug,
-		words: &'a str,
+		words: &str,
 		allowed: &(impl Debug + ?Sized)
 	) -> Result {
-		self.ok_or(
-			format!(
-				"{} was {:?}, allowed was {} {:?}",
-				property_name,
-				actual,
-				words,
-				allowed
-			)
-		)
+		self.ok_or(format!("{property_name} was {actual:?}, allowed was {words} {allowed:?}"))
 	}
 }
 
@@ -157,7 +149,7 @@ impl<T: PartialOrd + Debug> EnsureAtMost for T {}
 
 trait EnsureWithin: PartialOrd + Debug + Sized {
 	fn ensure_within(&self, allowed_range: &(impl RangeBounds<Self> + Debug), property_name: &str) -> Result {
-		allowed_range.contains(&self)
+		allowed_range.contains(self)
 			.ensure(property_name, self, "within", &allowed_range)
 	}
 }

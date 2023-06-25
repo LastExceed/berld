@@ -69,14 +69,14 @@ pub struct Creature {
 }
 
 impl Creature {
-	pub fn combat_class(&self) -> CombatClass {
+	pub const fn combat_class(&self) -> CombatClass {
 		CombatClass {
 			occupation: self.occupation,
 			specialization: self.specialization
 		}
 	}
 
-	pub fn maybe_from(creature_update: &CreatureUpdate) -> Option<Creature> {
+	pub fn maybe_from(creature_update: &CreatureUpdate) -> Option<Self> {
 		//todo: macro?
 		Some(Self {
 			position             : creature_update.position?,
@@ -130,6 +130,7 @@ impl Creature {
 		})
 	}
 
+	#[expect(clippy::cognitive_complexity, reason="false positive")]
 	pub fn update(&mut self, packet: &CreatureUpdate) {
 		//todo: macro
 		if let Some(it) = packet.position              { self.position              = it }
@@ -153,8 +154,8 @@ impl Creature {
 		if let Some(it) = packet.effect_time_chill     { self.effect_time_chill     = it }
 		if let Some(it) = packet.effect_time_wind      { self.effect_time_wind      = it }
 		if let Some(it) = packet.show_patch_time       { self.show_patch_time       = it }
-		if let Some(it) = packet.occupation            { self.occupation = it }
-		if let Some(it) = packet.specialization        { self.specialization = it }
+		if let Some(it) = packet.occupation            { self.occupation            = it }
+		if let Some(it) = packet.specialization        { self.specialization        = it }
 		if let Some(it) = packet.mana_charge           { self.mana_charge           = it }
 		if let Some(it) = packet.unknown24             { self.unknown24             = it }
 		if let Some(it) = packet.unknown25             { self.unknown25             = it }
@@ -226,7 +227,7 @@ impl Creature {
 			unknown38         : Some(self.unknown38),
 			home_zone         : Some(self.home_zone),
 			home              : Some(self.home),
-			zone_to_reveal    : Some(self.zone_to_reveal.clone()),
+			zone_to_reveal    : Some(self.zone_to_reveal),
 			unknown42         : Some(self.unknown42),
 			consumable        : Some(self.consumable.clone()),
 			equipment         : Some(self.equipment.clone()),

@@ -1,5 +1,6 @@
 #![allow(unused_variables)]
 
+use std::default::Default;
 use std::time::Duration;
 
 use boolinator::Boolinator;
@@ -46,7 +47,7 @@ pub(super) fn inspect_rotation(rotation: &EulerAngles, former_state: &Creature, 
 		.ensure_within(&(-90.0..=90.0), "rotation.roll")?;
 	rotation.yaw//normally -180..=180, but over-/underflows while attacking
 		.is_finite()
-		.ok_or("rotation.yaw wasn't finite".to_string())
+		.ok_or("rotation.yaw wasn't finite".into())
 }
 pub(super) fn inspect_velocity(velocity: &Vector3<f32>, former_state: &Creature, updated_state: &Creature, ac_data: &mut PlayerACData) -> anti_cheat::Result {
 	Ok(())
@@ -149,8 +150,9 @@ pub(super) fn inspect_combo_timeout(combo_timeout: &i32, former_state: &Creature
 	combo_timeout.abs_diff(expected)
 		.ensure_at_most(2000, "combo_timeout.clockdesync")
 }
+#[expect(clippy::too_many_lines, reason="TODO")]
 pub(super) fn inspect_appearance(appearance: &Appearance, former_state: &Creature, updated_state: &Creature, ac_data: &mut PlayerACData) -> anti_cheat::Result {
-	appearance.flags.ensure_exact(&core::default::Default::default(), "appearance.flags")?;
+	appearance.flags.ensure_exact(&FlagSet::default(), "appearance.flags")?;
 
 	appearance.tail_model.ensure_exact(&-1, "appearance.tail_model")?;
 	appearance.shoulder2model.ensure_exact(&-1, "appearance.shoulder2model")?;
@@ -177,7 +179,7 @@ pub(super) fn inspect_appearance(appearance: &Appearance, former_state: &Creatur
 	appearance.wing_offset.ensure_exact(&Point3::new(0.0, 0.0,  0.0), "appearance.wingOffset")?;
 
 	appearance.body_rotation.ensure_exact(&0.0, "appearance.bodyRotation")?;
-	appearance.hand_rotation.ensure_exact(&core::default::Default::default(), "appearance.handRotation")?;
+	appearance.hand_rotation.ensure_exact(&EulerAngles::default(), "appearance.handRotation")?;
 	appearance.feet_rotation.ensure_exact(&0.0, "appearance.feetRotation")?;
 	appearance.wing_rotation.ensure_exact(&0.0, "appearance.wingRotation")?;
 	appearance.tail_rotation.ensure_exact(&0.0, "appearance.tail_rotation")?;
@@ -588,7 +590,7 @@ pub(super) fn inspect_equipment(equipment: &Equipment, former_state: &Creature, 
 	];
 
 	for (slot, allowed_kind) in invariant_slots {
-		equipment[slot].kind.ensure_one_of(&[Void, allowed_kind], &format!("equipment[{:?}].kind", slot))?;
+		equipment[slot].kind.ensure_one_of(&[Void, allowed_kind], &format!("equipment[{slot:?}].kind"))?;
 	}
 
 	matches!(equipment[Slot::LeftWeapon].kind, Void | Weapon(_))
@@ -629,14 +631,14 @@ pub(super) fn inspect_equipment(equipment: &Equipment, former_state: &Creature, 
 		//item.seed.ensure_not_negative(&format!("equipment[{:?}].seed", slot)) //tolerating negative seeds due to popularity
 		//item._recipe.ensure_exact(&Void, &format!("equipment[{:?}].recipe", slot))?;
 		//item.minus_modifier
-		item.rarity.ensure_at_most(LEGENDARY, &format!("equipment[{:?}].rarity", slot))?; //todo: crashes for rarity 6+
+		item.rarity.ensure_at_most(LEGENDARY, &format!("equipment[{slot:?}].rarity"))?; //todo: crashes for rarity 6+
 		let allowed_materials = allowed_materials(item.kind, updated_state.occupation);
-		item.material.ensure_one_of(allowed_materials, &format!("equipment[{:?}].material", slot))?;
+		item.material.ensure_one_of(allowed_materials, &format!("equipment[{slot:?}].material"))?;
 		//item.flags
 		power_of(item.level as i32)
-			.ensure_within(&(0..=power_of(updated_state.level)), &format!("equipment[{:?}].power", slot))?;
+			.ensure_within(&(0..=power_of(updated_state.level)), &format!("equipment[{slot:?}].power"))?;
 		//item.spirits //tolerating everything due to popularity
-		item.spirit_counter.ensure_within(&(0..=32), &format!("equipment[{:?}].spirit_counter", slot))?;//normally only 2h weapons can have more than 16 (up to 32) spirits, but we're tolerating 32 on everyhting due to popularity
+		item.spirit_counter.ensure_within(&(0..=32), &format!("equipment[{slot:?}].spirit_counter"))?;//normally only 2h weapons can have more than 16 (up to 32) spirits, but we're tolerating 32 on everyhting due to popularity
 	}
 
 	Ok(())
@@ -647,7 +649,7 @@ pub(super) fn inspect_name(name: &String, former_state: &Creature, updated_state
 }
 pub(super) fn inspect_skill_tree(skill_tree: &SkillTree, former_state: &Creature, updated_state: &Creature, ac_data: &mut PlayerACData) -> anti_cheat::Result {
 	for skill in Skill::iter() {
-		skill_tree[skill].ensure_not_negative(&format!("skill_tree.{:?}", skill))?;
+		skill_tree[skill].ensure_not_negative(&format!("skill_tree.{skill:?}"))?;
 	}
 	skill_tree.iter().sum::<i32>().ensure_at_most((updated_state.level - 1) * 2, "skill_tree.total")
 }

@@ -15,26 +15,32 @@ pub mod io_extensions;
 pub mod flagset;
 pub mod constants;
 
+#[must_use]
 fn something(level: f32) -> f32 {
 	1.0 / (0.05 * (level - 1.0) + 1.0)
 }
 
+#[must_use]
 pub fn level_scaling_factor(level: f32) -> f32 {
 	2.0_f32.powf((1.0 - something(level)) * 3.0)
 }
 
+#[must_use]
 pub fn rarity_scaling_factor(rarity: u8) -> f32 {
 	2.0_f32.powf(rarity as f32 * 0.25)
 }
 
+#[must_use]
 pub fn power_of(level: i32) -> i32 {
 	(101.0 - 100.0 * something(level as f32)) as i32
 }
 
+#[must_use]
 pub fn maximum_experience_of(level: i32) -> i32 {
 	(1050.0 - 1000.0 * something(level as f32)) as i32
 }
 
+#[must_use]
 pub fn sound_position_of(position: Point3<i64>) -> Point3<f32> { //todo: move to SoundEffect ?
 	position.map(|scalar| scalar as f32 / SIZE_BLOCK as f32)
 }
@@ -110,6 +116,6 @@ impl<Idx: Into<usize> + EnumCount, Element> From<[Element; Idx::COUNT]> for Arra
 	where [(); Idx::COUNT]:
 {
 	fn from(value: [Element; Idx::COUNT]) -> Self {
-		Self(value, PhantomData::default())
+		Self(value, PhantomData)
 	}
 }

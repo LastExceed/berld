@@ -17,7 +17,7 @@ use crate::server::Server;
 mod commands;
 mod utils;
 
-type CommandFuture<'a> = Pin<Box<dyn Future<Output=CommandResult> + Send + 'a>>;
+type CommandFuture<'fut> = Pin<Box<dyn Future<Output=CommandResult> + Send + 'fut>>;
 pub type CommandResult = Result<Option<String>, &'static str>;
 
 
@@ -34,7 +34,7 @@ impl Default for CommandManager {
 			Err(error) if error.kind() == NotFound => {
 				"change-me"
 					.tap(|content| fs::write(Self::FILE_PATH, content).unwrap())
-					.to_string()
+					.to_owned()
 			}
 
 			Err(error) => panic!("failed to load {} - {}", Self::FILE_PATH, error)
@@ -83,7 +83,7 @@ impl CommandManager {
 					callback(response).await;
 				}
 				Ok(None) => {}
-				Err(error) => { callback(error.to_string()).await }
+				Err(error) => { callback(error.to_owned()).await }
 			}
 		}
 
@@ -91,7 +91,7 @@ impl CommandManager {
 	}
 
 	async fn handle_command(&self, server: &Server, caller: Option<&Player>, admin: bool, text: &str) -> CommandResult {
-		let mut fragments = text[1..].split_whitespace();
+		let mut fragments = text.trim_start_matches('/').split_whitespace();
 
 		let command_literal = fragments
 			.next()
@@ -99,8 +99,8 @@ impl CommandManager {
 
 		match command_literal {
 			//implementing these as regular command structs would effectively require inserting a reference to the command map into itself
-			"help" => self.on_help(admin).await,
-			"login" => self.attempt_login(caller, &mut fragments).await,
+			"help" => self.on_help(admin),
+			"login" => self.attempt_login(caller, &mut fragments),
 			_ => {
 				let command = self.commands
 					.get(command_literal)
@@ -115,7 +115,7 @@ impl CommandManager {
 		}
 	}
 
-	async fn on_help(&self, admin: bool) -> CommandResult {
+	fn on_help(&self, admin: bool) -> CommandResult {
 		let mut message = String::new();
 		message.push_str("help");
 
@@ -137,7 +137,7 @@ impl CommandManager {
 		Ok(Some(message))
 	}
 
-	async fn attempt_login(&self, caller: Option<&Player>, params: &mut SplitWhitespace<'_>) -> CommandResult {
+	fn attempt_login(&self, caller: Option<&Player>, params: &mut SplitWhitespace<'_>) -> CommandResult {
 		let caller = caller.ok_or(INGAME_ONLY)?;
 
 		params
@@ -148,7 +148,7 @@ impl CommandManager {
 
 		caller.admin.store(true, Relaxed);
 
-		Ok(Some("login successful".to_string()))
+		Ok(Some("login successful".to_owned()))
 	}
 }
 

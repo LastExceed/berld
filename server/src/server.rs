@@ -34,7 +34,7 @@ use crate::server::handle_packet::HandlePacket;
 use crate::server::player::Player;
 
 mod creature_id_pool;
-pub(crate) mod player;
+pub mod player;
 mod handle_packet;
 pub mod creature;
 pub mod utils;
@@ -59,8 +59,9 @@ impl Server {
 		loop {
 			let (stream, address) = listener.accept().await.unwrap();
 
-			let self_static: &'static Server = unsafe { transmute(&self) }; //todo: scoped task
+			let self_static: &'static Self = unsafe { transmute(&self) }; //todo: scoped task
 			tokio::spawn(async move {
+				#[expect(clippy::redundant_pattern_matching, reason="TODO")]
 				if let Err(_) = self_static.handle_new_connection(stream, address).await {
 					//TODO: error logging
 				}
@@ -145,7 +146,7 @@ impl Server {
 			..Default::default()
 		}, None).await;
 
-		let server_static: &'static Server = unsafe { transmute(self) }; //todo: scoped task
+		let server_static: &'static Self = unsafe { transmute(self) }; //todo: scoped task
 		tokio::spawn(async move {
 			sleep(Duration::from_millis(500)).await;
 			server_static.broadcast(&WorldUpdate::from(Sound::at(position, DropItem)), None).await;
@@ -157,7 +158,7 @@ impl Server {
 		let mut drops_guard = self.drops.write().await;
 		let Some(zone_drops) = drops_guard.get_mut(&zone) else { return None; };
 		let removed_drop = zone_drops.swap_remove(item_index);
-		let zone_drops_owned = zone_drops.to_owned();
+		let zone_drops_owned = zone_drops.clone();
 		if zone_drops.is_empty() {
 			drops_guard.remove(&zone);
 		}
@@ -181,7 +182,7 @@ impl Server {
 		//this is a shortcut, as the creature technically still exists
 		//the proper way to remove a creature requires updating all remaining creatures which is expensive on bandwidth
 		self.broadcast(&CreatureUpdate {
-			id: creature_id.to_owned(),
+			id: *creature_id,
 			health: Some(0.0), //makes the creature intangible
 			affiliation: Some(Affiliation::Neutral), //ensures it doesnt show up on the map
 			..Default::default()
@@ -262,7 +263,7 @@ async fn check_version(reader: &mut impl ReadPacket, writer: &mut impl WritePack
 	Ok(())
 }
 
-/// during new player setup the server needs to send an abnormal CreatureUpdate which:
+/// during new player setup the server needs to send an abnormal `CreatureUpdate` which:
 /// * is not compressed (and lacks the size prefix used for compressed packets)
 /// * has no bitfield indicating the presence of its properties
 /// * falls 8 bytes short of representing a full creature
@@ -275,7 +276,7 @@ async fn check_version(reader: &mut impl ReadPacket, writer: &mut impl WritePack
 async fn write_abnormal_creature_update<Writable: AsyncWrite + Unpin + Send>(writable: &mut Writable, assigned_id: CreatureId) -> io::Result<()> {
 	writable.write_arbitrary(&CreatureUpdate::ID).await?;
 	writable.write_arbitrary(&assigned_id).await?; //luckily the only thing the alpha client does with this data is acquiring its assigned CreatureId
-	writable.write_all(&[0u8; 4456]).await?; //so we can simply zero out everything else and not worry about the missing bytes
+	writable.write_all(&[0_u8; 4456]).await?; //so we can simply zero out everything else and not worry about the missing bytes
 	writable.flush().await
 	//TODO: move this to protocol crate and construct this from an actual [CreatureUpdate]
 }

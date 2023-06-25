@@ -10,7 +10,7 @@ pub trait ReadArbitrary: AsyncRead + Unpin {
 	async fn read_arbitrary<T>(&mut self) -> io::Result<T>
 		where [(); size_of::<T>()]:
 	{
-		let mut buffer = [0u8; size_of::<T>()];
+		let mut buffer = [0_u8; size_of::<T>()];
 		self.read_exact(&mut buffer).await?;
 
 		//Ok(unsafe { transmute::<[u8; size_of::<T>()], T>(buffer)}) //compiler is not smart enough to recognize that matching sizes for input and output are guaranteed

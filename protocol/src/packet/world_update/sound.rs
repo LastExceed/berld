@@ -111,6 +111,7 @@ pub enum Kind {
 }
 
 impl Sound {
+	#[must_use]
 	pub fn at(position: Point3<i64>, kind: Kind) -> Self {
 		Self {
 			position: sound_position_of(position),

@@ -10,7 +10,7 @@ use protocol::utils::constants::combat_classes::*;
 
 use crate::addon::anti_cheat::PresentIn;
 
-pub(crate) fn animations_avilable_with(combat_class: CombatClass, equipment: &Equipment) -> Vec<Animation> {
+pub fn animations_avilable_with(combat_class: CombatClass, equipment: &Equipment) -> Vec<Animation> {
 	let abilities = class_specific_animations(combat_class);
 	let (m1, m2) = weapon_specific_animations(combat_class, equipment);
 
@@ -23,6 +23,7 @@ pub(crate) fn animations_avilable_with(combat_class: CombatClass, equipment: &Eq
 }
 
 fn class_specific_animations(combat_class: CombatClass) -> &'static [Animation] {
+	#[expect(clippy::wildcard_in_or_patterns, reason="specialization enum is not exhaustive")] //todo
 	match combat_class.occupation {
 		Warrior => &abilities::WARRIOR[..],
 		Ranger  => &abilities::RANGER[..],

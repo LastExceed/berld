@@ -5,6 +5,7 @@
 #![feature(async_closure)]
 #![feature(async_fn_in_trait)]
 #![feature(min_specialization)]
+#![feature(lint_reasons)]
 
 use std::io::ErrorKind::InvalidData;
 use std::mem::size_of;
@@ -83,8 +84,8 @@ impl<Writable: AsyncWrite + Unpin> WriteCwData<ConnectionRejection > for Writabl
 struct Validator;
 
 impl Validator {
-	fn validate_enum<E: IntoEnumIterator + PartialEq>(e: E) -> io::Result<()> {
-		E::iter().any(|variant| e == variant).ok_or(InvalidData.into())
+	fn validate_enum<E: IntoEnumIterator + PartialEq>(e: &E) -> io::Result<()> {
+		E::iter().any(|variant| *e == variant).ok_or(InvalidData.into())
 	}
 }
 

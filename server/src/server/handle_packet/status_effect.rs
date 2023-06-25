@@ -24,7 +24,7 @@ impl HandlePacket<StatusEffect> for Server {
 				let Some(target) = players_guard.iter().find(|player| { player.id == packet.target }) else {
 					return; //can happen when the target disconnected in this moment
 				};
-				apply_poison(source, target.to_owned(), &packet).await;
+				apply_poison(source, target.clone(), &packet).await;
 			}
 			WarFrenzy => {
 				balancing::buff_warfrenzy(&packet, self).await;
@@ -72,7 +72,7 @@ async fn apply_poison(source: &Player, target: Arc<Player>, status_effect: &Stat
 				sleep(Duration::from_millis(500)).await;
 			}
 
-			if let Err(_) = target.send(&world_update).await {
+			if target.send(&world_update).await.is_err() {
 				//disconnects are handled in the reading thread
 				break;
 			};

@@ -7,7 +7,7 @@ pub mod animations;
 pub mod materials;
 pub mod rarity;
 
-pub const SIZE_BLOCK: i64 = 65536;
+pub const SIZE_BLOCK: i64 = 0x_01_00_00;
 pub const SIZE_MAPBLOCK: i64 = SIZE_BLOCK * 8;
 pub const SIZE_CHUNK: i64 = SIZE_BLOCK * 32;
 pub const SIZE_ZONE: i64 = SIZE_CHUNK * 8;//maptile

@@ -7,7 +7,7 @@ pub struct CreatureIdPool {
 
 impl CreatureIdPool {
 	pub fn claim(&mut self) -> CreatureId {
-		let mut x = 0i64;
+		let mut x = 0_i64;
 		while self.claimed_ids.contains(&x) {
 			x += 1;
 		}

@@ -33,7 +33,7 @@ pub struct Addons {
 
 pub fn enable_pvp(creature_update: &mut CreatureUpdate) {
 	if let Some(ref mut flags) = creature_update.flags {
-		flags.set(CreatureFlag::FriendlyFire, true)
+		flags.set(CreatureFlag::FriendlyFire, true);
 	}
 }
 
@@ -64,7 +64,7 @@ impl Server {
 				kind: MenuSelect,
 				pitch: 2.0,
 				volume: 0.5,
-			})).await
+			})).await;
 		})).await;
 	}
 }

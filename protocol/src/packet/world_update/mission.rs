@@ -69,7 +69,7 @@ pub enum Objective {
 
 #[repr(u8)]
 #[derive(Debug, PartialEq, Eq, Clone, Copy)]
-pub enum MissionState {
+pub enum State {
 	Ready,
 	InProgress,
 	Finished

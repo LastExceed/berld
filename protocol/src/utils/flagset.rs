@@ -18,6 +18,6 @@ impl<Inner: PrimInt, Flag: Into<usize>> FlagSet<Inner, Flag> {
 
 impl<Inner: PrimInt, Flag: Into<usize>> Default for FlagSet<Inner, Flag> {
 	fn default() -> Self {
-		Self(Inner::from(0).unwrap(), PhantomData::default())
+		Self(Inner::from(0).unwrap(), PhantomData)
 	}
 }

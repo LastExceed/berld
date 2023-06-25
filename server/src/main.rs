@@ -1,4 +1,4 @@
-#![allow(incomplete_features)]
+#![expect(incomplete_features, reason="generic_const_exprs is incomplete but works for our purposes")]
 #![feature(generic_const_exprs)]
 #![feature(async_closure)]
 #![feature(future_join)]
@@ -6,6 +6,7 @@
 #![feature(async_fn_in_trait)]
 #![feature(return_position_impl_trait_in_trait)]
 #![feature(iter_collect_into)]
+#![feature(lint_reasons)]
 
 use colour::magenta_ln;
 

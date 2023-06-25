@@ -32,8 +32,7 @@ impl Command for Test {
 				.ok_or("out of bounds")?,
 			pitch: params
 				.next()
-				.map(|input| input.parse().unwrap())
-				.unwrap_or(1.0),
+				.map_or(1.0, |input| input.parse().unwrap()),
 			volume: 1.0,
 		};
 		caller.send_ignoring(&WorldUpdate::from(sound)).await;

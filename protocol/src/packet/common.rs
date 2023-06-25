@@ -180,7 +180,7 @@ pub struct Item {
 	pub _recipe: RecipeDummy,
 	pub rarity: u8,
 	pub material: Material,
-	pub flags: FlagSet<u8, ItemFlag>,
+	pub flags: FlagSet<u8, Flag>,
 	//pad1 (ephemeral)
 	pub level: i16,
 	//pad2 (ephemeral)

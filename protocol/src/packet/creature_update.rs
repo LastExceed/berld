@@ -25,7 +25,7 @@ impl<Readable: AsyncRead + Unpin> ReadCwData<CreatureUpdate> for Readable {
 	async fn read_cw_data(&mut self) -> io::Result<CreatureUpdate> {
 		//todo: can't decode from network stream directly because ???
 		let size = self.read_arbitrary::<i32>().await?;
-		let mut buffer = vec![0u8; size as usize];
+		let mut buffer = vec![0_u8; size as usize];
 		self.read_exact(&mut buffer).await?;
 
 		let mut decoder = ZlibDecoder::new(buffer.as_slice());
@@ -34,6 +34,8 @@ impl<Readable: AsyncRead + Unpin> ReadCwData<CreatureUpdate> for Readable {
 		let bitfield = decoder.read_arbitrary::<u64>().await?;
 
 		//todo: macro
+
+		#[expect(clippy::if_then_some_else_none, reason="false positive")]
 		let instance = CreatureUpdate {
 			id,
 			position          : if bitfield & (1 <<  0) > 0 { Some(decoder.read_arbitrary().await?) } else { None },
@@ -49,7 +51,7 @@ impl<Readable: AsyncRead + Unpin> ReadCwData<CreatureUpdate> for Readable {
 				//the game treats Race as u32 here, but u8 everywhere else
 				//so we need to skip 3 bytes here
 				let padding = decoder.read_arbitrary::<[u8;3]>().await?;
-				if padding != [0u8; 3] {
+				if padding != [0_u8; 3] {
 					return Err(InvalidData.into());
 				}
 				Some(race)
@@ -95,7 +97,7 @@ impl<Readable: AsyncRead + Unpin> ReadCwData<CreatureUpdate> for Readable {
 					.map_err(|_| io::Error::from(InvalidData))?
 					.to_str()
 					.map_err(|_| io::Error::from(InvalidData))?
-					.to_string();
+					.to_owned();
 
 				Some(name)
 			} else { None },
@@ -103,7 +105,7 @@ impl<Readable: AsyncRead + Unpin> ReadCwData<CreatureUpdate> for Readable {
 			mana_cubes        : if bitfield & (1 << 47) > 0 { Some(decoder.read_arbitrary().await?) } else { None }
 		};
 
-		if !matches!(decoder.read_to_end(&mut vec![0u8; 0]).await, Ok(0)) {
+		if !matches!(decoder.read_to_end(&mut vec![0_u8; 0]).await, Ok(0)) {
 			return Err(InvalidData.into());
 		}
 		Ok(instance)
@@ -111,8 +113,10 @@ impl<Readable: AsyncRead + Unpin> ReadCwData<CreatureUpdate> for Readable {
 }
 
 impl<Writable: AsyncWrite + Unpin> WriteCwData<CreatureUpdate> for Writable {
+	#[expect(clippy::identity_op, reason="<< 0 is an identity_op, but more visually consistent in this case")]
+	#[expect(clippy::too_many_lines, reason="TODO")]
 	async fn write_cw_data(&mut self, creature_update: &CreatureUpdate) -> std::io::Result<()> {
-		let mut bitfield = 0u64;
+		let mut bitfield = 0_u64;
 
 		//todo: macro
 		bitfield |= (creature_update.position         .is_some() as u64) <<  0;
@@ -221,14 +225,14 @@ impl<Writable: AsyncWrite + Unpin> WriteCwData<CreatureUpdate> for Writable {
 				let bytes = it.as_bytes();
 				if bytes.len() > 16 { return Err(InvalidData.into()) }
 				encoder.write_all(bytes).await?;
-				encoder.write_all(&vec![0u8; 16 - bytes.len()]).await?;
+				encoder.write_all(&vec![0_u8; 16 - bytes.len()]).await?;
 				//todo: check what happens with non-ascii characters
 			}
 			if let Some(it) = &creature_update.skill_tree        { encoder.write_arbitrary(it).await?; }
 			if let Some(it) = &creature_update.mana_cubes        { encoder.write_arbitrary(it).await?; }
 
 			encoder.shutdown().await?;
-		}
+		};
 
 		self.write_arbitrary(&(buffer.len() as i32)).await?;
 		self.write_all(&buffer).await
@@ -238,26 +242,26 @@ impl<Writable: AsyncWrite + Unpin> WriteCwData<CreatureUpdate> for Writable {
 impl Validate<CreatureUpdate> for Validator {
 	fn validate(creature_update: &CreatureUpdate) -> io::Result<()> {
 		if let Some(affiliation) = creature_update.affiliation {
-			Validator::validate_enum(affiliation)?
+			Self::validate_enum(&affiliation)?;
 		}
 		if let Some(race) = creature_update.race {
-			Validator::validate_enum(race)?
+			Self::validate_enum(&race)?;
 		}
 		if let Some(animation) = creature_update.animation {
-			Validator::validate_enum(animation)?
+			Self::validate_enum(&animation)?;
 		}
 		if let Some(occupation) = creature_update.occupation {
-			Validator::validate_enum(occupation)?
+			Self::validate_enum(&occupation)?;
 		}
 		if let Some(specialization) = creature_update.specialization {
-			Validator::validate_enum(specialization)?
+			Self::validate_enum(&specialization)?;
 		}
 		if let Some(ref consumable) = creature_update.consumable {
-			Validator::validate(consumable)?
+			Self::validate(consumable)?;
 		}
 		if let Some(ref equipment) = creature_update.equipment {
 			for item in equipment.iter() {
-				Validator::validate(item)?
+				Self::validate(item)?;
 			}
 		}
 

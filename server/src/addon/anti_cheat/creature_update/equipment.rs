@@ -7,7 +7,7 @@ use protocol::packet::creature_update::Occupation;
 use protocol::packet::creature_update::Occupation::*;
 use protocol::utils::constants::materials;
 
-pub(crate) fn allowed_materials(item_kind: item::Kind, occupation: Occupation) -> &'static [Material] {
+pub fn allowed_materials(item_kind: item::Kind, occupation: Occupation) -> &'static [Material] {
 	match item_kind {
 		Weapon(Sword)      => &materials::SWORD[..],
 		Weapon(Axe)        => &materials::AXE[..],
@@ -49,8 +49,6 @@ pub(crate) fn allowed_materials(item_kind: item::Kind, occupation: Occupation) -
 
 		Lamp       => &materials::LAMP[..],
 
-		Pet(_)     |
-		PetFood(_) |
 		_          => &[Material::None][..],
 	}
 }

@@ -76,11 +76,10 @@ impl DiscordIntegration {
 
 					Ok(_) => (),
 
+					#[expect(clippy::dbg_macro, reason="keeping this until i figure out the errors")]
 					Err(error) => {
-						println!("{:?}", error);//todo: proper error handling
-						if error.is_fatal() {
-							panic!("fatal error in event loop of discord integration");
-						}
+						dbg!("{:?}", &error);//todo: proper error handling
+						assert!(!error.is_fatal(), "fatal error in event loop of discord integration");
 						continue;
 					}
 				};

@@ -1,3 +1,5 @@
+use tap::Tap;
+
 use protocol::packet::{Hit, WorldUpdate};
 use protocol::packet::common::Race;
 use protocol::packet::common::Race::*;
@@ -41,18 +43,19 @@ pub fn impact_sounds(hit: &Hit, target_race: Race) -> Vec<Sound> {
 		Invisible => vec![],
 
 		Normal => {
-			if let Some(groan) = groan_of(target_race) {
-				vec![Punch1, groan]
-			} else {
-				vec![Punch1]
-			}
+			vec![Punch1]
+				.tap_mut(|v| {
+					if let Some(groan) = groan_of(target_race) {
+						v.push(groan);
+					}
+				})
 		},
 	}.into_iter()
 		.map(|kind| Sound::at(hit.position, kind))
 		.collect()
 }
 
-fn groan_of(race: Race) -> Option<sound::Kind> {
+const fn groan_of(race: Race) -> Option<sound::Kind> {
 	match race {
 		ElfMale         => Some(MaleGroan),
 		ElfFemale       => Some(FemaleGroan),

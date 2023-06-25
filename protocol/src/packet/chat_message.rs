@@ -8,10 +8,11 @@ use crate::ReadCwData;
 use crate::utils::io_extensions::{ReadArbitrary, WriteArbitrary};
 
 async fn read_text<Readable: AsyncRead + Unpin>(readable: &mut Readable) -> io::Result<String> {
-	let character_count = readable.read_arbitrary::<i32>().await? as usize;
 	const U16_SIZE: usize = size_of::<u16>();
 
-	let mut u8s = vec![0u8; character_count * U16_SIZE];
+	let character_count = readable.read_arbitrary::<i32>().await? as usize;
+
+	let mut u8s = vec![0_u8; character_count * U16_SIZE];
 
 	readable.read_exact(&mut u8s).await?;
 	let u16s = u8s
@@ -79,6 +80,8 @@ impl From<ChatMessageFromServer> for ChatMessageFromClient {
 }
 
 impl ChatMessageFromServer {
+	#[expect(clippy::missing_const_for_fn, reason="doesn't actually work, some error i don't understand")]
+	#[must_use]
 	pub fn from_reverse(value: ChatMessageFromClient, source: CreatureId) -> Self {
 		Self {
 			source,
@@ -88,6 +91,7 @@ impl ChatMessageFromServer {
 }
 
 impl ChatMessageFromClient {
+	#[must_use]
 	pub fn into_reverse(self, source: CreatureId) -> ChatMessageFromServer {
 		ChatMessageFromServer::from_reverse(self, source)
 	}

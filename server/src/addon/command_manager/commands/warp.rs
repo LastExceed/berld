@@ -1,4 +1,3 @@
-use std::collections::HashMap;
 use std::fs;
 use std::io::ErrorKind::NotFound;
 use std::str::SplitWhitespace;
@@ -23,30 +22,29 @@ impl Warp {
 			Err(error) if error.kind() == NotFound => {
 				concat!("spawn;",0x8020800000,';',0x8020800000)
 					.tap(|content| fs::write(Self::FILE_PATH, content).unwrap())
-					.to_string()
+					.to_owned()
 			}
 
 			Err(error) => panic!("failed to load {} - {}", Self::FILE_PATH, error)
 		};
-		let locations_iter = file_content.lines().map(|line| {
-			let splits: [&str; 3] = line
-				.split(';')
-				.collect::<Vec<_>>()
-				.try_into()
-				.unwrap();
-
-			(
-				splits[0].to_string(),
-				Point3::new(
-					splits[1].parse().unwrap(),
-					splits[2].parse().unwrap(),
-					0i64
-				)
-			)
-		});
 
 		Self {
-			locations: HashMap::from_iter(locations_iter)
+			locations: file_content.lines().map(|line| {
+				let splits: [&str; 3] = line
+					.split(';')
+					.collect::<Vec<_>>()
+					.try_into()
+					.unwrap();
+
+				(
+					splits[0].to_owned(),
+					Point3::new(
+						splits[1].parse().unwrap(),
+						splits[2].parse().unwrap(),
+						0_i64
+					)
+				)
+			}).collect()
 		}
 	}
 }

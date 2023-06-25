@@ -1,6 +1,12 @@
 [package]
 name = "protocol"
 version = "0.1.0"
+description = "cubeworld alpha network protocol"
+repository = "https://github.com/LastExceed/berld"
+readme = "README.md"
+# license = "TODO"
+keywords = ["cubeworld"]
+categories = ["games", "network-programming"]
 edition = "2021"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html

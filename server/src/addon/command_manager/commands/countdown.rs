@@ -13,6 +13,7 @@ impl Command for Countdown {
 	const LITERAL: &'static str = "countdown";
 	const ADMIN_ONLY: bool = false;
 
+	#[expect(clippy::unused_async, reason="False positive rust-lang/rust-clippy#10459")]
 	async fn execute<'fut>(&'fut self, server: &'fut Server, _caller: Option<&'fut Player>, _params: &'fut mut SplitWhitespace<'fut>) -> CommandResult {
 		let server_static: &'static Server = unsafe { transmute(server) };//todo: scoped task
 

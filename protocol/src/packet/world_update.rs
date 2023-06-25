@@ -26,7 +26,7 @@ pub mod mission;
 impl<Readable: AsyncRead + Unpin> ReadCwData<WorldUpdate> for Readable {
 	async fn read_cw_data(&mut self) -> io::Result<WorldUpdate> {
 		//todo: deduplicate (creature_update)
-		let mut buffer = vec![0u8; self.read_arbitrary::<i32>().await? as usize];
+		let mut buffer = vec![0_u8; self.read_arbitrary::<i32>().await? as usize];
 		self.read_exact(&mut buffer).await?;
 
 		let mut decoder = ZlibDecoder::new(buffer.as_slice());
@@ -173,7 +173,7 @@ pub struct Mission {
 	pub race: Race,
 	pub level: i32,
 	pub rarity: u8,
-	pub state: MissionState,
+	pub state: State,
 	//pad2
 	pub progress_current: i32,
 	pub progress_maximum: i32,

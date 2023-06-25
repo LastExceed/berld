@@ -46,6 +46,7 @@ impl Player {
 	pub async fn send_ignoring<Packet: FromServer>(&self, packet: &Packet)
 		where BufWriter<OwnedWriteHalf>: WriteCwData<Packet>//todo: specialization could obsolete this
 	{
+		#[expect(clippy::let_underscore_must_use, reason="deliberate")]
 		let _ = self.send(packet).await;
 	}
 
