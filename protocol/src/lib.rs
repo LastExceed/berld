@@ -76,8 +76,8 @@ impl<Writable: AsyncWrite + Unpin> WriteCwData<ProtocolVersion     > for Writabl
 impl<Writable: AsyncWrite + Unpin> WriteCwData<ConnectionRejection > for Writable {}
 //ChatMessageFromServer
 //ChatMessageFromClient
-//WorldUpdate                //which can be found in their respective module
 //AirshipTraffic             //these packets have non-default trait implementations
+//WorldUpdate                //which can be found in their respective module
 //CreatureUpdate
 
 //todo: this should honestly be done entirely with macros, else its gonna be a bunch of copypasta
