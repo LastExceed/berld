@@ -1,7 +1,6 @@
 #![expect(incomplete_features, reason = "generic_const_exprs is incomplete, but works for our purposes")]
 #![feature(generic_const_exprs)]
 #![feature(associated_type_defaults)]
-#![allow(const_evaluatable_unchecked)]
 #![feature(async_closure)]
 #![feature(min_specialization)]
 #![feature(lint_reasons)]
