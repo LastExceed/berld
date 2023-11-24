@@ -6,6 +6,8 @@
 #![feature(iter_collect_into)]
 #![feature(lint_reasons)]
 
+#![allow(unreachable_pub)] //this isn't a lib, so adding `(crate)` to every `pub` is just pointless noise
+
 use colour::magenta_ln;
 
 use server::Server;
