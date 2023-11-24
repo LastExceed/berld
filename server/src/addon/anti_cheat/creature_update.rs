@@ -507,14 +507,19 @@ pub(super) fn inspect_blocking_gauge(blocking_gauge: &f32, former_state: &Creatu
 	let blocking = blocking_via_shield || blocking_via_guardians_passive;
 
 	let max =
-		//in theory, one could legitimately achieve 100% blocking uptime server side + 99% recharge uptime client side
-		//by only blocking for 1ms every time packet construction snapshots the character state
 		if blocking {
 			former_state.blocking_gauge
 		} else { 1.0 };
 
-	blocking_gauge
-		.ensure_within(&(0.0..=max), "blocking_gauge") //todo: negative gauge glitch?
+	//it is technically possible to achieve 100% blocking uptime server side + 99% recharge uptime client side legitimately
+	//by only blocking for 1ms every time packet construction snapshots the character state
+	//while this is inhuman to actually pull off in practice, it does cause false positives every once in a while
+	//which is why we unfortunately have to disable this check
+
+	// blocking_gauge
+	// 	.ensure_within(&(0.0..=max), "blocking_gauge") //todo: negative gauge glitch?
+
+	Ok(())
 }
 pub(super) fn inspect_multipliers(multipliers: &Multipliers, former_state: &Creature, updated_state: &Creature, ac_data: &mut PlayerACData) -> anti_cheat::Result {
 	multipliers[Health]     .ensure_exact(&100.0, "multipliers.health")?;
@@ -575,6 +580,7 @@ pub(super) fn inspect_consumable(consumable: &Item, former_state: &Creature, upd
 	power_of(consumable.level as i32)
 		.ensure_within(&(0..=power_of(updated_state.level)), "consumable.power")
 }
+//noinspection ProblematicWhitespace
 pub(super) fn inspect_equipment(equipment: &Equipment, former_state: &Creature, updated_state: &Creature, ac_data: &mut PlayerACData) -> anti_cheat::Result {
 	//todo: copypasta
 	let invariant_slots = [
