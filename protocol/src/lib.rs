@@ -1,4 +1,4 @@
-#![allow(incomplete_features)]
+#![expect(incomplete_features, reason = "generic_const_exprs is incomplete, but works for our purposes")]
 #![feature(generic_const_exprs)]
 #![feature(associated_type_defaults)]
 #![allow(const_evaluatable_unchecked)]
