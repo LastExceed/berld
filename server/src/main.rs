@@ -3,8 +3,6 @@
 #![feature(async_closure)]
 #![feature(future_join)]
 #![feature(let_chains)]
-#![feature(async_fn_in_trait)]
-#![feature(return_position_impl_trait_in_trait)]
 #![feature(iter_collect_into)]
 #![feature(lint_reasons)]
 

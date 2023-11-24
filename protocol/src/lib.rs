@@ -3,7 +3,6 @@
 #![feature(associated_type_defaults)]
 #![allow(const_evaluatable_unchecked)]
 #![feature(async_closure)]
-#![feature(async_fn_in_trait)]
 #![feature(min_specialization)]
 #![feature(lint_reasons)]
 
