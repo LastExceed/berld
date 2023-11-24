@@ -53,7 +53,7 @@ impl Command for Warp {
 	const LITERAL: &'static str = "warp";
 	const ADMIN_ONLY: bool = false;
 
-	async fn execute<'fut>(&'fut self, server: &'fut Server, caller: Option<&'fut Player>, params: &'fut mut SplitWhitespace<'fut>) -> CommandResult {//todo: lifetime redundant?
+	async fn execute<'fut>(&'fut self, server: &'fut Server, caller: Option<&'fut Player>, params: &'fut mut SplitWhitespace<'fut>) -> CommandResult {
 		let caller = caller.ok_or(INGAME_ONLY)?;
 
 		let location_name = params

@@ -16,7 +16,7 @@ impl Command for Test {
 	const LITERAL: &'static str = "t";
 	const ADMIN_ONLY: bool = true;
 
-	async fn execute(&self, _server: &Server, caller: Option<&Player>, params: &mut SplitWhitespace<'_>) -> CommandResult {
+	async fn execute<'fut>(&'fut self, _server: &'fut Server, caller: Option<&'fut Player>, params: &'fut mut SplitWhitespace<'fut>) -> CommandResult {
 		let caller = caller.ok_or(INGAME_ONLY)?;
 
 		let sound = Sound {

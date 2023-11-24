@@ -20,7 +20,7 @@ impl Command for Gear {
 	const LITERAL: &'static str = "gear";
 	const ADMIN_ONLY: bool = false;
 
-	async fn execute(&self, _server: &Server, caller: Option<&Player>, _params: &mut SplitWhitespace<'_>) -> CommandResult {
+	async fn execute<'fut>(&'fut self, _server: &'fut Server, caller: Option<&'fut Player>, _params: &'fut mut SplitWhitespace<'fut>) -> CommandResult {
 		let caller = caller.ok_or(INGAME_ONLY)?;
 		let character = caller.character.read().await;
 

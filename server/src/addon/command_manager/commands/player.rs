@@ -11,7 +11,7 @@ impl Command for PlayerCommand {
 	const LITERAL: &'static str = "player";
 	const ADMIN_ONLY: bool = false;
 
-	async fn execute(&self, server: &Server, _caller: Option<&Player>, params: &mut SplitWhitespace<'_>) -> CommandResult {
+	async fn execute<'fut>(&'fut self, server: &'fut Server, _caller: Option<&'fut Player>, params: &'fut mut SplitWhitespace<'fut>) -> CommandResult {
 		let player = server
 			.find_player(params.next().ok_or("no target specified")?).await
 			.ok_or("target not found")?;

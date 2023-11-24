@@ -13,7 +13,7 @@ impl Command for Level {
 	const LITERAL: &'static str = "level";
 	const ADMIN_ONLY: bool = false;
 
-	async fn execute(&self, _server: &Server, caller: Option<&Player>, params: &mut SplitWhitespace<'_>) -> CommandResult {
+	async fn execute<'fut>(&'fut self, _server: &'fut Server, caller: Option<&'fut Player>, params: &'fut mut SplitWhitespace<'fut>) -> CommandResult {
 		let caller = caller.ok_or(INGAME_ONLY)?;
 
 		let target_level: i32 = params

@@ -11,7 +11,7 @@ impl Command for Who {
 	const LITERAL: &'static str = "who";
 	const ADMIN_ONLY: bool = false;
 
-	async fn execute(&self, server: &Server, _caller: Option<&Player>, _params: &mut SplitWhitespace<'_>) -> CommandResult {
+	async fn execute<'fut>(&'fut self, server: &'fut Server, _caller: Option<&'fut Player>, _params: &'fut mut SplitWhitespace<'fut>) -> CommandResult {
 		let message = join_all(
 			server.players
 				.read().await
@@ -34,7 +34,7 @@ impl Command for WhoIp {
 	const LITERAL: &'static str = "who_ip";
 	const ADMIN_ONLY: bool = true;
 
-	async fn execute(&self, server: &Server, _caller: Option<&Player>, _params: &mut SplitWhitespace<'_>) -> CommandResult {
+	async fn execute<'fut>(&'fut self, server: &'fut Server, _caller: Option<&'fut Player>, _params: &'fut mut SplitWhitespace<'fut>) -> CommandResult {
 		let message = join_all(
 			server.players
 				.read().await
