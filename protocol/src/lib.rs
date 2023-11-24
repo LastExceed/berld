@@ -6,6 +6,8 @@
 #![feature(min_specialization)]
 #![feature(lint_reasons)]
 
+#![expect(async_fn_in_trait, reason = "TODO")] //TODO: investigate if AFIT desugaring could obsolete Unpin trait bounds
+
 use std::io::ErrorKind::InvalidData;
 use std::mem::size_of;
 
