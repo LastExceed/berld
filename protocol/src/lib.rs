@@ -24,8 +24,7 @@ pub mod utils;
 #[cfg(test)]
 mod tests;
 
-pub trait Packet
-	//todo: where AsyncRead : ReadCwData<Self>
+pub trait Packet //: where for<T: AsyncRead> T: ReadCwData<Self> //TODO: investigate if #![feature(non_lifetime_binders)] is usable yet
 {
 	const ID: packet::Id;//dedicated type ensures this can't be used in arithmetic operations
 }
