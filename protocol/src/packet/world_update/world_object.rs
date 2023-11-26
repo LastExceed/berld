@@ -71,7 +71,7 @@ pub enum Kind {
 	BeachUmbrella,
 	BeachTowel,
 	SleepingMat,
-	UNUSED, //70
+	Unknown70,
 	Furnace,
 	Anvil,
 	SpinningWheel,
