@@ -29,7 +29,7 @@ impl<Readable: AsyncRead + Unpin> ReadArbitrary for Readable {}
 impl<Writable: AsyncWrite + Unpin> WriteArbitrary for Writable {}
 
 
-pub trait ReadPacket: AsyncRead + Unpin + Sized { //todo: move to io extensions
+pub trait ReadPacket: AsyncRead + Unpin + Sized {
 	async fn read_packet<P: Packet>(&mut self) -> io::Result<P>
 		where
 			[(); size_of::<P>()]:,
@@ -46,7 +46,7 @@ pub trait ReadPacket: AsyncRead + Unpin + Sized { //todo: move to io extensions
 	}
 }
 
-pub trait WritePacket<P: Packet>: WriteCwData<P> {//todo: move to io extensions
+pub trait WritePacket<P: Packet>: WriteCwData<P> {
 	async fn write_packet(&mut self, packet: &P) -> io::Result<()> {
 		self.write_arbitrary(&P::ID).await?;
 		self.write_cw_data(packet).await?;

@@ -47,7 +47,7 @@ fn create_items(occupation: Occupation, level: i16) -> Vec<Item> {
 			Occupation::Ranger  => (Linen , Wood, vec![Bow, Crossbow, Boomerang]),
 			Occupation::Mage    => (Silk  , Wood, vec![Wand, Staff]),
 			Occupation::Rogue   => (Cotton, Iron, vec![Longsword, Dagger, Dagger, Fist, Fist]),
-			_ => unreachable!("player's occupation wasn't a combat discipline")
+			_ => unreachable!("player's occupation wasn't a combat discipline") //todo: err instead of panic?
 		};
 
 	let mut items = vec![

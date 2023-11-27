@@ -127,7 +127,7 @@ pub struct WorldObject {
 	pub transform_time: i32,
 	pub unknown_b: i32,
 	//pad4 //cuwo says 64bit padding??
-	pub interactor: i64
+	pub interactor: i64 //todo: CreatureId
 }
 
 #[derive(Debug, PartialEq, Eq, Hash, Clone, Default)]
