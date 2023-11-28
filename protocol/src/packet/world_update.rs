@@ -22,6 +22,7 @@ pub mod world_object;
 pub mod drops;
 pub mod p48;
 pub mod mission;
+mod pickup;
 
 impl<Readable: AsyncRead + Unpin> ReadCwData<WorldUpdate> for Readable {
 	async fn read_cw_data(&mut self) -> io::Result<WorldUpdate> {
@@ -184,7 +185,6 @@ impl<Readable: AsyncRead + Unpin> ReadCwData<Block      > for Readable {}
 impl<Readable: AsyncRead + Unpin> ReadCwData<Particle   > for Readable {}
 impl<Readable: AsyncRead + Unpin> ReadCwData<Sound      > for Readable {}
 impl<Readable: AsyncRead + Unpin> ReadCwData<WorldObject> for Readable {}
-impl<Readable: AsyncRead + Unpin> ReadCwData<Pickup     > for Readable {}
 impl<Readable: AsyncRead + Unpin> ReadCwData<Kill       > for Readable {}
 impl<Readable: AsyncRead + Unpin> ReadCwData<Attack     > for Readable {}
 impl<Readable: AsyncRead + Unpin> ReadCwData<Mission    > for Readable {}
@@ -193,13 +193,13 @@ impl<Writable: AsyncWrite + Unpin> WriteCwData<Block      > for Writable {}
 impl<Writable: AsyncWrite + Unpin> WriteCwData<Particle   > for Writable {}
 impl<Writable: AsyncWrite + Unpin> WriteCwData<Sound      > for Writable {}
 impl<Writable: AsyncWrite + Unpin> WriteCwData<WorldObject> for Writable {}
-impl<Writable: AsyncWrite + Unpin> WriteCwData<Pickup     > for Writable {}
 impl<Writable: AsyncWrite + Unpin> WriteCwData<Kill       > for Writable {}
 impl<Writable: AsyncWrite + Unpin> WriteCwData<Attack     > for Writable {}
 impl<Writable: AsyncWrite + Unpin> WriteCwData<Mission    > for Writable {}
 //Hit
 //Projectile
 //Drop
+//Pickup
 //P48
 //StatusEffect
 

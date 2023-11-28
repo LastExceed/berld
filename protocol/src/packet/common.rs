@@ -171,19 +171,16 @@ pub enum Race {
 	Blowfish
 }
 
-#[repr(C)]
+//note the lack of Repr(C) here! structure is altered because Formulas are weird
 #[derive(Debug, Clone, Default, PartialEq, Eq, Hash)]
 pub struct Item {
 	pub kind: Kind,
-	//pad 2 (ephemeral)
+	pub as_formula: bool,
 	pub seed: i32,
-	pub _recipe: RecipeDummy,
 	pub rarity: u8,
 	pub material: Material,
 	pub flags: FlagSet<u8, Flag>,
-	//pad1 (ephemeral)
 	pub level: i16,
-	//pad2 (ephemeral)
 	pub spirits: [Spirit; 32],
 	pub spirit_counter: i32
 }

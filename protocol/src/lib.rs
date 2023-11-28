@@ -49,7 +49,6 @@ pub trait WriteCwData<CwStruct>: AsyncWrite + Unpin + Sized {
 impl<Readable: AsyncRead + Unpin> ReadCwData<MultiCreatureUpdate > for Readable {}
 impl<Readable: AsyncRead + Unpin> ReadCwData<ServerTick          > for Readable {}
 impl<Readable: AsyncRead + Unpin> ReadCwData<IngameDatetime      > for Readable {}
-impl<Readable: AsyncRead + Unpin> ReadCwData<CreatureAction      > for Readable {}
 impl<Readable: AsyncRead + Unpin> ReadCwData<Hit                 > for Readable {}
 impl<Readable: AsyncRead + Unpin> ReadCwData<StatusEffect        > for Readable {}
 impl<Readable: AsyncRead + Unpin> ReadCwData<Projectile          > for Readable {}
@@ -63,7 +62,6 @@ impl<Readable: AsyncRead + Unpin> ReadCwData<ConnectionRejection > for Readable 
 impl<Writable: AsyncWrite + Unpin> WriteCwData<MultiCreatureUpdate > for Writable {}
 impl<Writable: AsyncWrite + Unpin> WriteCwData<ServerTick          > for Writable {}
 impl<Writable: AsyncWrite + Unpin> WriteCwData<IngameDatetime      > for Writable {}
-impl<Writable: AsyncWrite + Unpin> WriteCwData<CreatureAction      > for Writable {}
 impl<Writable: AsyncWrite + Unpin> WriteCwData<Hit                 > for Writable {}
 impl<Writable: AsyncWrite + Unpin> WriteCwData<StatusEffect        > for Writable {}
 impl<Writable: AsyncWrite + Unpin> WriteCwData<Projectile          > for Writable {}
@@ -78,6 +76,7 @@ impl<Writable: AsyncWrite + Unpin> WriteCwData<ConnectionRejection > for Writabl
 //AirshipTraffic             //these packets have non-default trait implementations
 //WorldUpdate                //which can be found in their respective module
 //CreatureUpdate
+//CreatureAction
 
 //todo: this should honestly be done entirely with macros, else its gonna be a bunch of copypasta
 struct Validator;

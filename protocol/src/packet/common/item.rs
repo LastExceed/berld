@@ -1,16 +1,16 @@
-use std::mem::{size_of, transmute};
-use std::slice;
+use std::mem::transmute;
 
 use nalgebra::Point3;
 use strum_macros::{EnumCount, EnumIter};
 use tokio::io;
+use tokio::io::{AsyncRead, AsyncReadExt, AsyncWrite, AsyncWriteExt};
 
 use kind::*;
 
-use crate::{Validate, Validator};
+use crate::{ReadCwData, Validate, Validator, WriteCwData};
 use crate::packet::common::{Item, Race};
-use crate::packet::common::item::Kind::Formula;
 use crate::utils::{ArrayWrapper, level_scaling_factor, rarity_scaling_factor};
+use crate::utils::io_extensions::{ReadArbitrary, WriteArbitrary};
 
 pub mod kind;
 
@@ -38,8 +38,8 @@ pub enum Kind {
 	#[default]
 	Void,
 	Consumable(Consumable),
-	Formula,
-	Weapon(Weapon),
+	//Formula, //use item.as_formula instead //todo: recursive formulas
+	Weapon(Weapon) = 3,
 	Chest,
 	Gloves,
 	Boots,
@@ -124,50 +124,70 @@ pub struct Spirit {
 	//pad2 //todo: struct align suggests that this could be a property, maybe seed/rarity/flags of the spirit?
 }
 
-
-///an awful workaround for the typesafety breaking inconsistency of formulas. initialize with `Default::default()`, and use the get/set functions afterwards
-#[derive(Debug, PartialEq, Eq, Hash, Clone, Copy, Default)]
-pub struct RecipeDummy([u8;4]);
-
-#[derive(Debug, PartialEq, Eq, Hash, Clone, Copy, Default)]
-pub struct NotAFormula;
-
-#[expect(clippy::used_underscore_binding, reason="disgusting workaround for a problem i don't yet know how to solve")]
-impl Item {
-	pub fn get_recipe(&self) -> Result<Kind, NotAFormula> {
-		if self.kind != Formula {
-			return Err(NotAFormula);
-		}
-
-		let recipe = unsafe {
-			let recipe_bytes = [
-				self._recipe.0[0],
-				transmute::<_, [u8; size_of::<Kind>()]>(self.kind)[1]
-			];
-
-			transmute(recipe_bytes)
-		};
-
-		Ok(recipe)
+//custom read/write impl is necessary solely because of formula weirdness :(
+impl<Writable: AsyncWrite + Unpin> WriteCwData<Item> for Writable {
+	async fn write_cw_data(&mut self, item: &Item) -> io::Result<()> {
+		let has_subkind = matches!(
+			item.kind,
+			Kind::Consumable(_)
+			| Kind::Weapon(_)
+			| Kind::Resource(_)
+			| Kind::Candle(_)
+			| Kind::Pet(_)
+			| Kind::PetFood(_)
+			| Kind::Quest(_)
+			| Kind::Special(_)
+		);
+		let kind_bytes: [u8; 2] = unsafe { transmute(item.kind) }; //SAFETY: infallible
+		self.write_u8(if item.as_formula { 2 } else { kind_bytes[0] }).await?;
+		self.write_u8(if has_subkind { kind_bytes[1] } else { 0 }).await?;
+		self.write_all(&[0u8; 2]).await?; //pad2
+		self.write_i32_le(item.seed).await?;
+		self.write_u32_le(if item.as_formula { kind_bytes[0] as _ } else { 0 }).await?;
+		self.write_u8(item.rarity).await?;
+		self.write_u8(item.material as _).await?;
+		self.write_arbitrary(&item.flags).await?;
+		self.write_all(&[0u8; 1]).await?; //pad2
+		self.write_i16_le(item.level).await?;
+		self.write_all(&[0u8; 2]).await?; //pad2
+		self.write_arbitrary(&item.spirits).await?;
+		self.write_i32_le(item.spirit_counter).await
 	}
+}
 
-	pub fn set_recipe(&mut self, recipe: Kind) -> Result<(), NotAFormula> {
-		if self.kind != Formula {
-			return Err(NotAFormula);
+impl<Readable: AsyncRead + Unpin> ReadCwData<Item> for Readable {
+	async fn read_cw_data(&mut self) -> io::Result<Item> {
+		let mut mainkind = self.read_u8().await?;
+		let subkind = self.read_u8().await?;
+		let _ = self.read_u16().await?;
+		let seed = self.read_i32_le().await?;
+		let recipe = self.read_u32_le().await?;
+		let rarity = self.read_u8().await?;
+		let material = self.read_arbitrary().await?;
+		let flags = self.read_arbitrary().await?;
+		let _ = self.read_u8().await?;
+		let level = self.read_i16_le().await?;
+		let _ = self.read_u16().await?;
+
+		let is_formula = mainkind == 2;
+		if is_formula {
+			mainkind = recipe as _;
 		}
+		let kind = unsafe { transmute([mainkind, subkind]) };
 
-		unsafe {
-			let recipe_bytes: [u8; size_of::<Kind>()] = transmute(recipe);
-
-			slice::from_raw_parts_mut(
-				(self as *mut Self).cast::<u8>(),
-				size_of::<Self>()
-			)[1] = recipe_bytes[1];
-
-			self._recipe.0[0] = recipe_bytes[0];
+		let item = Item {
+			kind,
+			as_formula: is_formula,
+			seed,
+			rarity,
+			material,
+			flags,
+			level,
+			spirits: self.read_arbitrary().await?,
+			spirit_counter: self.read_i32_le().await?,
 		};
-
-		Ok(())
+		Validator::validate(&item)?;
+		Ok(item)
 	}
 }
 

@@ -5,6 +5,7 @@ use async_compression::tokio::bufread::ZlibDecoder;
 use async_compression::tokio::write::ZlibEncoder;
 use nalgebra::Point3;
 use rgb::RGB;
+use strum::EnumCount;
 use strum_macros::EnumIter;
 use tokio::io;
 use tokio::io::{AsyncRead, AsyncReadExt, AsyncWrite, AsyncWriteExt};
@@ -90,8 +91,22 @@ impl<Readable: AsyncRead + Unpin> ReadCwData<CreatureUpdate> for Readable {
 			home              : if bitfield & (1 << 40) > 0 { Some(decoder.read_arbitrary().await?) } else { None },
 			zone_to_reveal    : if bitfield & (1 << 41) > 0 { Some(decoder.read_arbitrary().await?) } else { None },
 			unknown42         : if bitfield & (1 << 42) > 0 { Some(decoder.read_arbitrary().await?) } else { None },
-			consumable        : if bitfield & (1 << 43) > 0 { Some(decoder.read_arbitrary().await?) } else { None },
-			equipment         : if bitfield & (1 << 44) > 0 { Some(decoder.read_arbitrary().await?) } else { None },
+			consumable        : if bitfield & (1 << 43) > 0 {
+				//explicit type annotation as a workaround for https://github.com/rust-lang/rust/issues/108362
+				let consumable = <ZlibDecoder<&[u8]> as ReadCwData<Item>>::read_cw_data(&mut decoder).await?;
+				Some(consumable)
+			} else { None },
+			equipment         : if bitfield & (1 << 44) > 0 {
+				//custom read/write impl is necessary solely because of formula weirdness :(
+				let mut items = Vec::with_capacity(Slot::COUNT);
+				for _ in 0..Slot::COUNT {
+					//explicit type annotation as a workaround for https://github.com/rust-lang/rust/issues/108362
+					items.push(<ZlibDecoder<&[u8]> as ReadCwData<Item>>::read_cw_data(&mut decoder).await?);
+				}
+
+				let x: [_; Slot::COUNT] = items.try_into().unwrap();
+				Some(x.into())
+			} else { None },
 			name              : if bitfield & (1 << 45) > 0 {
 				let name = CStr::from_bytes_until_nul(decoder.read_arbitrary::<[u8; 16]>().await?.as_slice())
 					.map_err(|_| io::Error::from(InvalidData))?
@@ -219,8 +234,13 @@ impl<Writable: AsyncWrite + Unpin> WriteCwData<CreatureUpdate> for Writable {
 			if let Some(it) = &creature_update.home              { encoder.write_arbitrary(it).await?; }
 			if let Some(it) = &creature_update.zone_to_reveal    { encoder.write_arbitrary(it).await?; }
 			if let Some(it) = &creature_update.unknown42         { encoder.write_arbitrary(it).await?; }
-			if let Some(it) = &creature_update.consumable        { encoder.write_arbitrary(it).await?; }
-			if let Some(it) = &creature_update.equipment         { encoder.write_arbitrary(it).await?; }
+			if let Some(it) = &creature_update.consumable        { encoder.write_cw_data(it).await?; }
+			if let Some(it) = &creature_update.equipment         {
+				//custom read/write impl is necessary solely because of formula weirdness :(
+				for item in it.iter() {
+					encoder.write_cw_data(item).await?;
+				}
+			}
 			if let Some(it) = &creature_update.name              {
 				let bytes = it.as_bytes();
 				if bytes.len() > 16 { return Err(InvalidData.into()) }
