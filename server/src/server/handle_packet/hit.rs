@@ -75,7 +75,7 @@ impl HandlePacket<Hit> for Server {
 			sounds: hit_sounds,
 			hits: hits_vec,
 			..Default::default()
-		}).await; //todo: verify that only target needs this packet*/ ToufouMaster: After investigating, it seem like the hits are only visible for the target even with broadcast, also the sound "Hit" seems to be hearable by everyone, but not the Destroy2 which need a broadcast, again cubeworld is well done ;D
+		}).await; //todo: verify that only target needs this packet*/ ToufouMaster: After investigating, it seem like the hit damages are only visible for the target even with broadcast, also the sound "Hit" seems to be hearable by everyone, but not the Destroy2 which need a broadcast, again cubeworld is well done ;D
 	}
 }
 
