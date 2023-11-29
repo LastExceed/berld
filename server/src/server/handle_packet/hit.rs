@@ -1,9 +1,12 @@
 use std::sync::Arc;
 use tap::Tap;
 
-use protocol::packet::{Hit, WorldUpdate};
+use protocol::packet::{CreatureUpdate, Hit, WorldUpdate};
 use protocol::packet::common::Race;
+use protocol::packet::common::item::Kind::Weapon;
+use protocol::packet::common::item::kind::Weapon::Shield;
 use protocol::packet::common::Race::*;
+use protocol::packet::creature_update::equipment::Slot;
 use protocol::packet::hit::Kind::{*, Absorb, Block};
 use protocol::packet::world_update::{Sound, sound};
 use protocol::packet::world_update::sound::Kind::*;
@@ -29,14 +32,50 @@ impl HandlePacket<Hit> for Server {
 
 		balancing::adjust_hit(&mut packet, &source_character_guard, &target_character_guard);
 		packet.flash = true;//todo: (re-)move
-		let sounds = impact_sounds(&packet, target_character_guard.race);
-		drop((source_character_guard, target_character_guard));
+
+
+		source.send_ignoring(&CreatureUpdate { // Avoid the depletion of the target blocking gauge
+			id: target.id,
+			blocking_gauge: Some(target_character_guard.blocking_gauge),
+			..Default::default()
+		}).await;
+
+		let mut hits_vec = vec![];
+		let mut hit_sounds = impact_sounds(&packet, target_character_guard.race);
+
+		if packet.kind == Block {
+			let block_packet = Hit { // Show Block message when attack is Blocked
+				kind: Block,
+				damage: 0.0,
+				..packet
+			};
+			hits_vec.push(block_packet); // To target
+
+			let left_weapon = &target_character_guard.equipment[Slot::LeftWeapon];
+			let right_weapon = &target_character_guard.equipment[Slot::RightWeapon];
+			if left_weapon.kind != Weapon(Shield) && right_weapon.kind != Weapon(Shield) { // No shield blocking
+				packet.damage /= 4.0;
+				packet.kind = Normal;
+				hits_vec.push(packet); // Normal hit packet, but with damage divided by 4
+			}
+		} else {
+			hits_vec.push(packet);
+		}
+
+		let mut next_health = target_character_guard.health;
+		for hit in &hits_vec {
+			next_health -= hit.damage;
+		}
+
+		if next_health <= 0.0 {
+			hit_sounds.push(Sound::at(target_character_guard.position, Destroy2)); // TODO: this sound is only hearable for the target.
+		}
 
 		target.send_ignoring(&WorldUpdate {
-			sounds,
-			hits: vec![packet],
+			sounds: hit_sounds,
+			hits: hits_vec,
 			..Default::default()
-		}).await; //todo: verify that only target needs this packet
+		}).await; //todo: verify that only target needs this packet*/ ToufouMaster: After investigating, it seem like the hits are only visible for the target even with broadcast, also the sound "Hit" seems to be hearable by everyone, but not the Destroy2 which need a broadcast, again cubeworld is well done ;D
 	}
 }
 
