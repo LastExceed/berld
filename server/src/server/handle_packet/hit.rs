@@ -47,6 +47,7 @@ impl HandlePacket<Hit> for Server {
 			let block_packet = Hit { // Show Block message when attack is Blocked
 				kind: Block,
 				damage: 0.0,
+				critical: true, // text is clearer like this
 				..packet
 			};
 			hits_vec.push(block_packet); // To target
@@ -67,15 +68,19 @@ impl HandlePacket<Hit> for Server {
 			next_health -= hit.damage;
 		}
 
-		if next_health <= 0.0 {
-			hit_sounds.push(Sound::at(target_character_guard.position, Destroy2)); // TODO: this sound is only hearable for the target.
-		}
 
 		target.send_ignoring(&WorldUpdate {
-			sounds: hit_sounds,
-			hits: hits_vec,
-			..Default::default()
-		}).await; //todo: verify that only target needs this packet*/ ToufouMaster: After investigating, it seem like the hit damages are only visible for the target even with broadcast, also the sound "Hit" seems to be hearable by everyone, but not the Destroy2 which need a broadcast, again cubeworld is well done ;D
+			sounds: hit_sounds, 	// the sound and hit effect can be heard/seen by every players
+			hits: hits_vec,			// the damages are only shown to the target
+			..Default::default()	// and the attacker damage is precalculated by the client
+		}).await;
+
+		if next_health <= 0.0 {
+			self.broadcast(&WorldUpdate { // send death sound to all players
+				sounds: vec![Sound::at(target_character_guard.position, Destroy2)],
+				..Default::default()
+			}, None).await;
+		}
 	}
 }
 
