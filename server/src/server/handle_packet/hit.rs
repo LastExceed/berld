@@ -42,14 +42,13 @@ pub fn impact_sounds(hit: &Hit, target_race: Race) -> Vec<Sound> {
 		Dodge |
 		Invisible => vec![],
 
-		Normal => {
-			vec![Punch1]
-				.tap_mut(|v| {
-					if let Some(groan) = groan_of(target_race) {
-						v.push(groan);
-					}
-				})
-		},
+		Normal => Vec::with_capacity(2)
+			.tap_mut(|vec| {
+				vec.push(Punch1);
+				if let Some(groan) = groan_of(target_race) {
+					vec.push(groan);
+				}
+			}),
 	}.into_iter()
 		.map(|kind| Sound::at(hit.position, kind))
 		.collect()

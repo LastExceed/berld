@@ -1,4 +1,5 @@
 #![allow(unused_variables)]
+#![allow(clippy::needless_pass_by_ref_mut)] //todo: remove empty functions
 
 use std::default::Default;
 use std::time::Duration;
@@ -163,6 +164,7 @@ pub(super) fn inspect_combo_timeout(combo_timeout: &i32, former_state: &Creature
 		.ensure_at_most(2000, "combo_timeout.clockdesync")
 }
 
+#[expect(clippy::too_many_lines, reason = "TODO")] //TODO: extract constants
 pub(super) fn inspect_appearance(appearance: &Appearance, former_state: &Creature, updated_state: &Creature, ac_data: &mut PlayerACData) -> anti_cheat::Result {
 	appearance.flags.ensure_exact(&FlagSet::default(), "appearance.flags")?;
 
@@ -647,7 +649,7 @@ pub(super) fn inspect_equipment(equipment: &Equipment, former_state: &Creature, 
 			continue; //empty item slots contain uninitialized memory
 		}
 
-		let property_name = |s| { format!("equipment[{slot:?}].{s}") };
+		let property_name = |literal| { format!("equipment[{slot:?}].{literal}") };
 
 		item.as_formula
 			.ensure_exact(&false, &property_name("as_formula"))?;

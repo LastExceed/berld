@@ -128,9 +128,9 @@ impl<Readable: AsyncRead + Unpin> ReadCwData<CreatureUpdate> for Readable {
 }
 
 impl<Writable: AsyncWrite + Unpin> WriteCwData<CreatureUpdate> for Writable {
-	#[expect(clippy::identity_op, reason="<< 0 is an identity_op, but more visually consistent in this case")]
-	#[expect(clippy::too_many_lines, reason="TODO")]
-	async fn write_cw_data(&mut self, creature_update: &CreatureUpdate) -> std::io::Result<()> {
+	#[expect(clippy::identity_op, reason = "<< 0 is an identity_op, but more visually consistent in this case")]
+	#[expect(clippy::too_many_lines, reason = "TODO")]
+	async fn write_cw_data(&mut self, creature_update: &CreatureUpdate) -> io::Result<()> {
 		let mut bitfield = 0_u64;
 
 		//todo: macro

@@ -1,3 +1,4 @@
+use std::mem::transmute;
 use std::sync::atomic::Ordering;
 use std::time::Duration;
 
@@ -51,6 +52,12 @@ impl Server {
 		for other_player in self.players.read().await.iter() {//todo: "on_reload" ?
 			player.send_ignoring(&other_player.character.read().await.to_update(other_player.id)).await;
 		}
+	}
+
+	///terrible hack due to my inexperience. unsafe as fuck
+	pub fn extend_lifetime(&self) -> &'static Self {
+		#[expect(clippy::undocumented_unsafe_blocks, reason = "TODO")]
+		unsafe { transmute(self) } //TODO: figure out scoped tasks
 	}
 }
 

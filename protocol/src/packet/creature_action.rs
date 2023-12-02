@@ -1,3 +1,4 @@
+use tokio::io;
 use tokio::io::{AsyncRead, AsyncReadExt, AsyncWrite, AsyncWriteExt};
 
 use crate::{ReadCwData, WriteCwData};
@@ -20,7 +21,7 @@ pub enum Kind {
 
 //custom read/write impl is necessary solely because of formula weirdness :(
 impl<Readable: AsyncRead + Unpin> ReadCwData<CreatureAction> for Readable {
-	async fn read_cw_data(&mut self) -> std::io::Result<CreatureAction> {
+	async fn read_cw_data(&mut self) -> io::Result<CreatureAction> {
 		let creature_action = CreatureAction {
 			item: <Readable as ReadCwData<Item>>::read_cw_data(self).await?,//explicit type annotation as a workaround for https://github.com/rust-lang/rust/issues/108362
 			zone: self.read_arbitrary().await?,
@@ -28,19 +29,19 @@ impl<Readable: AsyncRead + Unpin> ReadCwData<CreatureAction> for Readable {
 			unknown_a: self.read_i32_le().await?,
 			kind: self.read_arbitrary().await?,
 		};
-		self.read_exact(&mut [0u8; 3]).await?;
+		self.read_exact(&mut [0_u8; 3]).await?;
 
 		Ok(creature_action)
 	}
 }
 
 impl<Writable: AsyncWrite + Unpin> WriteCwData<CreatureAction> for Writable {
-	async fn write_cw_data(&mut self, creature_action: &CreatureAction) -> std::io::Result<()> {
+	async fn write_cw_data(&mut self, creature_action: &CreatureAction) -> io::Result<()> {
 		self.write_cw_data(&creature_action.item).await?;
 		self.write_arbitrary(&creature_action.zone).await?;
 		self.write_i32_le(creature_action.item_index).await?;
 		self.write_i32_le(creature_action.unknown_a).await?;
 		self.write_u8(creature_action.kind as u8).await?;
-		self.write_all(&[0u8; 3]).await
+		self.write_all(&[0_u8; 3]).await
 	}
 }

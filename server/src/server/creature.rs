@@ -130,7 +130,7 @@ impl Creature {
 		})
 	}
 
-	#[expect(clippy::cognitive_complexity, reason="false positive")]
+	#[expect(clippy::cognitive_complexity, reason = "false positive")]
 	pub fn update(&mut self, packet: &CreatureUpdate) {
 		//todo: macro
 		if let Some(it) = packet.position              { self.position              = it }

@@ -51,8 +51,6 @@ variant_size_differences = "warn"
 
 
 
-
-
 [workspace.lints.clippy]
 # start with EVERYTHING enabled (except deprecated lints ofc)
 cargo       = { level = "warn", priority = -1 }
@@ -77,6 +75,7 @@ large_futures = "allow" # unsure
 unchecked_duration_subtraction = "allow" # unsure
 missing_panics_doc = "allow" # unsure
 missing_errors_doc = "allow" # unsure
+unreadable_literal = "allow" # unsure (also complains about floats)
 cast_sign_loss = "allow" # TODO
 cast_possible_truncation = "allow" # TODO
 cast_lossless = "allow" # TODO
@@ -84,12 +83,13 @@ cast_possible_wrap = "allow" # TODO
 cast_precision_loss = "allow" # TODO
 trivially_copy_pass_by_ref = "allow" # TODO
 unnecessary_wraps = "allow" # TODO
-unreadable_literal = "allow" # TODO
 
 # nursery exceptions
 or_fun_call = "allow" # unsure
 future_not_send = "allow" # TODO
 suboptimal_flops = "allow" # TODO
+significant_drop_tightening = "allow" # TODO
+significant_drop_in_scrutinee = "allow" # TODO
 
 # restrictions exceptions
 allow_attributes = "allow" # unusably buggy
@@ -110,6 +110,11 @@ exhaustive_structs = "allow" # disagree
 exhaustive_enums = "allow" # disagree
 missing_inline_in_public_items = "allow" # not relevant
 self_named_module_files = "allow" # using `mod_module_files` instead
+as_underscore = "allow" # disagree
+single_call_fn = "allow" # disagree
+impl_trait_in_params = "allow" #disagree
+little_endian_bytes = "allow" # using `big_endian_bytes` instead
+pub_with_shorthand = "allow" # using `pub_without_shorthand` instead
 
 pattern_type_mismatch = "allow" # unsure
 multiple_inherent_impl = "allow" # unsure
@@ -125,6 +130,7 @@ unreachable = "allow" # unsure
 ref_patterns = "allow" # unsure
 multiple_unsafe_ops_per_block = "allow" # unsure
 partial_pub_fields = "allow" # unsure
+modulo_arithmetic = "allow" # unsure
 
 clone_on_ref_ptr = "allow" # TODO
 indexing_slicing = "allow" # TODO

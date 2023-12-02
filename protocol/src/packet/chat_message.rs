@@ -80,7 +80,6 @@ impl From<ChatMessageFromServer> for ChatMessageFromClient {
 }
 
 impl ChatMessageFromServer {
-	#[expect(clippy::missing_const_for_fn, reason="doesn't actually work, some error i don't understand")]
 	#[must_use]
 	pub fn from_reverse(value: ChatMessageFromClient, source: CreatureId) -> Self {
 		Self {

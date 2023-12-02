@@ -89,6 +89,7 @@ pub struct ArrayWrapper<Idx: Into<usize> + EnumCount, Element>([Element; Idx::CO
 impl<Idx: Into<usize> + EnumCount, Element> ArrayWrapper<Idx, Element>
 	where [(); Idx::COUNT]:
 {
+	#[expect(clippy::iter_without_into_iter, reason = "TODO")]
 	pub fn iter(&self) -> Iter<'_, Element> {
 		self.0.iter()
 	}

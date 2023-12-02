@@ -82,8 +82,10 @@ impl<Writable: AsyncWrite + Unpin> WriteCwData<ConnectionRejection > for Writabl
 struct Validator;
 
 impl Validator {
-	fn validate_enum<E: IntoEnumIterator + PartialEq>(e: &E) -> io::Result<()> {
-		E::iter().any(|variant| *e == variant).ok_or(InvalidData.into())
+	fn validate_enum<E: IntoEnumIterator + PartialEq>(instance: &E) -> io::Result<()> {
+		E::iter()
+			.any(|variant| variant == *instance)
+			.ok_or(InvalidData.into())
 	}
 }
 

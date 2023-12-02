@@ -1,6 +1,5 @@
 use std::collections::HashMap;
 use std::io::ErrorKind::{InvalidData, InvalidInput};
-use std::mem::transmute;
 use std::net::SocketAddr;
 use std::ptr;
 use std::sync::Arc;
@@ -59,9 +58,9 @@ impl Server {
 		loop {
 			let (stream, address) = listener.accept().await.unwrap();
 
-			let self_static: &'static Self = unsafe { transmute(&self) }; //todo: scoped task
+			let self_static = self.extend_lifetime();
 			tokio::spawn(async move {
-				#[expect(clippy::redundant_pattern_matching, reason="TODO")]
+				#[expect(clippy::redundant_pattern_matching, reason = "TODO")]
 				if let Err(_) = self_static.handle_new_connection(stream, address).await {
 					//TODO: error logging
 				}
@@ -146,7 +145,7 @@ impl Server {
 			..Default::default()
 		}, None).await;
 
-		let server_static: &'static Self = unsafe { transmute(self) }; //todo: scoped task
+		let server_static = self.extend_lifetime();
 		tokio::spawn(async move {
 			sleep(Duration::from_millis(500)).await;
 			server_static.broadcast(&WorldUpdate::from(Sound::at(position, DropItem)), None).await;
@@ -201,7 +200,7 @@ impl Server {
 				ChatMessageFromClient::ID => self.handle_packet(source, reader.read_packet::<ChatMessageFromClient>().await?).await,
 				ZoneDiscovery        ::ID => self.handle_packet(source, reader.read_packet::<ZoneDiscovery        >().await?).await,
 				RegionDiscovery      ::ID => self.handle_packet(source, reader.read_packet::<RegionDiscovery      >().await?).await,
-				unexpected_packet_id => panic!("unexpected packet id {:?}", unexpected_packet_id)
+				unexpected_packet_id => panic!("unexpected packet id {unexpected_packet_id:?}")
 			};
 
 			if source.should_disconnect.load(Ordering::Relaxed) {

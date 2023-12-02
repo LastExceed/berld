@@ -1,5 +1,4 @@
 use std::fs;
-use std::mem::transmute;
 
 use twilight_gateway::Shard;
 use twilight_http::Client;
@@ -45,7 +44,8 @@ impl DiscordIntegration {
 			Intents::GUILD_MESSAGES | Intents::MESSAGE_CONTENT
 		);
 
-		let server_static: &'static Server = unsafe { transmute(server) }; //todo: scoped task
+		let server_static = server.extend_lifetime();
+
 		tokio::spawn(async move {
 			loop {
 				match shard.next_event().await {

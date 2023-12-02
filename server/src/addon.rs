@@ -1,4 +1,3 @@
-use std::intrinsics::transmute;
 use std::time::Duration;
 
 use futures::future::join_all;
@@ -44,7 +43,8 @@ pub fn fix_cutoff_animations(creature_update: &mut CreatureUpdate, previous_stat
 }
 
 pub fn freeze_time(server: &Server) {
-	let server_static: &'static Server = unsafe { transmute(server) }; //todo: scoped task
+	let server_static = server.extend_lifetime();
+
 	tokio::spawn(async move {
 		loop {
 			server_static.broadcast(&IngameDatetime { time: 12 * 60 * 60 * 1000, day: 0 }, None).await;

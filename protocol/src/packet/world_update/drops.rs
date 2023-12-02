@@ -46,13 +46,13 @@ impl<Readable: AsyncRead + Unpin> ReadCwData<Drop> for Readable {
 			scale: self.read_f32_le().await?,
 			unknown_a: {
 				let unknown_a = self.read_u8().await?;
-				self.read_exact(&mut [0u8; 3]).await?; //pad3
+				self.read_exact(&mut [0_u8; 3]).await?; //pad3
 				unknown_a
 			},
 			droptime: self.read_i32_le().await?,
 			unknown_b: self.read_i32_le().await?,
 		};
-		self.read_exact(&mut [0u8; 4]).await?; //pad4
+		self.read_exact(&mut [0_u8; 4]).await?; //pad4
 
 		Ok(drop)
 	}
@@ -65,9 +65,9 @@ impl<Writable: AsyncWrite + Unpin> WriteCwData<Drop> for Writable {
 		self.write_f32_le(drop.rotation).await?;
 		self.write_f32_le(drop.scale).await?;
 		self.write_u8(drop.unknown_a).await?;
-		self.write_all(&[0u8; 3]).await?;
+		self.write_all(&[0_u8; 3]).await?;
 		self.write_i32_le(drop.droptime).await?;
 		self.write_i32_le(drop.unknown_b).await?;
-		self.write_all(&[0u8; 4]).await
+		self.write_all(&[0_u8; 4]).await
 	}
 }

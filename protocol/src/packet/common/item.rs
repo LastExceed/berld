@@ -138,18 +138,19 @@ impl<Writable: AsyncWrite + Unpin> WriteCwData<Item> for Writable {
 			| Kind::Quest(_)
 			| Kind::Special(_)
 		);
-		let kind_bytes: [u8; 2] = unsafe { transmute(item.kind) }; //SAFETY: infallible
+		//SAFETY: infallible
+		let kind_bytes: [u8; 2] = unsafe { transmute(item.kind) };
 		self.write_u8(if item.as_formula { 2 } else { kind_bytes[0] }).await?;
 		self.write_u8(if has_subkind { kind_bytes[1] } else { 0 }).await?;
-		self.write_all(&[0u8; 2]).await?; //pad2
+		self.write_all(&[0_u8; 2]).await?; //pad2
 		self.write_i32_le(item.seed).await?;
 		self.write_u32_le(if item.as_formula { kind_bytes[0] as _ } else { 0 }).await?;
 		self.write_u8(item.rarity).await?;
 		self.write_u8(item.material as _).await?;
 		self.write_arbitrary(&item.flags).await?;
-		self.write_all(&[0u8; 1]).await?; //pad2
+		self.write_all(&[0_u8; 1]).await?; //pad2
 		self.write_i16_le(item.level).await?;
-		self.write_all(&[0u8; 2]).await?; //pad2
+		self.write_all(&[0_u8; 2]).await?; //pad2
 		self.write_arbitrary(&item.spirits).await?;
 		self.write_i32_le(item.spirit_counter).await
 	}
@@ -173,6 +174,7 @@ impl<Readable: AsyncRead + Unpin> ReadCwData<Item> for Readable {
 		if is_formula {
 			mainkind = recipe as _;
 		}
+		//SAFETY: this value gets validated below
 		let kind = unsafe { transmute([mainkind, subkind]) };
 
 		let item = Item {
@@ -262,7 +264,7 @@ impl Item {
 				_                 => 1.0,
 			};
 
-		#[expect(clippy::match_same_arms, reason="coincidence")]
+		#[expect(clippy::match_same_arms, reason = "coincidence")]
 		let material_multiplier =
 			match self.material {
 				Iron    => (1.0 , 0.85, 2.0 , 0.0, 0.0, 0.0),
@@ -277,8 +279,8 @@ impl Item {
 				_       => (1.0 , 1.0 , 1.0 , 0.0, 0.0, 0.0)
 			};            //armor,resi,health,reg,crit,tempo
 
-		let hp_reg_balance =    ((self.seed as u32 & 0x1FFFFFFF) * 8 % 21) as f32 / 20.0;
-		let crit_tempo_balance = (self.seed as u32                   % 21) as f32 / 20.0;
+		let hp_reg_balance =    ((self.seed as u32 & 0x1FFF_FFFF) * 8 % 21) as f32 / 20.0;
+		let crit_tempo_balance = (self.seed as u32                    % 21) as f32 / 20.0;
 
 		let spirit_bonus = self.spirit_counter as f32 * 0.1;
 

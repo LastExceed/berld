@@ -13,13 +13,15 @@ pub trait ReadArbitrary: AsyncRead + Unpin {
 		let mut buffer = [0_u8; size_of::<T>()];
 		self.read_exact(&mut buffer).await?;
 
-		//Ok(unsafe { transmute::<[u8; size_of::<T>()], T>(buffer)}) //compiler is not smart enough to recognize that matching sizes for input and output are guaranteed
-		Ok(unsafe { (buffer.as_ptr().cast::<T>()).read() })
+		//SAFETY: consumer is expected to validate the struct (terrible, i know)
+		Ok(unsafe { buffer.as_ptr().cast::<T>().read() })
+		//Ok(unsafe { transmute(buffer)}) //compiler is not smart enough to recognize that matching sizes for input and output are guaranteed
 	}
 }
 
 pub trait WriteArbitrary: AsyncWrite + Unpin {
 	async fn write_arbitrary<T>(&mut self, data: &T) -> io::Result<()> {
+		//SAFETY: infallible
 		let data_as_bytes = unsafe { slice::from_raw_parts((data as *const T).cast::<u8>(), size_of::<T>()) };
 		self.write_all(data_as_bytes).await
 	}
