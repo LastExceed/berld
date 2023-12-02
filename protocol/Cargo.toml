@@ -12,14 +12,14 @@ edition = "2021"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-nalgebra = "0.30.1"
-async-compression = { version = "0.3.15", features = ["tokio", "zlib"] }
-rgb = "0.8.33"
-tokio = { version = "1.23.0", features = ["full"] }
-strum_macros = "0.24.3"
-strum = "0.24.1"
+nalgebra = "0.32.3"
+async-compression = { version = "0.4.5", features = ["tokio", "zlib"] }
+rgb = "0.8.37"
+tokio = { version = "1.34.0", features = ["full"] }
+strum_macros = "0.25.3"
+strum = "0.25.0"
 boolinator = "2.4.0"
-num-traits = "0.2.15"
+num-traits = "0.2.17"
 
 [lints]
 workspace = true
