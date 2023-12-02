@@ -134,7 +134,6 @@ modulo_arithmetic = "allow" # unsure
 
 clone_on_ref_ptr = "allow" # TODO
 indexing_slicing = "allow" # TODO
-undocumented_unsafe_blocks = "allow" # TODO
 as_conversions = "allow" # TODO
 
 
