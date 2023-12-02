@@ -573,8 +573,10 @@ pub(super) fn inspect_consumable(consumable: &Item, former_state: &Creature, upd
 	}
 	matches!(consumable.kind, Consumable(_))
 		.ok_or("illegal consumable.kind")?;//todo: safety measure until data validation is implemented
-	 matches!(consumable.kind, Consumable(_))
+	matches!(consumable.kind, Consumable(_))
 	 	.ensure("consumable.kind", &consumable.kind, "any variant of", "Consumable")?;
+	consumable.as_formula
+		.ensure_exact(&false, "consumable.as_formula")?;
 	consumable.rarity
 		.ensure_exact(&NORMAL, "consumable.rarity")?;
 	power_of(consumable.level as i32)
@@ -582,17 +584,21 @@ pub(super) fn inspect_consumable(consumable: &Item, former_state: &Creature, upd
 }
 //noinspection ProblematicWhitespace
 pub(super) fn inspect_equipment(equipment: &Equipment, former_state: &Creature, updated_state: &Creature, ac_data: &mut PlayerACData) -> anti_cheat::Result {
-	//todo: copypasta
+	for slot in Slot::iter() {
+		equipment[slot].as_formula.ensure_exact(&false, &format!("equipment[{slot:?}].as_formula"))?;
+	}
+
+	//todo: copypasta (use strum discriminators)
 	let invariant_slots = [
-		(Slot::Unknown  , item::Kind::Void),
-		(Slot::Neck     , item::Kind::Amulet),
-		(Slot::Chest    , item::Kind::Chest),
-		(Slot::Feet     , item::Kind::Boots),
-		(Slot::Hands    , item::Kind::Gloves),
-		(Slot::Shoulder , item::Kind::Shoulder),
-		(Slot::LeftRing , item::Kind::Ring),
-		(Slot::RightRing, item::Kind::Ring),
-		(Slot::Lamp     , item::Kind::Lamp)
+		(Slot::Unknown  , Void),
+		(Slot::Neck     , Amulet),
+		(Slot::Chest    , Chest),
+		(Slot::Feet     , Boots),
+		(Slot::Hands    , Gloves),
+		(Slot::Shoulder , Shoulder),
+		(Slot::LeftRing , Ring),
+		(Slot::RightRing, Ring),
+		(Slot::Lamp     , Lamp)
 	];
 
 	for (slot, allowed_kind) in invariant_slots {
