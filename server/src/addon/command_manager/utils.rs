@@ -10,7 +10,7 @@ impl Server {
 
 		if let Ok(id) = query.parse::<i64>() {
 			if let Some(player) = players.iter().find(|player| player.id.0 == id) {
-				return Some(player.clone());
+				return Some(Arc::clone(player));
 			}
 		}
 
@@ -21,7 +21,7 @@ impl Server {
 				.to_lowercase()
 				.contains(query);
 			if matches_query {
-				return Some(player.clone())
+				return Some(Arc::clone(player))
 			}
 		}
 

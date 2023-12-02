@@ -132,7 +132,6 @@ multiple_unsafe_ops_per_block = "allow" # unsure
 partial_pub_fields = "allow" # unsure
 modulo_arithmetic = "allow" # unsure
 
-clone_on_ref_ptr = "allow" # TODO
 indexing_slicing = "allow" # TODO
 as_conversions = "allow" # TODO
 

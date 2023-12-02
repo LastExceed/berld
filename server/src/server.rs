@@ -95,16 +95,16 @@ impl Server {
 
 		self.on_join(&new_player, full_creature_update).await?;//todo: character 2x updated
 
-		let new_player_arc = Arc::new(new_player);
-		self.players.write().await.push(new_player_arc.clone());
+		let new_player = Arc::new(new_player);
+		self.players.write().await.push(Arc::clone(&new_player));
 
-		self.read_packets_forever(&new_player_arc, reader).await
+		self.read_packets_forever(&new_player, reader).await
 			.expect_err("impossible");
 
-		self.remove_player(&new_player_arc).await;
+		self.remove_player(&new_player).await;
 
-		self.announce(format!("[-] {}", new_player_arc.character.read().await.name)).await;
-		self.addons.anti_cheat.on_leave(&new_player_arc).await;
+		self.announce(format!("[-] {}", new_player.character.read().await.name)).await;
+		self.addons.anti_cheat.on_leave(&new_player).await;
 
 		Ok(())
 	}

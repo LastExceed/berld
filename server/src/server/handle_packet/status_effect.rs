@@ -24,7 +24,7 @@ impl HandlePacket<StatusEffect> for Server {
 				let Some(target) = players_guard.iter().find(|player| { player.id == packet.target }) else {
 					return; //can happen when the target disconnected in this moment
 				};
-				apply_poison(source, target.clone(), &packet).await;
+				apply_poison(source, Arc::clone(target), &packet).await;
 			}
 			WarFrenzy => {
 				balancing::buff_warfrenzy(&packet, self).await;
