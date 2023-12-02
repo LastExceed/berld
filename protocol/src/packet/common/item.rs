@@ -1,7 +1,7 @@
 use std::mem::transmute;
 
 use nalgebra::Point3;
-use strum_macros::{EnumCount, EnumIter};
+use strum_macros::{EnumCount, EnumDiscriminants, EnumIter};
 use tokio::io;
 use tokio::io::{AsyncRead, AsyncReadExt, AsyncWrite, AsyncWriteExt};
 
@@ -33,7 +33,7 @@ impl Validate<Item> for Validator {
 }
 
 #[repr(u8)]
-#[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Hash, EnumIter)]
+#[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Hash, EnumIter, EnumDiscriminants)]
 pub enum Kind {
 	#[default]
 	Void,

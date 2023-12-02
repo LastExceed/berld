@@ -5,10 +5,11 @@ use std::time::Duration;
 
 use boolinator::Boolinator;
 use strum::IntoEnumIterator;
+use tap::Pipe;
 
 use protocol::nalgebra::{Point3, Vector3};
 use protocol::packet::common::{CreatureId, EulerAngles, Hitbox, Item, item, Race};
-use protocol::packet::common::item::Kind::*;
+use protocol::packet::common::item::KindDiscriminants;
 use protocol::packet::common::Race::*;
 use protocol::packet::creature_update::{Affiliation, Animation, Appearance, CreatureFlag, Equipment, Multipliers, Occupation, PhysicsFlag, SkillTree, Specialization};
 use protocol::packet::creature_update::Animation::*;
@@ -568,12 +569,10 @@ pub(super) fn inspect_unknown42(unknown42: &i8, former_state: &Creature, updated
 	Ok(())
 }
 pub(super) fn inspect_consumable(consumable: &Item, former_state: &Creature, updated_state: &Creature, ac_data: &mut PlayerACData) -> anti_cheat::Result {
-	if consumable.kind == Void {
+	if consumable.kind == item::Kind::Void {
 		return Ok(());
 	}
-	matches!(consumable.kind, Consumable(_))
-		.ok_or("illegal consumable.kind")?;//todo: safety measure until data validation is implemented
-	matches!(consumable.kind, Consumable(_))
+	matches!(consumable.kind, item::Kind::Consumable(_))
 	 	.ensure("consumable.kind", &consumable.kind, "any variant of", "Consumable")?;
 	consumable.as_formula
 		.ensure_exact(&false, "consumable.as_formula")?;
@@ -584,73 +583,49 @@ pub(super) fn inspect_consumable(consumable: &Item, former_state: &Creature, upd
 }
 //noinspection ProblematicWhitespace
 pub(super) fn inspect_equipment(equipment: &Equipment, former_state: &Creature, updated_state: &Creature, ac_data: &mut PlayerACData) -> anti_cheat::Result {
-	for slot in Slot::iter() {
-		equipment[slot].as_formula.ensure_exact(&false, &format!("equipment[{slot:?}].as_formula"))?;
-	}
-
-	//todo: copypasta (use strum discriminators)
-	let invariant_slots = [
-		(Slot::Unknown  , Void),
-		(Slot::Neck     , Amulet),
-		(Slot::Chest    , Chest),
-		(Slot::Feet     , Boots),
-		(Slot::Hands    , Gloves),
-		(Slot::Shoulder , Shoulder),
-		(Slot::LeftRing , Ring),
-		(Slot::RightRing, Ring),
-		(Slot::Lamp     , Lamp)
+	use protocol::packet::common::item::KindDiscriminants::*;
+	let allowed_kinds_by_slot = [
+		(Slot::Unknown    , [            ].as_slice()),
+		(Slot::Neck       , [Amulet      ].as_slice()),
+		(Slot::Chest      , [Chest       ].as_slice()),
+		(Slot::Feet       , [Boots       ].as_slice()),
+		(Slot::Hands      , [Gloves      ].as_slice()),
+		(Slot::Shoulder   , [Shoulder    ].as_slice()),
+		(Slot::LeftWeapon , [Weapon      ].as_slice()),
+		(Slot::RightWeapon, [Weapon      ].as_slice()),
+		(Slot::LeftRing   , [Ring        ].as_slice()),
+		(Slot::RightRing  , [Ring        ].as_slice()),
+		(Slot::Lamp       , [Lamp        ].as_slice()),
+		(Slot::Special    , [Special     ].as_slice()),
+		(Slot::Pet        , [Pet, PetFood].as_slice()),
 	];
 
-	for (slot, allowed_kind) in invariant_slots {
-		equipment[slot].kind.ensure_one_of(&[Void, allowed_kind], &format!("equipment[{slot:?}].kind"))?;
-	}
-
-	matches!(equipment[Slot::LeftWeapon].kind, Void | Weapon(_))
-		.ensure(
-			"equipment[LeftWeapon].kind",
-			&equipment[Slot::LeftWeapon].kind,
-			"any variant of",
-			"Weapon"
-		)?;
-	matches!(equipment[Slot::RightWeapon].kind, Void | Weapon(_))
-		.ensure(
-			"equipment[RightWeapon].kind",
-			&equipment[Slot::RightWeapon].kind,
-			"any variant of",
-			"Weapon"
-		)?;
-	matches!(equipment[Slot::Special].kind, Void | Special(_))
-		.ensure(
-			"equipment[Special].kind",
-			&equipment[Slot::Special].kind,
-			"any variant of",
-			"Special"
-		)?;
-	matches!(equipment[Slot::Pet].kind, Void | Pet(_) | PetFood(_))
-		.ensure(
-			"equipment[Pet].kind",
-			&equipment[Slot::Pet].kind,
-			"any variant of",
-			"Pet or PetFood"
-		)?;
-
-	for slot in Slot::iter() {
+	for (slot, allowed) in allowed_kinds_by_slot {
 		let item = &equipment[slot];
-		if item.kind == Void {
+		if item.kind == item::Kind::Void {
 			continue; //empty item slots contain uninitialized memory
 		}
 
-		//item.seed.ensure_not_negative(&format!("equipment[{:?}].seed", slot)) //tolerating negative seeds due to popularity
-		//item._recipe.ensure_exact(&Void, &format!("equipment[{:?}].recipe", slot))?;
-		//item.minus_modifier
-		item.rarity.ensure_at_most(LEGENDARY, &format!("equipment[{slot:?}].rarity"))?; //todo: crashes for rarity 6+
-		let allowed_materials = allowed_materials(item.kind, updated_state.occupation);
-		item.material.ensure_one_of(allowed_materials, &format!("equipment[{slot:?}].material"))?;
+		let property_name = |s| { format!("equipment[{slot:?}].{s}") };
+
+		item.as_formula
+			.ensure_exact(&false, &property_name("as_formula"))?;
+		item.kind.pipe(KindDiscriminants::from)
+			.ensure_one_of(allowed, &property_name("kind"))?;
+		item.rarity
+			.ensure_at_most(LEGENDARY, &property_name("rarity"))?;
+		item.material
+			.ensure_one_of(allowed_materials(item.kind, updated_state.occupation), &property_name("material"))?;
+		(item.level as i32).pipe(power_of)
+			.ensure_within(&(0..=power_of(updated_state.level)), &property_name("power"))?;
+		item.spirit_counter
+			.ensure_within(&(0..=32), &property_name("spirit_counter"))?;
+		//normally only 2h weapons can have more than 16 (up to 32) spirits, but we're tolerating 32 on everyhting due to popularity
+
 		//item.flags
-		power_of(item.level as i32)
-			.ensure_within(&(0..=power_of(updated_state.level)), &format!("equipment[{slot:?}].power"))?;
 		//item.spirits //tolerating everything due to popularity
-		item.spirit_counter.ensure_within(&(0..=32), &format!("equipment[{slot:?}].spirit_counter"))?;//normally only 2h weapons can have more than 16 (up to 32) spirits, but we're tolerating 32 on everyhting due to popularity
+		//item.seed
+		//	.ensure_not_negative(&format!("equipment[{:?}].seed", slot)) //tolerating negative seeds due to popularity
 	}
 
 	Ok(())
