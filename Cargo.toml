@@ -86,8 +86,8 @@ unnecessary_wraps = "allow" # TODO
 
 # nursery exceptions
 or_fun_call = "allow" # unsure
-future_not_send = "allow" # TODO
-suboptimal_flops = "allow" # TODO
+future_not_send = "allow" # don't currently need this, just adds noise
+suboptimal_flops = "allow" # cubeworld doesn't use these either, and we want to match its rounding behaviour
 
 # restrictions exceptions
 allow_attributes = "allow" # unusably buggy
@@ -129,9 +129,8 @@ ref_patterns = "allow" # unsure
 multiple_unsafe_ops_per_block = "allow" # unsure
 partial_pub_fields = "allow" # unsure
 modulo_arithmetic = "allow" # unsure
-
-indexing_slicing = "allow" # TODO
-as_conversions = "allow" # TODO
+indexing_slicing = "allow" # unsure
+as_conversions = "allow" # unsure
 
 
 # suspicious exceptions
