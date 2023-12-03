@@ -25,8 +25,8 @@ pub mod multipliers;
 impl<Readable: AsyncRead + Unpin> ReadCwData<CreatureUpdate> for Readable {
 	async fn read_cw_data(&mut self) -> io::Result<CreatureUpdate> {
 		//todo: can't decode from network stream directly because ???
-		let size = self.read_arbitrary::<i32>().await?;
-		let mut buffer = vec![0_u8; size as usize];
+		let size = self.read_arbitrary::<u32>().await? as usize;
+		let mut buffer = vec![0_u8; size];
 		self.read_exact(&mut buffer).await?;
 
 		let mut decoder = ZlibDecoder::new(buffer.as_slice());
@@ -36,7 +36,7 @@ impl<Readable: AsyncRead + Unpin> ReadCwData<CreatureUpdate> for Readable {
 
 		//todo: macro
 
-		#[expect(clippy::if_then_some_else_none, reason="false positive")]
+		#[expect(clippy::if_then_some_else_none, reason = "false positive")]
 		let instance = CreatureUpdate {
 			id,
 			position          : if bitfield & (1 <<  0) > 0 { Some(decoder.read_arbitrary().await?) } else { None },

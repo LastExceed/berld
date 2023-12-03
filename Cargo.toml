@@ -76,7 +76,6 @@ unchecked_duration_subtraction = "allow" # unsure
 missing_panics_doc = "allow" # unsure
 missing_errors_doc = "allow" # unsure
 unreadable_literal = "allow" # unsure (also complains about floats)
-cast_sign_loss = "allow" # TODO
 cast_possible_truncation = "allow" # TODO
 cast_lossless = "allow" # TODO
 cast_possible_wrap = "allow" # TODO

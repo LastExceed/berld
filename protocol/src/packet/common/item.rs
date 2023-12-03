@@ -279,12 +279,14 @@ impl Item {
 				_       => (1.0 , 1.0 , 1.0 , 0.0, 0.0, 0.0)
 			};            //armor,resi,health,reg,crit,tempo
 
+		#[expect(clippy::cast_sign_loss, reason = "intentional")]
 		let hp_reg_balance =    ((self.seed as u32 & 0x1FFF_FFFF) * 8 % 21) as f32 / 20.0;
+		#[expect(clippy::cast_sign_loss, reason = "intentional")]
 		let crit_tempo_balance = (self.seed as u32                    % 21) as f32 / 20.0;
 
 		let spirit_bonus = self.spirit_counter as f32 * 0.1;
 
-		#[expect(clippy::shadow_unrelated, reason="kinda false positive")]
+		#[expect(clippy::shadow_unrelated, reason = "kinda false positive")]
 		[
 			(4.0        , can_have_stat.0, false         , class_multiplier     , 0.0                     , true ),//dmg
 			(0.5        , can_have_stat.1, false         , material_multiplier.0, 0.0                     , true ),//armor

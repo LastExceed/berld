@@ -27,7 +27,8 @@ mod pickup;
 impl<Readable: AsyncRead + Unpin> ReadCwData<WorldUpdate> for Readable {
 	async fn read_cw_data(&mut self) -> io::Result<WorldUpdate> {
 		//todo: deduplicate (creature_update)
-		let mut buffer = vec![0_u8; self.read_arbitrary::<i32>().await? as usize];
+		let size = self.read_arbitrary::<u32>().await? as usize;
+		let mut buffer = vec![0_u8; size];
 		self.read_exact(&mut buffer).await?;
 
 		let mut decoder = ZlibDecoder::new(buffer.as_slice());
