@@ -33,6 +33,7 @@ impl Command for Gear {
 				}).collect(),
 			..Default::default()
 		};
+		drop(character);
 
 		caller.send_ignoring(&world_update).await;
 

@@ -11,6 +11,7 @@ impl Command for PlayerCommand {
 	const LITERAL: &'static str = "player";
 	const ADMIN_ONLY: bool = false;
 
+	#[expect(clippy::significant_drop_in_scrutinee, clippy::significant_drop_tightening, reason = "cannot drop any earlier")]
 	async fn execute<'fut>(&'fut self, server: &'fut Server, _caller: Option<&'fut Player>, params: &'fut mut SplitWhitespace<'fut>) -> CommandResult {
 		let player = server
 			.find_player(params.next().ok_or("no target specified")?).await

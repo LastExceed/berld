@@ -1,3 +1,4 @@
+use std::sync::Arc;
 use tap::Tap;
 
 use protocol::packet::{Hit, WorldUpdate};
@@ -14,18 +15,25 @@ use crate::server::Server;
 
 impl HandlePacket<Hit> for Server {
 	async fn handle_packet(&self, source: &Player, mut packet: Hit) {
-		let players_guard = self.players.read().await;
-		let Some(target) = players_guard.iter().find(|player| { player.id == packet.target }) else {
-			return; //can happen when the target disconnected in this moment
-		};
+		//todo: duplicate code
+		let Some(target) = self
+			.players
+			.read()
+			.await
+			.iter()
+			.find(|player| { player.id == packet.target })
+			.map(Arc::clone)
+			else { return; };//can happen when the target disconnected in this moment
 		let target_character_guard = target.character.read().await;
-		let source_character_guard = source.character.read().await; //todo: rename creature -> character
+		let source_character_guard = source.character.read().await;
 
 		balancing::adjust_hit(&mut packet, &source_character_guard, &target_character_guard);
 		packet.flash = true;//todo: (re-)move
+		let sounds = impact_sounds(&packet, target_character_guard.race);
+		drop((source_character_guard, target_character_guard));
 
 		target.send_ignoring(&WorldUpdate {
-			sounds: impact_sounds(&packet, target_character_guard.race),
+			sounds,
 			hits: vec![packet],
 			..Default::default()
 		}).await; //todo: verify that only target needs this packet

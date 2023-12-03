@@ -88,8 +88,6 @@ unnecessary_wraps = "allow" # TODO
 or_fun_call = "allow" # unsure
 future_not_send = "allow" # TODO
 suboptimal_flops = "allow" # TODO
-significant_drop_tightening = "allow" # TODO
-significant_drop_in_scrutinee = "allow" # TODO
 
 # restrictions exceptions
 allow_attributes = "allow" # unusably buggy

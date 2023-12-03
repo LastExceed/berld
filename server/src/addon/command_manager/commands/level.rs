@@ -36,6 +36,8 @@ impl Command for Level {
 			.sum::<i32>()
 			- character.experience;
 
+		drop(character);
+
 		give_xp(caller, xp).await;
 
 		Ok(None)

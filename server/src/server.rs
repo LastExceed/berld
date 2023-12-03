@@ -7,6 +7,8 @@ use std::sync::atomic::Ordering;
 use std::time::Duration;
 
 use futures::future;
+use futures::future::join_all;
+use tap::Pipe;
 use tokio::io;
 use tokio::io::{AsyncWrite, AsyncWriteExt};
 use tokio::io::{BufReader, BufWriter};
@@ -220,8 +222,22 @@ impl Server {
 		player.send(&MapSeed(56345)).await?;
 		player.notify("welcome to berld").await;
 
-		for existing_player in self.players.read().await.iter() {
-			let mut creature_update = existing_player.character.read().await.to_update(existing_player.id);
+		let existing_players = self.players.read().await;
+		let creature_updates = existing_players
+			.iter()
+			.map(|existing_player| async {
+				existing_player
+					.character
+					.read()
+					.await
+					.to_update(existing_player.id)
+			})
+			.pipe(join_all)
+			.await;
+		drop(existing_players);
+
+		//todo: figure out how to begin this loop as soon as the first packet is available
+		for mut creature_update in creature_updates {
 			enable_pvp(&mut creature_update);
 			player.send(&creature_update).await?;
 		}

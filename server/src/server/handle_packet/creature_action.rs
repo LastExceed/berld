@@ -43,13 +43,12 @@ impl HandlePacket<CreatureAction> for Server {
 					self.kick(source, "void item dropped").await;
 					return;
 				}
-				let creature_guard = source.character.read().await;
+				let character = source.character.read().await;
+				let position = character.position - Vector3::new(0, 0, SIZE_BLOCK);
+				let rotation = character.rotation.yaw;
+				drop(character);
 
-				self.add_drop(
-					packet.item,
-					creature_guard.position - Vector3::new(0, 0, SIZE_BLOCK),
-					creature_guard.rotation.yaw
-				).await;
+				self.add_drop(packet.item, position, rotation).await;
 			}
 			CallPet => {
 				//source.notify("pets are disabled".to_owned());

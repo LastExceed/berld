@@ -49,7 +49,8 @@ impl Server {
 		sleep(Duration::from_millis(100)).await;
 		player.send_ignoring(&ServerTick).await;
 		player.send_ignoring(&ServerTick).await;
-		for other_player in self.players.read().await.iter() {//todo: "on_reload" ?
+		#[expect(clippy::significant_drop_in_scrutinee, reason = "TODO")]
+		for other_player in self.players.read().await.iter() {//todo: "on_reload" ? see server.on_join()
 			player.send_ignoring(&other_player.character.read().await.to_update(other_player.id)).await;
 		}
 	}

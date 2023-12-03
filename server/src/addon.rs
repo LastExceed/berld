@@ -1,6 +1,7 @@
 use std::time::Duration;
 
 use futures::future::join_all;
+use tap::Pipe;
 use tokio::time::sleep;
 
 use protocol::packet::{CreatureUpdate, IngameDatetime, WorldUpdate};
@@ -55,16 +56,21 @@ pub fn freeze_time(server: &Server) {
 
 impl Server {
 	pub async fn play_chat_sound(&self) {
-		let players = self.players.read().await;
-
 		//cant use broadcast as sound position is different for each player
-		join_all(players.iter().map(|player| async {
-			player.send_ignoring(&WorldUpdate::from(Sound {
-				position: sound_position_of(player.character.read().await.position),
-				kind: MenuSelect,
-				pitch: 2.0,
-				volume: 0.5,
-			})).await;
-		})).await;
+		self.players
+			.read()
+			.await
+			.iter()
+			.map(|player| async {
+				let sound = Sound {
+					position: sound_position_of(player.character.read().await.position),
+					kind: MenuSelect,
+					pitch: 2.0,
+					volume: 0.5,
+				};
+				player.send_ignoring(&WorldUpdate::from(sound)).await;
+			})
+			.pipe(join_all)
+			.await;
 	}
 }

@@ -34,11 +34,16 @@ impl AirTimeTracker {
 			return;
 		}
 
+		let flags_physics = character.flags_physics.clone();
+		let flags = character.flags.clone();
+		let position = character.position;
+		drop(character); //otherwise we might hold this lock over multiple awaits
+
 		let mut airtime_map = self.airtime_map.write().await;
-		if character.flags_physics.get(OnGround) ||
-			character.flags_physics.get(Swimming) ||
-			character.flags.get(Gliding) ||
-			character.flags.get(Climbing)
+		if flags_physics.get(OnGround) ||
+			flags_physics.get(Swimming) ||
+			flags.get(Gliding) ||
+			flags.get(Climbing)
 		{
 			airtime_map.remove(&source.id);
 			return;
@@ -62,13 +67,9 @@ impl AirTimeTracker {
 				duration: 2000,
 				creature_id3: source.id,//todo: is this needed?
 			};
-			let sound = Sound::at(
-				character.position,
-				Magic01
-			);
 			let world_update = WorldUpdate {
 				status_effects: vec![anger],
-				sounds: vec![sound],
+				sounds: vec![Sound::at(position, Magic01)],
 				..Default::default()
 			};
 			source.send_ignoring(&world_update).await;
@@ -83,13 +84,9 @@ impl AirTimeTracker {
 				stuntime: 3000,
 				..Default::default()
 			};
-			let sound = Sound::at(
-				character.position,
-				SpikeTrap
-			);
 			let world_update = WorldUpdate {
 				hits: vec![stun],
-				sounds: vec![sound],
+				sounds: vec![Sound::at(position, SpikeTrap)],
 				..Default::default()
 			};
 			source.send_ignoring(&world_update).await;

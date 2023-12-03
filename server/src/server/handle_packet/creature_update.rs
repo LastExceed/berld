@@ -8,6 +8,7 @@ use crate::server::player::Player;
 use crate::server::Server;
 
 impl HandlePacket<CreatureUpdate> for Server {
+	#[expect(clippy::significant_drop_tightening, reason = "false positive")]
 	async fn handle_packet(&self, source: &Player, mut packet: CreatureUpdate) {
 		let mut character = source.character.write().await;
 		let snapshot = character.clone();
@@ -22,6 +23,7 @@ impl HandlePacket<CreatureUpdate> for Server {
 		if !filter(&mut packet, &snapshot, &character) {
 			return;
 		}
+		drop(character);
 
 		enable_pvp(&mut packet);
 		fix_cutoff_animations(&mut packet, &snapshot);

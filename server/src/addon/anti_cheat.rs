@@ -38,7 +38,7 @@ impl AntiCheat {
 			.remove(&player.id);
 	}
 
-
+	#[expect(clippy::significant_drop_tightening, reason = "cannot drop any earlier")]
 	pub async fn inspect_creature_update(&self, source: &Player, packet: &CreatureUpdate, former_state: &Creature, updated_state: &Creature) -> Result {
 		packet.id.ensure_exact(&source.id, "creature_id")?;
 
