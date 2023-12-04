@@ -76,12 +76,12 @@ unchecked_duration_subtraction = "allow" # unsure
 missing_panics_doc = "allow" # unsure
 missing_errors_doc = "allow" # unsure
 unreadable_literal = "allow" # unsure (also complains about floats)
-cast_possible_truncation = "allow" # TODO
-cast_lossless = "allow" # TODO
-cast_possible_wrap = "allow" # TODO
-cast_precision_loss = "allow" # TODO
+cast_possible_truncation = "allow" # unsure
+cast_lossless = "allow" # unsure
+cast_possible_wrap = "allow" # unsure
+cast_precision_loss = "allow" # unneeded
 trivially_copy_pass_by_ref = "allow" # TODO
-unnecessary_wraps = "allow" # TODO
+unnecessary_wraps = "allow" # unsure
 
 # nursery exceptions
 or_fun_call = "allow" # unsure
