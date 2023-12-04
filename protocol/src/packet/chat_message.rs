@@ -10,7 +10,7 @@ use crate::utils::io_extensions::{ReadArbitrary, WriteArbitrary};
 async fn read_text<Readable: AsyncRead + Unpin>(readable: &mut Readable) -> io::Result<String> {
 	const U16_SIZE: usize = size_of::<u16>();
 
-	let character_count = readable.read_arbitrary::<u32>().await? as usize;
+	let character_count = readable.read_u32_le().await? as usize;
 
 	let mut u8s = vec![0_u8; character_count * U16_SIZE];
 

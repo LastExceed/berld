@@ -25,14 +25,14 @@ pub mod multipliers;
 impl<Readable: AsyncRead + Unpin> ReadCwData<CreatureUpdate> for Readable {
 	async fn read_cw_data(&mut self) -> io::Result<CreatureUpdate> {
 		//todo: can't decode from network stream directly because ???
-		let size = self.read_arbitrary::<u32>().await? as usize;
+		let size = self.read_u32_le().await? as usize;
 		let mut buffer = vec![0_u8; size];
 		self.read_exact(&mut buffer).await?;
 
 		let mut decoder = ZlibDecoder::new(buffer.as_slice());
 
 		let id = decoder.read_arbitrary::<CreatureId>().await?;
-		let bitfield = decoder.read_arbitrary::<u64>().await?;
+		let bitfield = decoder.read_u64_le().await?;
 
 		//todo: macro
 
@@ -51,7 +51,7 @@ impl<Readable: AsyncRead + Unpin> ReadCwData<CreatureUpdate> for Readable {
 				let race = decoder.read_arbitrary().await?;
 				//the game treats Race as u32 here, but u8 everywhere else
 				//so we need to skip 3 bytes here
-				let padding = decoder.read_arbitrary::<[u8;3]>().await?;
+				let padding = decoder.read_arbitrary::<[u8; 3]>().await?;
 				if padding != [0_u8; 3] {
 					return Err(InvalidData.into());
 				}
@@ -254,7 +254,7 @@ impl<Writable: AsyncWrite + Unpin> WriteCwData<CreatureUpdate> for Writable {
 			encoder.shutdown().await?;
 		};
 
-		self.write_arbitrary(&(buffer.len() as i32)).await?;
+		self.write_i32_le(buffer.len() as _).await?;
 		self.write_all(&buffer).await
 	}
 }

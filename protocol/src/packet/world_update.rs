@@ -10,7 +10,6 @@ use crate::{ReadCwData, WriteCwData};
 use crate::packet::{Hit, Projectile, StatusEffect, WorldUpdate};
 use crate::packet::common::{CreatureId, Hitbox, Item, Race};
 use crate::packet::world_update::drops::Drop;
-use crate::utils::io_extensions::{ReadArbitrary, WriteArbitrary};
 
 use self::mission::*;
 use self::p48::*;
@@ -27,7 +26,7 @@ mod pickup;
 impl<Readable: AsyncRead + Unpin> ReadCwData<WorldUpdate> for Readable {
 	async fn read_cw_data(&mut self) -> io::Result<WorldUpdate> {
 		//todo: deduplicate (creature_update)
-		let size = self.read_arbitrary::<u32>().await? as usize;
+		let size = self.read_u32_le().await? as usize;
 		let mut buffer = vec![0_u8; size];
 		self.read_exact(&mut buffer).await?;
 
@@ -76,7 +75,7 @@ impl<Writable: AsyncWrite + Unpin> WriteCwData<WorldUpdate> for Writable {
 
 		encoder.shutdown().await?;
 
-		self.write_arbitrary(&(buffer.len() as i32)).await?;
+		self.write_i32_le(buffer.len() as _).await?;
 		self.write_all(&buffer).await
 	}
 }

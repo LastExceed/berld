@@ -6,10 +6,10 @@ use std::slice::Iter;
 use nalgebra::Point3;
 use strum::EnumCount;
 use tokio::io;
+use tokio::io::{AsyncReadExt, AsyncWriteExt};
 
 use crate::{ReadCwData, WriteCwData};
 use crate::utils::constants::SIZE_BLOCK;
-use crate::utils::io_extensions::{ReadArbitrary, WriteArbitrary};
 
 pub mod io_extensions;
 pub mod flagset;
@@ -61,7 +61,7 @@ impl<Element, Readable: ReadCwData<Element>> ReadCwData<Vec<Element>> for Readab
 	async fn read_cw_data(&mut self) -> io::Result<Vec<Element>>
 		where [(); size_of::<Element>()]:
 	{
-		let count = self.read_arbitrary::<u32>().await?;
+		let count = self.read_u32_le().await?;
 		let mut vec = Vec::with_capacity(count as usize);
 		for _ in 0..count {
 			vec.push(self.read_cw_data().await?); //todo: figure out how to do this functional style (probably create and collect an Iter)
@@ -73,7 +73,7 @@ impl<Element, Readable: ReadCwData<Element>> ReadCwData<Vec<Element>> for Readab
 //todo: relax to iterable
 impl<Element, Writable: WriteCwData<Element>> WriteCwData<Vec<Element>> for Writable {
 	async fn write_cw_data(&mut self, elements: &Vec<Element>) -> io::Result<()> {
-		self.write_arbitrary(&(elements.len() as i32)).await?;
+		self.write_i32_le(elements.len() as _).await?;
 		for element in elements {
 			self.write_cw_data(element).await?;
 		}
