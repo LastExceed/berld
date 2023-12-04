@@ -676,8 +676,15 @@ pub(super) fn inspect_equipment(equipment: &Equipment, former_state: &Creature, 
 }
 
 pub(super) fn inspect_name(name: &String, former_state: &Creature, updated_state: &Creature, ac_data: &mut PlayerACData) -> anti_cheat::Result {
-	name.as_bytes().len().ensure_within(&(1..=15), "name.length")
-	//todo: limit characters to what the default font can display
+	//character names are serialized as a cstring and thus guaranteed to be comprised of single-byte characters exclusively
+	name.chars().count().ensure_within(&(1..=15), "name.length")?;
+	for (n, character) in name.chars().enumerate() {
+		character.ensure_within(&('!'..='~'), &format!("name[{n}]"))?;
+		//all printable ASCII characters except space (0x20)
+		//cubeworld doesn't recognize 0x80+ in character names, only in chat messages
+	}
+
+	Ok(())
 }
 
 pub(super) fn inspect_skill_tree(skill_tree: &SkillTree, former_state: &Creature, updated_state: &Creature, ac_data: &mut PlayerACData) -> anti_cheat::Result {

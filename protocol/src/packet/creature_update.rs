@@ -1,4 +1,3 @@
-use std::ffi::CStr;
 use std::io::ErrorKind::InvalidData;
 
 use async_compression::tokio::bufread::ZlibDecoder;
@@ -108,11 +107,13 @@ impl<Readable: AsyncRead + Unpin> ReadCwData<CreatureUpdate> for Readable {
 				Some(x.into())
 			} else { None },
 			name              : if bitfield & (1 << 45) > 0 {
-				let name = CStr::from_bytes_until_nul(decoder.read_arbitrary::<[u8; 16]>().await?.as_slice())
-					.map_err(|_| io::Error::from(InvalidData))?
-					.to_str()
-					.map_err(|_| io::Error::from(InvalidData))?
-					.to_owned();
+				let name = decoder
+					.read_arbitrary::<[u8; 16]>()
+					.await?
+					.into_iter()
+					.take_while(|byte| *byte != 0)
+					.map(char::from)
+					.collect();
 
 				Some(name)
 			} else { None },
@@ -246,7 +247,6 @@ impl<Writable: AsyncWrite + Unpin> WriteCwData<CreatureUpdate> for Writable {
 				if bytes.len() > 16 { return Err(InvalidData.into()) }
 				encoder.write_all(bytes).await?;
 				encoder.write_all(&vec![0_u8; 16 - bytes.len()]).await?;
-				//todo: check what happens with non-ascii characters
 			}
 			if let Some(it) = &creature_update.skill_tree        { encoder.write_arbitrary(it).await?; }
 			if let Some(it) = &creature_update.mana_cubes        { encoder.write_arbitrary(it).await?; }
