@@ -6,15 +6,18 @@ members = [
 resolver = "2"
 
 [workspace.lints.rust]
-# for some reason these are unknown. maybe the documentation is outdated?
+unknown_lints = "deny"
+# TODO: figure out how to enable unstable lints
 # fuzzy_provenance_casts = "warn"
 # lossy_provenance_casts = "warn"
 # multiple_supertrait_upcastable = "warn"
 # must_not_suspend = "warn?"
 # non_exhaustive_omitted_patterns = "warn"
+# unnameable_types = "warn"
 
 absolute_paths_not_starting_with_crate = "warn"
 # box_pointers = "warn" # useless
+deprecated_in_future = "warn"
 elided_lifetimes_in_paths = "warn"
 explicit_outlives_requirements = "warn"
 ffi_unwind_calls = "warn"
@@ -27,7 +30,6 @@ missing_abi = "warn"
 missing_debug_implementations = "warn"
 # missing_docs = "warn"
 non_ascii_idents = "warn"
-noop_method_call = "warn"
 pointer_structural_match = "warn"
 rust_2021_incompatible_closure_captures = "warn"
 rust_2021_incompatible_or_patterns = "warn"
@@ -39,6 +41,7 @@ trivial_numeric_casts = "warn"
 unreachable_pub = "warn"
 # unsafe_code = "warn" # defo need this
 unsafe_op_in_unsafe_fn = "warn"
+# unstable_features = "warn" # i like to live on the edge
 unused_crate_dependencies = "warn"
 unused_extern_crates = "warn"
 unused_import_braces = "warn"
