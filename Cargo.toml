@@ -112,6 +112,7 @@ single_call_fn = "allow" # disagree
 impl_trait_in_params = "allow" #disagree
 little_endian_bytes = "allow" # using `big_endian_bytes` instead
 pub_with_shorthand = "allow" # using `pub_without_shorthand` instead
+iter_over_hash_type = "allow" # disagree
 
 pattern_type_mismatch = "allow" # unsure
 multiple_inherent_impl = "allow" # unsure

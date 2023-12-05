@@ -1,3 +1,5 @@
+use std::collections::HashMap;
+use std::hash::Hash;
 use async_compression::Level;
 use async_compression::tokio::bufread::ZlibDecoder;
 use async_compression::tokio::write::ZlibEncoder;
@@ -9,7 +11,7 @@ use tokio::io::{AsyncRead, AsyncReadExt, AsyncWrite, AsyncWriteExt};
 use crate::{ReadCwData, WriteCwData};
 use crate::packet::{Hit, Projectile, StatusEffect, WorldUpdate};
 use crate::packet::common::{CreatureId, Hitbox, Item, Race};
-use crate::packet::world_update::drops::Drop;
+use crate::packet::world_update::loot::GroundItem;
 
 use self::mission::*;
 use self::p48::*;
@@ -18,7 +20,7 @@ pub mod block;
 pub mod particle;
 pub mod sound;
 pub mod world_object;
-pub mod drops;
+pub mod loot;
 pub mod p48;
 pub mod mission;
 mod pickup;
@@ -35,19 +37,19 @@ impl<Readable: AsyncRead + Unpin> ReadCwData<WorldUpdate> for Readable {
 		//todo: copypasta
 		Ok(WorldUpdate {
 			//explicit type annotation as a workaround for https://github.com/rust-lang/rust/issues/108362
-			blocks        : ReadCwData::<Vec<Block                   >>::read_cw_data(&mut decoder).await?,//decoder.read_cw_struct().await?,
-			hits          : ReadCwData::<Vec<Hit                     >>::read_cw_data(&mut decoder).await?,//decoder.read_cw_struct().await?,
-			particles     : ReadCwData::<Vec<Particle                >>::read_cw_data(&mut decoder).await?,//decoder.read_cw_struct().await?,
-			sounds        : ReadCwData::<Vec<Sound                   >>::read_cw_data(&mut decoder).await?,//decoder.read_cw_struct().await?,
-			projectiles   : ReadCwData::<Vec<Projectile              >>::read_cw_data(&mut decoder).await?,//decoder.read_cw_struct().await?,
-			world_objects : ReadCwData::<Vec<WorldObject             >>::read_cw_data(&mut decoder).await?,//decoder.read_cw_struct().await?,
-			drops         : ReadCwData::<Vec<(Point2<i32>, Vec<Drop>)>>::read_cw_data(&mut decoder).await?,//decoder.read_cw_struct().await?,
-			p48s          : ReadCwData::<Vec<P48                     >>::read_cw_data(&mut decoder).await?,//decoder.read_cw_struct().await?,
-			pickups       : ReadCwData::<Vec<Pickup                  >>::read_cw_data(&mut decoder).await?,//decoder.read_cw_struct().await?,
-			kills         : ReadCwData::<Vec<Kill                    >>::read_cw_data(&mut decoder).await?,//decoder.read_cw_struct().await?,
-			attacks       : ReadCwData::<Vec<Attack                  >>::read_cw_data(&mut decoder).await?,//decoder.read_cw_struct().await?,
-			status_effects: ReadCwData::<Vec<StatusEffect            >>::read_cw_data(&mut decoder).await?,//decoder.read_cw_struct().await?,
-			missions      : ReadCwData::<Vec<Mission                 >>::read_cw_data(&mut decoder).await?,//decoder.read_cw_struct().await?
+			blocks        : ReadCwData::<Vec<Block>                           >::read_cw_data(&mut decoder).await?,//decoder.read_cw_data().await?,
+			hits          : ReadCwData::<Vec<Hit>                             >::read_cw_data(&mut decoder).await?,//decoder.read_cw_data().await?,
+			particles     : ReadCwData::<Vec<Particle>                        >::read_cw_data(&mut decoder).await?,//decoder.read_cw_data().await?,
+			sounds        : ReadCwData::<Vec<Sound>                           >::read_cw_data(&mut decoder).await?,//decoder.read_cw_data().await?,
+			projectiles   : ReadCwData::<Vec<Projectile>                      >::read_cw_data(&mut decoder).await?,//decoder.read_cw_data().await?,
+			world_objects : ReadCwData::<Vec<WorldObject>                     >::read_cw_data(&mut decoder).await?,//decoder.read_cw_data().await?,
+			loot          : ReadCwData::<HashMap<Point2<i32>, Vec<GroundItem>>>::read_cw_data(&mut decoder).await?,//decoder.read_cw_data().await?,
+			p48           : ReadCwData::<HashMap<Point2<i32>, Vec<P48sub>>    >::read_cw_data(&mut decoder).await?,//decoder.read_cw_data().await?,
+			pickups       : ReadCwData::<Vec<Pickup>                          >::read_cw_data(&mut decoder).await?,//decoder.read_cw_data().await?,
+			kills         : ReadCwData::<Vec<Kill>                            >::read_cw_data(&mut decoder).await?,//decoder.read_cw_data().await?,
+			attacks       : ReadCwData::<Vec<Attack>                          >::read_cw_data(&mut decoder).await?,//decoder.read_cw_data().await?,
+			status_effects: ReadCwData::<Vec<StatusEffect>                    >::read_cw_data(&mut decoder).await?,//decoder.read_cw_data().await?,
+			missions      : ReadCwData::<Vec<Mission>                         >::read_cw_data(&mut decoder).await?,//decoder.read_cw_data().await?
 		})
 	}
 }
@@ -65,8 +67,8 @@ impl<Writable: AsyncWrite + Unpin> WriteCwData<WorldUpdate> for Writable {
 		encoder.write_cw_data(&world_update.sounds        ).await?;
 		encoder.write_cw_data(&world_update.projectiles   ).await?;
 		encoder.write_cw_data(&world_update.world_objects ).await?;
-		encoder.write_cw_data(&world_update.drops         ).await?;
-		encoder.write_cw_data(&world_update.p48s          ).await?;
+		encoder.write_cw_data(&world_update.loot          ).await?;
+		encoder.write_cw_data(&world_update.p48           ).await?;
 		encoder.write_cw_data(&world_update.pickups       ).await?;
 		encoder.write_cw_data(&world_update.kills         ).await?;
 		encoder.write_cw_data(&world_update.attacks       ).await?;
@@ -129,12 +131,6 @@ pub struct WorldObject {
 	pub unknown_b: i32,
 	//pad4 //cuwo says 64bit padding??
 	pub interactor: i64 //todo: CreatureId
-}
-
-#[derive(Debug, PartialEq, Eq, Hash, Clone, Default)]
-pub struct P48 {
-	pub zone: Point2<i32>,
-	pub sub_packets: Vec<P48sub>
 }
 
 #[repr(C)]
@@ -259,19 +255,19 @@ impl From<WorldObject> for WorldUpdate {
 	}
 }
 
-impl From<(Point2<i32>, Vec<drops::Drop>)> for WorldUpdate {
-	fn from(value: (Point2<i32>, Vec<drops::Drop>)) -> Self {
+impl From<(Point2<i32>, Vec<GroundItem>)> for WorldUpdate {
+	fn from(value: (Point2<i32>, Vec<GroundItem>)) -> Self {
 		Self {
-			drops: vec![value],
+			loot: HashMap::from([value]),
 			..Default::default()
 		}
 	}
 }
 
-impl From<P48> for WorldUpdate {
-	fn from(value: P48) -> Self {
+impl From<(Point2<i32>, Vec<P48sub>)> for WorldUpdate {
+	fn from(value: (Point2<i32>, Vec<P48sub>)) -> Self {
 		Self {
-			p48s: vec![value],
+			p48: HashMap::from([value]),
 			..Default::default()
 		}
 	}

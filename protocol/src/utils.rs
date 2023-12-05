@@ -1,3 +1,5 @@
+use std::collections::HashMap;
+use std::hash::Hash;
 use std::marker::PhantomData;
 use std::mem::size_of;
 use std::ops::{Index, IndexMut};
@@ -6,10 +8,11 @@ use std::slice::Iter;
 use nalgebra::Point3;
 use strum::EnumCount;
 use tokio::io;
-use tokio::io::{AsyncReadExt, AsyncWriteExt};
+use tokio::io::{AsyncRead, AsyncReadExt, AsyncWriteExt};
 
 use crate::{ReadCwData, WriteCwData};
 use crate::utils::constants::SIZE_BLOCK;
+use crate::utils::io_extensions::{ReadArbitrary, WriteArbitrary};
 
 pub mod io_extensions;
 pub mod flagset;
@@ -76,6 +79,34 @@ impl<Element, Writable: WriteCwData<Element>> WriteCwData<Vec<Element>> for Writ
 		self.write_i32_le(elements.len() as _).await?;
 		for element in elements {
 			self.write_cw_data(element).await?;
+		}
+		Ok(())
+	}
+}
+
+impl<Key: Eq + Hash, Value, Readable: AsyncRead + Unpin + ReadCwData<Value>> ReadCwData<HashMap<Key, Value>> for Readable
+	where
+		[(); size_of::<Key>()]:,
+		[(); size_of::<Value>()]:
+{
+	async fn read_cw_data(&mut self) -> io::Result<HashMap<Key, Value>> {
+		let mut map = HashMap::new();
+		let n_keys = self.read_u32_le().await?;
+		for _ in 0..n_keys {
+			let zone = self.read_arbitrary().await?;
+			let ground_items = self.read_cw_data().await?;
+			map.insert(zone, ground_items);
+		}
+		Ok(map)
+	}
+}
+
+impl<Key, Value, Writable: WriteCwData<Value>> WriteCwData<HashMap<Key, Value>> for Writable {
+	async fn write_cw_data(&mut self, map: &HashMap<Key, Value>) -> io::Result<()> {
+		self.write_i32_le(map.len() as _).await?;
+		for (key, value) in map {
+			self.write_arbitrary(key).await?;
+			self.write_cw_data(value).await?;
 		}
 		Ok(())
 	}

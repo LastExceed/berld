@@ -1,4 +1,4 @@
-use nalgebra::{Point2, Point3};
+use nalgebra::Point3;
 use tokio::io;
 use tokio::io::{AsyncRead, AsyncReadExt, AsyncWrite, AsyncWriteExt};
 
@@ -6,24 +6,9 @@ use crate::{ReadCwData, WriteCwData};
 use crate::packet::Item;
 use crate::utils::io_extensions::{ReadArbitrary, WriteArbitrary};
 
-//todo: implementation is extremely similar to P48 and AirshipTraffic
-impl<Readable: AsyncRead + Unpin> ReadCwData<(Point2<i32>, Vec<Drop>)> for Readable {
-	async fn read_cw_data(&mut self) -> io::Result<(Point2<i32>, Vec<Drop>)> {
-		//explicit type annotation as a workaround for https://github.com/rust-lang/rust/issues/108362
-		Ok((self.read_arbitrary().await?, ReadCwData::<Vec<Drop>>::read_cw_data(self).await?))//self.read_cw_struct().await?))
-	}
-}
-
-impl<Writable: AsyncWrite + Unpin> WriteCwData<(Point2<i32>, Vec<Drop>)> for Writable {
-	async fn write_cw_data(&mut self, zone_drops: &(Point2<i32>, Vec<Drop>)) -> io::Result<()> {
-		self.write_arbitrary(&zone_drops.0).await?;
-		self.write_cw_data(&zone_drops.1).await
-	}
-}
-
 #[repr(C)]
 #[derive(Debug, PartialEq, Clone)]
-pub struct Drop {
+pub struct GroundItem {
 	pub item: Item,
 	pub position: Point3<i64>,
 	pub rotation: f32,
@@ -36,9 +21,9 @@ pub struct Drop {
 }
 
 //custom read/write impl is necessary solely because of formula weirdness :(
-impl<Readable: AsyncRead + Unpin> ReadCwData<Drop> for Readable {
-	async fn read_cw_data(&mut self) -> io::Result<Drop> {
-		let drop = Drop {
+impl<Readable: AsyncRead + Unpin> ReadCwData<GroundItem> for Readable {
+	async fn read_cw_data(&mut self) -> io::Result<GroundItem> {
+		let drop = GroundItem {
 			//explicit type annotation as a workaround for https://github.com/rust-lang/rust/issues/108362
 			item: <Readable as ReadCwData<Item>>::read_cw_data(self).await?,
 			position: self.read_arbitrary().await?,
@@ -58,8 +43,8 @@ impl<Readable: AsyncRead + Unpin> ReadCwData<Drop> for Readable {
 	}
 }
 
-impl<Writable: AsyncWrite + Unpin> WriteCwData<Drop> for Writable {
-	async fn write_cw_data(&mut self, drop: &Drop) -> io::Result<()> {
+impl<Writable: AsyncWrite + Unpin> WriteCwData<GroundItem> for Writable {
+	async fn write_cw_data(&mut self, drop: &GroundItem) -> io::Result<()> {
 		self.write_cw_data(&drop.item).await?;
 		self.write_arbitrary(&drop.position).await?;
 		self.write_f32_le(drop.rotation).await?;

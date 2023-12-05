@@ -1,6 +1,8 @@
+use std::collections::HashMap;
 use nalgebra::{Point2, Point3, Vector3};
 
 use crate::{bulk_impl, Packet, WriteCwData};
+use crate::packet::world_update::p48::P48sub;
 use crate::utils::flagset::FlagSet;
 use crate::utils::io_extensions::{ReadArbitrary, WriteArbitrary};
 
@@ -8,7 +10,7 @@ use self::airship_traffic::*;
 use self::common::*;
 use self::creature_update::*;
 use self::world_update::*;
-use self::world_update::drops::Drop;
+use self::world_update::loot::GroundItem;
 
 pub mod creature_update;
 pub mod airship_traffic;
@@ -101,8 +103,8 @@ pub struct WorldUpdate {
 	pub sounds: Vec<Sound>,
 	pub projectiles: Vec<Projectile>,
 	pub world_objects: Vec<WorldObject>,
-	pub drops: Vec<(Point2<i32>, Vec<Drop>)>,//todo: dedicated type
-	pub p48s: Vec<P48>,
+	pub loot: HashMap<Point2<i32>, Vec<GroundItem>>,
+	pub p48: HashMap<Point2<i32>, Vec<P48sub>>,
 	pub pickups: Vec<Pickup>,
 	pub kills: Vec<Kill>,
 	pub attacks: Vec<Attack>,

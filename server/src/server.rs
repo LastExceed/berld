@@ -22,7 +22,7 @@ use protocol::nalgebra::{Point2, Point3};
 use protocol::packet::{*, Hit};
 use protocol::packet::common::{CreatureId, Item};
 use protocol::packet::creature_update::Affiliation;
-use protocol::packet::world_update::drops::Drop;
+use protocol::packet::world_update::loot::GroundItem;
 use protocol::packet::world_update::Sound;
 use protocol::packet::world_update::sound::Kind::*;
 use protocol::utils::constants::SIZE_ZONE;
@@ -44,7 +44,7 @@ pub mod utils;
 pub struct Server {
 	id_pool: RwLock<CreatureIdPool>,
 	pub players: RwLock<Vec<Arc<Player>>>,
-	drops: RwLock<HashMap<Point2<i32>, Vec<Drop>>>,
+	loot: RwLock<HashMap<Point2<i32>, Vec<GroundItem>>>,
 	pub addons: Addons
 }
 
@@ -126,9 +126,9 @@ impl Server {
 	pub async fn add_drop(&self, item: Item, position: Point3<i64>, rotation: f32) {
 		let zone = position.xy().map(|scalar| (scalar / SIZE_ZONE) as i32);
 
-		let mut drops_guard = self.drops.write().await;
-		let zone_drops = drops_guard.entry(zone).or_insert(vec![]);
-		zone_drops.push(Drop {
+		let mut loot = self.loot.write().await;
+		let zone_loot = loot.entry(zone).or_insert(vec![]);
+		zone_loot.push(GroundItem {
 			item,
 			position,
 			rotation,
@@ -137,12 +137,12 @@ impl Server {
 			unknown_b: 0,
 			droptime: 0
 		});
-		let mut zone_drops_copy = zone_drops.clone();
-		zone_drops_copy[zone_drops.len() - 1].droptime = 500;
-		drop(drops_guard);
+		let mut zone_loot_copy = zone_loot.clone();
+		zone_loot_copy[zone_loot.len() - 1].droptime = 500;
+		drop(loot);
 
 		self.broadcast(&WorldUpdate {
-			drops: vec![(zone, zone_drops_copy)],
+			loot: HashMap::from([(zone, zone_loot_copy)]),
 			sounds: vec![Sound::at(position, Drop)],
 			..Default::default()
 		}, None).await;
@@ -156,7 +156,7 @@ impl Server {
 
 	///returns none if a player picks up an item they dropped in single player
 	pub async fn remove_drop(&self, zone: Point2<i32>, item_index: usize) -> Option<Item> {
-		let mut drops_guard = self.drops.write().await;
+		let mut drops_guard = self.loot.write().await;
 		let Some(zone_drops) = drops_guard.get_mut(&zone) else { return None; };
 		let removed_drop = zone_drops.swap_remove(item_index);
 		let zone_drops_owned = zone_drops.clone();
@@ -243,7 +243,7 @@ impl Server {
 		}
 
 		player.send(&WorldUpdate {
-			drops: self.drops.read().await
+			loot: self.loot.read().await
 				.clone()
 				.into_iter()
 				.collect(),
