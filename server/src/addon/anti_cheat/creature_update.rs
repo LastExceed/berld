@@ -86,9 +86,9 @@ pub(super) fn inspect_velocity_extra(velocity_extra: &Vector3<f32>, former_state
 
 	velocity_extra.xy()
 		.magnitude()
-		.ensure_at_most(max_xy, "retreat_horizontal_speed")?;
+		.ensure_at_most(max_xy, "velocity_extra.horizontal")?;
 	velocity_extra.z
-		.ensure_within(&(0.0..=max_z), "")
+		.ensure_within(&(0.0..=max_z), "velocity_extra.vertical")
 }
 
 pub(super) fn inspect_head_tilt(head_tilt: &f32, former_state: &Creature, updated_state: &Creature, ac_data: &mut PlayerACData) -> anti_cheat::Result {
