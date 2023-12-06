@@ -5,7 +5,6 @@ use tap::Pipe;
 use tokio::time::sleep;
 
 use protocol::packet::{CreatureUpdate, IngameDatetime, WorldUpdate};
-use protocol::packet::creature_update::CreatureFlag;
 use protocol::packet::world_update::Sound;
 use protocol::packet::world_update::sound::Kind::MenuSelect;
 use protocol::utils::sound_position_of;
@@ -22,6 +21,7 @@ pub mod traffic_filter;
 pub mod balancing;
 pub mod discord_integration;
 pub mod command_manager;
+pub mod pvp;
 
 #[derive(Default)]
 pub struct Addons {
@@ -29,12 +29,6 @@ pub struct Addons {
 	pub discord_integration: DiscordIntegration,
 	pub air_time_tracker: AirTimeTracker,
 	pub command_manager: CommandManager
-}
-
-pub fn enable_pvp(creature_update: &mut CreatureUpdate) {
-	if let Some(ref mut flags) = creature_update.flags {
-		flags.set(CreatureFlag::FriendlyFire, true);
-	}
 }
 
 pub fn fix_cutoff_animations(creature_update: &mut CreatureUpdate, previous_state: &Creature) {

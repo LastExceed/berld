@@ -8,7 +8,7 @@ use std::time::Duration;
 
 use futures::future;
 use futures::future::join_all;
-use tap::Pipe;
+use tap::{Pipe, Tap};
 use tokio::io;
 use tokio::io::{AsyncWrite, AsyncWriteExt};
 use tokio::io::{BufReader, BufWriter};
@@ -28,7 +28,8 @@ use protocol::packet::world_update::sound::Kind::*;
 use protocol::utils::constants::SIZE_ZONE;
 use protocol::utils::io_extensions::{ReadPacket, WriteArbitrary, WritePacket};
 
-use crate::addon::{Addons, enable_pvp, freeze_time};
+use crate::addon::{Addons, freeze_time};
+use crate::addon::pvp;
 use crate::server::creature::Creature;
 use crate::server::creature_id_pool::CreatureIdPool;
 use crate::server::handle_packet::HandlePacket;
@@ -221,39 +222,51 @@ impl Server {
 
 		player.send(&MapSeed(56345)).await?;
 		player.notify("welcome to berld").await;
-
-		let existing_players = self.players.read().await;
-		let creature_updates = existing_players
-			.iter()
-			.map(|existing_player| async {
-				existing_player
-					.character
-					.read()
-					.await
-					.to_update(existing_player.id)
-			})
-			.pipe(join_all)
-			.await;
-		drop(existing_players);
-
-		//todo: figure out how to begin this loop as soon as the first packet is available
-		for mut creature_update in creature_updates {
-			enable_pvp(&mut creature_update);
-			player.send(&creature_update).await?;
-		}
-
-		player.send(&WorldUpdate {
-			loot: self.loot.read().await
-				.clone()
-				.into_iter()
-				.collect(),
-			..Default::default()
-		}).await?;
+		send_existing_creatures(self, player).await?;
+		send_loot(self, player).await?;
 
 		self.announce(format!("[+] {}", player.character.read().await.name)).await;
 
 		Ok(())
 	}
+}
+
+async fn send_loot(server: &Server, player: &Player) -> io::Result<()> {
+	let world_update = WorldUpdate {
+		loot: server.loot.read().await
+			.clone()
+			.into_iter()
+			.collect(),
+		..Default::default()
+	};
+
+	player.send(&world_update).await
+}
+
+async fn send_existing_creatures(server: &Server, player: &Player) -> io::Result<()> {
+	let existing_players = server.players.read().await;
+	let creature_updates = existing_players
+		.iter()
+		.map(|existing_player| async {
+			let character = existing_player
+				.character
+				.read()
+				.await;
+
+			character
+				.to_update(existing_player.id)
+				.tap_mut(|packet| packet.flags = pvp::get_modified_flags(&character, true))
+		})
+		.pipe(join_all)
+		.await;
+	drop(existing_players);
+
+	//todo: figure out how to begin this loop as soon as the first packet is available
+	for creature_update in creature_updates {
+		player.send(&creature_update).await?;
+	}
+
+	Ok(())
 }
 
 fn split_and_buffer(stream: TcpStream) -> (BufReader<OwnedReadHalf>, BufWriter<OwnedWriteHalf>) {

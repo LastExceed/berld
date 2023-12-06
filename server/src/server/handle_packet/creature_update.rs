@@ -1,6 +1,6 @@
 use protocol::packet::CreatureUpdate;
 
-use crate::addon::enable_pvp;
+use crate::addon::pvp;
 use crate::addon::fix_cutoff_animations;
 use crate::addon::traffic_filter::filter;
 use crate::server::handle_packet::HandlePacket;
@@ -25,9 +25,12 @@ impl HandlePacket<CreatureUpdate> for Server {
 		}
 		drop(character);
 
-		enable_pvp(&mut packet);
 		fix_cutoff_animations(&mut packet, &snapshot);
 		self.addons.air_time_tracker.on_creature_update(source).await;
+
+		if pvp::on_creature_update(self, source, &packet).await {
+			return;
+		};
 
 		self.broadcast(&packet, Some(source)).await;
 	}

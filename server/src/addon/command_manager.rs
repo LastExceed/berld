@@ -55,6 +55,7 @@ impl Default for CommandManager {
 			cm.register(Kick);
 			cm.register(Tp);
 			cm.register(Test);
+			cm.register(Team);
 		})
 	}
 }

@@ -1,3 +1,5 @@
+mod addon_data;
+
 use std::net::SocketAddr;
 use std::sync::atomic::AtomicBool;
 
@@ -12,6 +14,7 @@ use protocol::utils::io_extensions::WritePacket;
 use protocol::WriteCwData;
 
 use crate::server::creature::Creature;
+use crate::server::player::addon_data::AddonData;
 
 #[derive(Debug)]
 pub struct Player {
@@ -19,8 +22,9 @@ pub struct Player {
 	pub id: CreatureId,
 	pub character: RwLock<Creature>,
 	writer: RwLock<BufWriter<OwnedWriteHalf>>,
-	pub admin: AtomicBool,
+	pub admin: AtomicBool, //todo: move to AddonData
 	pub should_disconnect: AtomicBool,
+	pub addon_data: RwLock<AddonData>
 }
 
 impl Player {
@@ -30,8 +34,9 @@ impl Player {
 			id,
 			character: RwLock::new(creature),
 			writer: RwLock::new(writer),
-			admin: AtomicBool::new(false),
-			should_disconnect: AtomicBool::new(false)
+			admin: Default::default(),
+			should_disconnect: Default::default(),
+			addon_data: Default::default()
 		}
 	}
 
