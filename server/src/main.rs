@@ -17,7 +17,6 @@ mod addon;
 
 #[tokio::main]
 async fn main() {
-	//let r = 42i32 as i16;
 	magenta_ln!("===== Berld =====");
 	Server::default().run().await;
 }

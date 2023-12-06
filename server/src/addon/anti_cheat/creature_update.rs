@@ -101,7 +101,7 @@ pub(super) fn inspect_affiliation(affiliation: &Affiliation, former_state: &Crea
 }
 
 pub(super) fn inspect_race(race: &Race, former_state: &Creature, updated_state: &Creature, ac_data: &mut PlayerACData) -> anti_cheat::Result {
-	race.ensure_one_of(PLAYABLE_RACES.as_slice(), "")
+	race.ensure_one_of(PLAYABLE_RACES.as_slice(), "race")
 }
 
 pub(super) fn inspect_animation(animation: &Animation, former_state: &Creature, updated_state: &Creature, ac_data: &mut PlayerACData) -> anti_cheat::Result {

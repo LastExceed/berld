@@ -2,6 +2,7 @@ use std::marker::PhantomData;
 
 use num_traits::PrimInt;
 
+//todo: impl a Flag trait for the enums which provides associated types
 //todo: use size_of<flag> to infer inner, maybe [u8] ?
 #[derive(Debug, PartialEq, Eq, Hash, Clone)] //todo: default?
 pub struct FlagSet<Inner: PrimInt, Flag: Into<usize>>(Inner, PhantomData<Flag>);

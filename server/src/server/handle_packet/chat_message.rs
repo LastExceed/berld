@@ -20,7 +20,7 @@ impl HandlePacket<ChatMessageFromClient> for Server {
 			.command_manager
 			.on_message(
 				self,
-				Some(source),
+				Some(source), //TODO: use a custom enum so `admin` doesnt have to be passed here
 				source.admin.load(Relaxed),
 				&packet.text,
 				'/',

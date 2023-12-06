@@ -77,7 +77,7 @@ pub struct CreatureUpdate {
 	pub unknown42: Option<i8>, //todo: 0 3 4 for villages - 3 = dialog about pet food
 	pub consumable: Option<Item>,
 	pub equipment: Option<Equipment>,
-	pub name: Option<String>,
+	pub name: Option<String>, //todo: AsciiString
 	pub skill_tree: Option<SkillTree>,
 	pub mana_cubes: Option<i32>
 }
