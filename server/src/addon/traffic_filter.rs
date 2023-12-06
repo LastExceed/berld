@@ -14,7 +14,6 @@ pub fn filter(packet: &mut CreatureUpdate, former_state: &Creature, updated_stat
 	packet.home_zone      = None;
 	packet.home           = None;
 	packet.zone_to_reveal = None;
-	packet.skill_tree     = None;
 	packet.mana_cubes     = None;
 	//always keep:
 	//- affiliation
@@ -31,6 +30,7 @@ pub fn filter(packet: &mut CreatureUpdate, former_state: &Creature, updated_stat
 	//- equipment
 	//- name
 	//- rarity
+	//- skilltree //need this because receiving clients locally remove the glider if the skill isnt learned
 
 	//todo:
 	//- position
@@ -105,6 +105,7 @@ pub fn filter(packet: &mut CreatureUpdate, former_state: &Creature, updated_stat
 	packet.aim_offset.filter_in_place(|_| updated_state.flags.get(CreatureFlag::Aiming));//todo: compare to last sent (2)
 
 
+	return true;
 
 	//todo: macro
 	packet.position          .is_some() ||
