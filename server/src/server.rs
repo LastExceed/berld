@@ -223,24 +223,11 @@ impl Server {
 		player.send(&MapSeed(56345)).await?;
 		player.notify("welcome to berld").await;
 		send_existing_creatures(self, player).await?;
-		send_loot(self, player).await?;
 
 		self.announce(format!("[+] {}", player.character.read().await.name)).await;
 
 		Ok(())
 	}
-}
-
-async fn send_loot(server: &Server, player: &Player) -> io::Result<()> {
-	let world_update = WorldUpdate {
-		loot: server.loot.read().await
-			.clone()
-			.into_iter()
-			.collect(),
-		..Default::default()
-	};
-
-	player.send(&world_update).await
 }
 
 async fn send_existing_creatures(server: &Server, player: &Player) -> io::Result<()> {
