@@ -34,9 +34,9 @@ impl Player {
 			id,
 			character: RwLock::new(creature),
 			writer: RwLock::new(writer),
-			admin: Default::default(),
-			should_disconnect: Default::default(),
-			addon_data: Default::default()
+			admin: AtomicBool::default(),
+			should_disconnect: AtomicBool::default(),
+			addon_data: RwLock::default()
 		}
 	}
 
