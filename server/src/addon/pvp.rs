@@ -54,6 +54,7 @@ pub async fn change_team(server: &Server, player: &Player, new_team: Option<i32>
 		update_flags(server, player, old_team, true).await;
 	}
 	addon_data.team = new_team;
+	drop(addon_data); //todo: might be able to drop this even earlier
 	if let Some(new_team) = new_team {
 		update_flags(server, player, new_team, false).await;
 	}
