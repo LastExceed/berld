@@ -63,10 +63,15 @@ pub(super) fn inspect_acceleration(acceleration: &Vector3<f32>, former_state: &C
 //	if !updated_state.flags.get(CreatureFlag::Gliding) {
 //		actual_xy.ensure_within(&(0.0..=limit_xy), "acceleration.horizontal")?;
 //	}
+
+	#[expect(clippy::dbg_macro, reason = "testing in production lol")]
 	if updated_state.flags_physics.get(PhysicsFlag::Swimming) {
 		acceleration.z.ensure_within(&(-80.0..=80.0), "acceleration.vertical")
-	} else if updated_state.flags.get(CreatureFlag::Climbing) {
+	} else if updated_state.flags.get(CreatureFlag::Climbing) {//possible fix for a false positive
 		acceleration.z.ensure_one_of(&[-16.0, 0.0, 16.0], "acceleration.vertical")
+	} else if former_state.flags.get(CreatureFlag::Climbing) {
+		dbg!("accel.z false positive? (relax this to -16..16)");
+		acceleration.z.ensure_exact(&0.0, "acceleration.vertical (potential false positive, if you manage to trigger this, please let me know)")
 	} else {
 		acceleration.z.ensure_exact(&0.0, "acceleration.vertical")
 	}
