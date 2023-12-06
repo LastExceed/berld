@@ -116,13 +116,19 @@ impl Server {
 	pub async fn broadcast<Packet: FromServer>(&self, packet: &Packet, player_to_skip: Option<&Player>)
 		where BufWriter<OwnedWriteHalf>: WriteCwData<Packet>//todo: specialization could obsolete this
 	{
-		future::join_all(self.players.read().await.iter().filter_map(|player| {
-			if let Some(pts) = player_to_skip && ptr::eq(player.as_ref(), pts) {
-				return None;
-			}
+		self.players
+			.read()
+			.await
+			.iter()
+			.filter_map(|player| {
+				if let Some(pts) = player_to_skip && ptr::eq(player.as_ref(), pts) {
+					return None;
+				}
 
-			Some(player.send_ignoring(packet))
-		})).await;
+				Some(player.send_ignoring(packet))
+			})
+			.pipe(join_all)
+			.await;
 	}
 
 	pub async fn add_drop(&self, item: Item, position: Point3<i64>, rotation: f32) {
