@@ -675,6 +675,7 @@ pub(super) fn inspect_equipment(equipment: &Equipment, former_state: &Creature, 
 	Ok(())
 }
 
+#[expect(clippy::ptr_arg, reason = "TODO")]
 pub(super) fn inspect_name(name: &String, former_state: &Creature, updated_state: &Creature, ac_data: &mut PlayerACData) -> anti_cheat::Result {
 	//character names are serialized as a cstring and thus guaranteed to be comprised of single-byte characters exclusively
 	name.chars().count().ensure_within(&(1..=15), "name.length")?;
