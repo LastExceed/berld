@@ -19,7 +19,7 @@ impl HandlePacket<StatusEffect> for Server {
 	async fn handle_packet(&self, source: &Player, packet: StatusEffect) {
 		match packet.kind {
 			Poison => {
-				let Some(target) = self
+				let Some(target) = self //todo: duplicate code
 					.players
 					.read()
 					.await
@@ -32,6 +32,9 @@ impl HandlePacket<StatusEffect> for Server {
 			}
 			WarFrenzy => {
 				balancing::buff_warfrenzy(&packet, self).await;
+			}
+			ManaShield => {
+				source.notify(format!("manashield: {}", packet.modifier)).await;
 			}
 			_ => ()
 		}
