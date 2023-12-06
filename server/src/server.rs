@@ -20,6 +20,7 @@ use tokio::time::sleep;
 use protocol::{Packet, WriteCwData};
 use protocol::nalgebra::{Point2, Point3};
 use protocol::packet::{*, Hit};
+use protocol::packet::area_request::{Region, Zone};
 use protocol::packet::common::{CreatureId, Item};
 use protocol::packet::creature_update::Affiliation;
 use protocol::packet::world_update::loot::GroundItem;
@@ -201,8 +202,8 @@ impl Server {
 				StatusEffect         ::ID => self.handle_packet(source, reader.read_packet::<StatusEffect         >().await?).await,
 				Projectile           ::ID => self.handle_packet(source, reader.read_packet::<Projectile           >().await?).await,
 				ChatMessageFromClient::ID => self.handle_packet(source, reader.read_packet::<ChatMessageFromClient>().await?).await,
-				ZoneDiscovery        ::ID => self.handle_packet(source, reader.read_packet::<ZoneDiscovery        >().await?).await,
-				RegionDiscovery      ::ID => self.handle_packet(source, reader.read_packet::<RegionDiscovery      >().await?).await,
+				AreaRequest::<Zone>  ::ID => self.handle_packet(source, reader.read_packet::<AreaRequest<Zone>    >().await?).await,
+				AreaRequest::<Region>::ID => self.handle_packet(source, reader.read_packet::<AreaRequest<Region>  >().await?).await,
 				unexpected_packet_id => panic!("unexpected packet id {unexpected_packet_id:?}")
 			};
 

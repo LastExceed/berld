@@ -18,6 +18,7 @@ use tokio::io;
 use tokio::io::{AsyncRead, AsyncWrite};
 
 use crate::packet::*;
+use crate::packet::area_request::{Region, Zone};
 use crate::utils::io_extensions::{ReadArbitrary, WriteArbitrary};
 
 pub mod packet;
@@ -52,8 +53,8 @@ impl<Readable: AsyncRead + Unpin> ReadCwData<IngameDatetime      > for Readable 
 impl<Readable: AsyncRead + Unpin> ReadCwData<Hit                 > for Readable {}
 impl<Readable: AsyncRead + Unpin> ReadCwData<StatusEffect        > for Readable {}
 impl<Readable: AsyncRead + Unpin> ReadCwData<Projectile          > for Readable {}
-impl<Readable: AsyncRead + Unpin> ReadCwData<ZoneDiscovery       > for Readable {}
-impl<Readable: AsyncRead + Unpin> ReadCwData<RegionDiscovery     > for Readable {}
+impl<Readable: AsyncRead + Unpin> ReadCwData<AreaRequest<Zone>   > for Readable {}
+impl<Readable: AsyncRead + Unpin> ReadCwData<AreaRequest<Region> > for Readable {}
 impl<Readable: AsyncRead + Unpin> ReadCwData<MapSeed             > for Readable {}
 impl<Readable: AsyncRead + Unpin> ReadCwData<ConnectionAcceptance> for Readable {}
 impl<Readable: AsyncRead + Unpin> ReadCwData<ProtocolVersion     > for Readable {}
@@ -65,8 +66,8 @@ impl<Writable: AsyncWrite + Unpin> WriteCwData<IngameDatetime      > for Writabl
 impl<Writable: AsyncWrite + Unpin> WriteCwData<Hit                 > for Writable {}
 impl<Writable: AsyncWrite + Unpin> WriteCwData<StatusEffect        > for Writable {}
 impl<Writable: AsyncWrite + Unpin> WriteCwData<Projectile          > for Writable {}
-impl<Writable: AsyncWrite + Unpin> WriteCwData<ZoneDiscovery       > for Writable {}
-impl<Writable: AsyncWrite + Unpin> WriteCwData<RegionDiscovery     > for Writable {}
+impl<Writable: AsyncWrite + Unpin> WriteCwData<AreaRequest<Zone>   > for Writable {}
+impl<Writable: AsyncWrite + Unpin> WriteCwData<AreaRequest<Region> > for Writable {}
 impl<Writable: AsyncWrite + Unpin> WriteCwData<MapSeed             > for Writable {}
 impl<Writable: AsyncWrite + Unpin> WriteCwData<ConnectionAcceptance> for Writable {}
 impl<Writable: AsyncWrite + Unpin> WriteCwData<ProtocolVersion     > for Writable {}

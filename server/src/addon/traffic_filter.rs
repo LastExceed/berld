@@ -104,9 +104,6 @@ pub fn filter(packet: &mut CreatureUpdate, former_state: &Creature, updated_stat
 
 	packet.aim_offset.filter_in_place(|_| updated_state.flags.get(CreatureFlag::Aiming));//todo: compare to last sent (2)
 
-
-	return true;
-
 	//todo: macro
 	packet.position          .is_some() ||
 	packet.rotation          .is_some() ||

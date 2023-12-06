@@ -2,6 +2,7 @@ use std::collections::HashMap;
 use nalgebra::{Point2, Point3, Vector3};
 
 use crate::{bulk_impl, Packet, WriteCwData};
+use crate::packet::area_request::{Area, Region, Zone};
 use crate::packet::world_update::p48::P48sub;
 use crate::utils::flagset::FlagSet;
 use crate::utils::io_extensions::{ReadArbitrary, WriteArbitrary};
@@ -21,6 +22,7 @@ pub mod status_effect;
 pub mod projectile;
 pub mod chat_message;
 pub mod common;
+pub mod area_request;
 
 #[derive(Debug, PartialEq, Clone, Default)]
 pub struct CreatureUpdate {
@@ -198,11 +200,7 @@ pub struct ChatMessageFromServer {
 
 #[repr(C)]
 #[derive(Debug, PartialEq, Eq, Hash, Clone, Default)]
-pub struct ZoneDiscovery(pub Point2<i32>);
-
-#[repr(C)]
-#[derive(Debug, PartialEq, Eq, Hash, Clone, Default)]
-pub struct RegionDiscovery(pub Point2<i32>);
+pub struct AreaRequest<A: Area>(pub Point2<A::Coordinate>);
 
 #[repr(C)]
 #[derive(Debug, PartialEq, Eq, Hash, Clone, Default)]
@@ -239,8 +237,8 @@ impl Packet for StatusEffect          { const ID: Id = Id( 8); }
 impl Packet for Projectile            { const ID: Id = Id( 9); }
 impl Packet for ChatMessageFromClient { const ID: Id = Id(10); }
 impl Packet for ChatMessageFromServer { const ID: Id = Id(10); }
-impl Packet for ZoneDiscovery         { const ID: Id = Id(11); }
-impl Packet for RegionDiscovery       { const ID: Id = Id(12); }
+impl Packet for AreaRequest<Zone>     { const ID: Id = Id(11); }
+impl Packet for AreaRequest<Region>   { const ID: Id = Id(12); }
 impl Packet for MapSeed               { const ID: Id = Id(15); }
 impl Packet for ConnectionAcceptance  { const ID: Id = Id(16); }
 impl Packet for ProtocolVersion       { const ID: Id = Id(17); }
@@ -273,7 +271,7 @@ bulk_impl!(FromClient for
 	StatusEffect,
 	Projectile,
 	ChatMessageFromClient,
-	ZoneDiscovery,
-	RegionDiscovery,
+	AreaRequest<Zone>,
+	AreaRequest<Region>,
 	ProtocolVersion
 );
