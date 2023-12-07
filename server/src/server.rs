@@ -75,40 +75,44 @@ impl Server {
 		let (mut reader, mut writer) = split_and_buffer(stream);
 
 		check_version(&mut reader, &mut writer).await?;
+		writer.write_packet(&ConnectionAcceptance).await?;
 
 		let assigned_id = self.id_pool.write().await.claim();
-		let result = self.handle_new_player(assigned_id, reader, writer, address).await;
-		self.id_pool.write().await.free(assigned_id);
-		result
-	}
-
-	async fn handle_new_player(&self, assigned_id: CreatureId, mut reader: BufReader<OwnedReadHalf>, mut writer: BufWriter<OwnedWriteHalf>, address: SocketAddr) -> io::Result<()> {
-		writer.write_packet(&ConnectionAcceptance).await?;
 		write_abnormal_creature_update(&mut writer, assigned_id).await?;
 
-		let (full_creature_update, character) = read_character_data(&mut reader).await?;
-
+		let (initial_creature_update, character) = read_character_data(&mut reader).await?;
+		//todo: AC inspection beforehand
 		let (new_player, kick_receiver) = Player::new(
 			address,
 			assigned_id,
 			character,
 			writer,
 		);
-
-		self.on_join(&new_player, full_creature_update).await?;//todo: character 2x updated
-
-		let new_player = Arc::new(new_player);
-		self.players.write().await.push(Arc::clone(&new_player));
+		let player = Arc::new(new_player);
+		self.players.write().await.push(Arc::clone(&player));
 
 		select! {
+			biased;
 			_ = kick_receiver => (),
-			_ = self.read_packets_forever(&new_player, reader) => ()
+			_ = self.handle_new_player(reader, &player, initial_creature_update) => ()
 		}
-
-		self.remove_player(&new_player).await;
-		self.announce(format!("[-] {}", new_player.character.read().await.name)).await;
-
+		self.remove_player(&player).await;
+		self.announce(format!("[-] {}", player.character.read().await.name)).await;
+		self.id_pool.write().await.free(assigned_id);
 		Ok(())
+	}
+
+	async fn handle_new_player(&self, reader: BufReader<OwnedReadHalf>, player: &Player, initial_creature_update: CreatureUpdate) {
+		self.handle_packet(player, initial_creature_update).await;
+
+		player.send_ignoring(&MapSeed(56345)).await;
+		player.notify("welcome to berld").await;
+		send_existing_creatures(self, player).await;
+
+		self.announce(format!("[+] {}", player.character.read().await.name)).await;
+
+		self.read_packets_forever(player, reader).await
+			.expect_err("impossible");
 	}
 
 	pub async fn broadcast<Packet: FromServer>(&self, packet: &Packet, player_to_skip: Option<&Player>)
@@ -177,11 +181,13 @@ impl Server {
 	}
 
 	async fn remove_player(&self, player_to_remove: &Player) {
-		{
-			let mut players = self.players.write().await;
-			let index = players.iter().position(|player| ptr::eq(player_to_remove, player.as_ref())).expect("player not found");
-			players.swap_remove(index);
-		};
+		let mut players = self.players.write().await;
+		let index = players
+			.iter()
+			.position(|player| ptr::eq(player_to_remove, player.as_ref()))
+			.expect("this should be the only place where players get removed");
+		players.swap_remove(index);
+		drop(players);
 		self.remove_creature(&player_to_remove.id).await;
 	}
 
@@ -212,23 +218,13 @@ impl Server {
 			};
 		}
 	}
-
-	async fn on_join(&self, player: &Player, full_creature_update: CreatureUpdate) -> io::Result<()> {
-		self.handle_packet(player, full_creature_update).await;
-
-		player.send(&MapSeed(56345)).await?;
-		player.notify("welcome to berld").await;
-		send_existing_creatures(self, player).await?;
-
-		self.announce(format!("[+] {}", player.character.read().await.name)).await;
-
-		Ok(())
-	}
 }
 
-async fn send_existing_creatures(server: &Server, player: &Player) -> io::Result<()> {
-	let existing_players = server.players.read().await;
-	let creature_updates = existing_players
+async fn send_existing_creatures(server: &Server, player: &Player) {
+	server
+		.players
+		.read()
+		.await
 		.iter()
 		.map(|existing_player| async {
 			let character = existing_player
@@ -236,20 +232,15 @@ async fn send_existing_creatures(server: &Server, player: &Player) -> io::Result
 				.read()
 				.await;
 
-			character
+			let creature_update = character
 				.to_update(existing_player.id)
-				.tap_mut(|packet| packet.flags = pvp::get_modified_flags(&character, true))
+				.tap_mut(|packet| packet.flags = pvp::get_modified_flags(&character, true));
+			drop(character);
+
+			player.send_ignoring(&creature_update).await;
 		})
 		.pipe(join_all)
 		.await;
-	drop(existing_players);
-
-	//todo: figure out how to begin this loop as soon as the first packet is available
-	for creature_update in creature_updates {
-		player.send(&creature_update).await?;
-	}
-
-	Ok(())
 }
 
 fn split_and_buffer(stream: TcpStream) -> (BufReader<OwnedReadHalf>, BufWriter<OwnedWriteHalf>) {
