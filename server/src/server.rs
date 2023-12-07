@@ -3,13 +3,11 @@ use std::io::ErrorKind::{InvalidData, InvalidInput};
 use std::net::SocketAddr;
 use std::ptr;
 use std::sync::Arc;
-use std::sync::atomic::Ordering;
 use std::time::Duration;
 
-use futures::future;
 use futures::future::join_all;
 use tap::{Pipe, Tap};
-use tokio::io;
+use tokio::{io, select};
 use tokio::io::{AsyncWrite, AsyncWriteExt};
 use tokio::io::{BufReader, BufWriter};
 use tokio::net::{TcpListener, TcpStream};
@@ -90,7 +88,7 @@ impl Server {
 
 		let (full_creature_update, character) = read_character_data(&mut reader).await?;
 
-		let new_player = Player::new(
+		let (new_player, kick_receiver) = Player::new(
 			address,
 			assigned_id,
 			character,
@@ -102,13 +100,13 @@ impl Server {
 		let new_player = Arc::new(new_player);
 		self.players.write().await.push(Arc::clone(&new_player));
 
-		self.read_packets_forever(&new_player, reader).await
-			.expect_err("impossible");
+		select! {
+			_ = kick_receiver => (),
+			_ = self.read_packets_forever(&new_player, reader) => ()
+		}
 
 		self.remove_player(&new_player).await;
-
 		self.announce(format!("[-] {}", new_player.character.read().await.name)).await;
-		self.addons.anti_cheat.on_leave(&new_player).await;
 
 		Ok(())
 	}
@@ -212,20 +210,11 @@ impl Server {
 				AreaRequest::<Region>::ID => self.handle_packet(source, reader.read_packet::<AreaRequest<Region>  >().await?).await,
 				unexpected_packet_id => panic!("unexpected packet id {unexpected_packet_id:?}")
 			};
-
-			if source.should_disconnect.load(Ordering::Relaxed) {
-				return Err(InvalidInput.into());
-			}
 		}
 	}
 
 	async fn on_join(&self, player: &Player, full_creature_update: CreatureUpdate) -> io::Result<()> {
-		self.addons.anti_cheat.on_join(player).await;
 		self.handle_packet(player, full_creature_update).await;
-
-		if player.should_disconnect.load(Ordering::Relaxed) {//todo: this is very error prone. need proper kick logic asap
-			return Err(InvalidInput.into());
-		}
 
 		player.send(&MapSeed(56345)).await?;
 		player.notify("welcome to berld").await;

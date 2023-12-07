@@ -9,7 +9,6 @@ use protocol::packet::world_update::Sound;
 use protocol::packet::world_update::sound::Kind::MenuSelect;
 use protocol::utils::sound_position_of;
 
-use crate::addon::anti_cheat::AntiCheat;
 use crate::addon::balancing::AirTimeTracker;
 use crate::addon::command_manager::CommandManager;
 use crate::addon::discord_integration::DiscordIntegration;
@@ -25,7 +24,6 @@ pub mod pvp;
 
 #[derive(Default)]
 pub struct Addons {
-	pub anti_cheat: AntiCheat,
 	pub discord_integration: DiscordIntegration,
 	pub air_time_tracker: AirTimeTracker,
 	pub command_manager: CommandManager

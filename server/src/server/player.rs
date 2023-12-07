@@ -6,7 +6,7 @@ use std::sync::atomic::AtomicBool;
 use tokio::io;
 use tokio::io::BufWriter;
 use tokio::net::tcp::OwnedWriteHalf;
-use tokio::sync::RwLock;
+use tokio::sync::{oneshot, RwLock};
 
 use protocol::packet::{ChatMessageFromServer, FromServer};
 use protocol::packet::common::CreatureId;
@@ -23,21 +23,25 @@ pub struct Player {
 	pub character: RwLock<Creature>,
 	writer: RwLock<BufWriter<OwnedWriteHalf>>,
 	pub admin: AtomicBool, //todo: move to AddonData
-	pub should_disconnect: AtomicBool,
+	pub kick_sender: RwLock<Option<oneshot::Sender<()>>>,
 	pub addon_data: RwLock<AddonData>
 }
 
 impl Player {
-	pub fn new(address: SocketAddr, id: CreatureId, creature: Creature, writer: BufWriter<OwnedWriteHalf>) -> Self {
-		Self {
+	pub fn new(address: SocketAddr, id: CreatureId, creature: Creature, writer: BufWriter<OwnedWriteHalf>) -> (Self, oneshot::Receiver<()>) {
+		let (kick_sender, kick_receiver) = oneshot::channel();
+
+		let instance = Self {
 			address,
 			id,
 			character: RwLock::new(creature),
 			writer: RwLock::new(writer),
 			admin: AtomicBool::default(),
-			should_disconnect: AtomicBool::default(),
+			kick_sender: RwLock::new(Some(kick_sender)),
 			addon_data: RwLock::default()
-		}
+		};
+
+		(instance, kick_receiver)
 	}
 
 	pub async fn send<Packet: FromServer>(&self, packet: &Packet) -> io::Result<()>

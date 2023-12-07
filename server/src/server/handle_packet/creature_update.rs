@@ -1,6 +1,6 @@
 use protocol::packet::CreatureUpdate;
 
-use crate::addon::pvp;
+use crate::addon::{anti_cheat, pvp};
 use crate::addon::fix_cutoff_animations;
 use crate::addon::traffic_filter::filter;
 use crate::server::handle_packet::HandlePacket;
@@ -15,7 +15,7 @@ impl HandlePacket<CreatureUpdate> for Server {
 		character.update(&packet);
 		let character = character.downgrade();
 
-		if let Err(message) = self.addons.anti_cheat.inspect_creature_update(source, &packet, &snapshot, &character).await {
+		if let Err(message) = anti_cheat::inspect_creature_update(source, &packet, &snapshot, &character).await {
 			self.kick(source, message).await;
 			return;
 		}

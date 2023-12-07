@@ -1,5 +1,4 @@
 use std::mem::transmute;
-use std::sync::atomic::Ordering;
 use std::time::Duration;
 
 use colour::white_ln;
@@ -33,7 +32,12 @@ impl Server {
 		//wait a bit to make sure the message arrives at the player about to be kicked
 		sleep(Duration::from_millis(100)).await;
 
-		player.should_disconnect.store(true, Ordering::Relaxed);
+		player
+			.kick_sender
+			.write()
+			.await
+			.take()
+			.map(|sender| sender.send(()));
 		//remove_player will be called by the reading task
 	}
 
