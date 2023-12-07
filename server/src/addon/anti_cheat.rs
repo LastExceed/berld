@@ -4,10 +4,10 @@ use std::result;
 use std::time::Instant;
 
 use boolinator::Boolinator;
+use tap::Tap;
 
 use protocol::packet::CreatureUpdate;
 
-use crate::server::creature::Creature;
 use crate::server::player::Player;
 
 use self::creature_update::*;
@@ -15,68 +15,66 @@ use self::creature_update::*;
 pub mod creature_update;
 
 #[derive(Debug, PartialEq, Eq, Hash, Clone, Default)]
-pub struct AntiCheatData {
+pub struct PlayerData {
 	last_combo_update: Option<Instant>
 }
 
 #[expect(clippy::significant_drop_tightening, reason = "cannot drop any earlier")]
-pub async fn inspect_creature_update(source: &Player, packet: &CreatureUpdate, former_state: &Creature, updated_state: &Creature) -> Result {
+pub async fn inspect_creature_update(source: &Player, packet: &CreatureUpdate) -> Result {
+	let previous_state = source.character.read().await;
+	let updated_state = previous_state.clone().tap_mut(|state| state.update(packet));
+
 	packet.id.ensure_exact(&source.id, "creature_id")?;
 
-	let ac_data = &mut source.addon_data.write().await.anti_cheat_data;
-	if former_state.health == 0.0 && updated_state.health > 0.0 {
-		ac_data.last_combo_update = Some(Instant::now()); //clocks freeze on death, so there's a desync on respawn
-	}
-
 	//todo: macro
-	if let Some(ref value) = packet.position          { inspect_position         (value, former_state, updated_state, ac_data)? };
-	if let Some(ref value) = packet.rotation          { inspect_rotation         (value, former_state, updated_state, ac_data)? };
-	if let Some(ref value) = packet.velocity          { inspect_velocity         (value, former_state, updated_state, ac_data)? };
-	if let Some(ref value) = packet.acceleration      { inspect_acceleration     (value, former_state, updated_state, ac_data)? };
-	if let Some(ref value) = packet.velocity_extra    { inspect_velocity_extra   (value, former_state, updated_state, ac_data)? };
-	if let Some(ref value) = packet.head_tilt         { inspect_head_tilt        (value, former_state, updated_state, ac_data)? };
-	if let Some(ref value) = packet.flags_physics     { inspect_flags_physics    (value, former_state, updated_state, ac_data)? };
-	if let Some(ref value) = packet.affiliation       { inspect_affiliation      (value, former_state, updated_state, ac_data)? };
-	if let Some(ref value) = packet.race              { inspect_race             (value, former_state, updated_state, ac_data)? };
-	if let Some(ref value) = packet.animation         { inspect_animation        (value, former_state, updated_state, ac_data)? };
-	if let Some(ref value) = packet.animation_time    { inspect_animation_time   (value, former_state, updated_state, ac_data)? };
-	if let Some(ref value) = packet.combo             { inspect_combo            (value, former_state, updated_state, ac_data)? };
-	if let Some(ref value) = packet.combo_timeout     { inspect_combo_timeout    (value, former_state, updated_state, ac_data)? };
-	if let Some(ref value) = packet.appearance        { inspect_appearance       (value, former_state, updated_state, ac_data)? };
-	if let Some(ref value) = packet.flags             { inspect_flags            (value, former_state, updated_state, ac_data)? };
-	if let Some(ref value) = packet.effect_time_dodge { inspect_effect_time_dodge(value, former_state, updated_state, ac_data)? };
-	if let Some(ref value) = packet.effect_time_stun  { inspect_effect_time_stun (value, former_state, updated_state, ac_data)? };
-	if let Some(ref value) = packet.effect_time_fear  { inspect_effect_time_fear (value, former_state, updated_state, ac_data)? };
-	if let Some(ref value) = packet.effect_time_chill { inspect_effect_time_chill(value, former_state, updated_state, ac_data)? };
-	if let Some(ref value) = packet.effect_time_wind  { inspect_effect_time_wind (value, former_state, updated_state, ac_data)? };
-	if let Some(ref value) = packet.show_patch_time   { inspect_show_patch_time  (value, former_state, updated_state, ac_data)? };
-	if let Some(ref value) = packet.occupation        { inspect_occupation       (value, former_state, updated_state, ac_data)? };
-	if let Some(ref value) = packet.specialization    { inspect_specialization   (value, former_state, updated_state, ac_data)? };
-	if let Some(ref value) = packet.mana_charge       { inspect_mana_charge      (value, former_state, updated_state, ac_data)? };
-	if let Some(ref value) = packet.unknown24         { inspect_unknown24        (value, former_state, updated_state, ac_data)? };
-	if let Some(ref value) = packet.unknown25         { inspect_unknown25        (value, former_state, updated_state, ac_data)? };
-	if let Some(ref value) = packet.aim_offset        { inspect_aim_offset       (value, former_state, updated_state, ac_data)? };
-	if let Some(ref value) = packet.health            { inspect_health           (value, former_state, updated_state, ac_data)? };
-	if let Some(ref value) = packet.mana              { inspect_mana             (value, former_state, updated_state, ac_data)? };
-	if let Some(ref value) = packet.blocking_gauge    { inspect_blocking_gauge   (value, former_state, updated_state, ac_data)? };
-	if let Some(ref value) = packet.multipliers       { inspect_multipliers      (value, former_state, updated_state, ac_data)? };
-	if let Some(ref value) = packet.unknown31         { inspect_unknown31        (value, former_state, updated_state, ac_data)? };
-	if let Some(ref value) = packet.unknown32         { inspect_unknown32        (value, former_state, updated_state, ac_data)? };
-	if let Some(ref value) = packet.level             { inspect_level            (value, former_state, updated_state, ac_data)? };
-	if let Some(ref value) = packet.experience        { inspect_experience       (value, former_state, updated_state, ac_data)? };
-	if let Some(ref value) = packet.master            { inspect_master           (value, former_state, updated_state, ac_data)? };
-	if let Some(ref value) = packet.unknown36         { inspect_unknown36        (value, former_state, updated_state, ac_data)? };
-	if let Some(ref value) = packet.rarity            { inspect_rarity           (value, former_state, updated_state, ac_data)? };
-	if let Some(ref value) = packet.unknown38         { inspect_unknown38        (value, former_state, updated_state, ac_data)? };
-	if let Some(ref value) = packet.home_zone         { inspect_home_zone        (value, former_state, updated_state, ac_data)? };
-	if let Some(ref value) = packet.home              { inspect_home             (value, former_state, updated_state, ac_data)? };
-	if let Some(ref value) = packet.zone_to_reveal    { inspect_zone_to_reveal   (value, former_state, updated_state, ac_data)? };
-	if let Some(ref value) = packet.unknown42         { inspect_unknown42        (value, former_state, updated_state, ac_data)? };
-	if let Some(ref value) = packet.consumable        { inspect_consumable       (value, former_state, updated_state, ac_data)? };
-	if let Some(ref value) = packet.equipment         { inspect_equipment        (value, former_state, updated_state, ac_data)? };
-	if let Some(ref value) = packet.name              { inspect_name             (value, former_state, updated_state, ac_data)? };
-	if let Some(ref value) = packet.skill_tree        { inspect_skill_tree       (value, former_state, updated_state, ac_data)? };
-	if let Some(ref value) = packet.mana_cubes        { inspect_mana_cubes       (value, former_state, updated_state, ac_data)? };
+	if packet.position         .is_some() { inspect_position         (&previous_state, &updated_state)? };
+	if packet.rotation         .is_some() { inspect_rotation         (&previous_state, &updated_state)? };
+	if packet.velocity         .is_some() { inspect_velocity         (&previous_state, &updated_state)? };
+	if packet.acceleration     .is_some() { inspect_acceleration     (&previous_state, &updated_state)? };
+	if packet.velocity_extra   .is_some() { inspect_velocity_extra   (&previous_state, &updated_state)? };
+	if packet.head_tilt        .is_some() { inspect_head_tilt        (&previous_state, &updated_state)? };
+	if packet.flags_physics    .is_some() { inspect_flags_physics    (&previous_state, &updated_state)? };
+	if packet.affiliation      .is_some() { inspect_affiliation      (&previous_state, &updated_state)? };
+	if packet.race             .is_some() { inspect_race             (&previous_state, &updated_state)? };
+	if packet.animation        .is_some() { inspect_animation        (&previous_state, &updated_state)? };
+	if packet.animation_time   .is_some() { inspect_animation_time   (&previous_state, &updated_state)? };
+	if packet.combo            .is_some() { inspect_combo            (&previous_state, &updated_state)? };
+	if packet.combo_timeout    .is_some() { inspect_combo_timeout    (&previous_state, &updated_state, source).await? }; //todo: consistency
+	if packet.appearance       .is_some() { inspect_appearance       (&previous_state, &updated_state)? };
+	if packet.flags            .is_some() { inspect_flags            (&previous_state, &updated_state)? };
+	if packet.effect_time_dodge.is_some() { inspect_effect_time_dodge(&previous_state, &updated_state)? };
+	if packet.effect_time_stun .is_some() { inspect_effect_time_stun (&previous_state, &updated_state)? };
+	if packet.effect_time_fear .is_some() { inspect_effect_time_fear (&previous_state, &updated_state)? };
+	if packet.effect_time_chill.is_some() { inspect_effect_time_chill(&previous_state, &updated_state)? };
+	if packet.effect_time_wind .is_some() { inspect_effect_time_wind (&previous_state, &updated_state)? };
+	if packet.show_patch_time  .is_some() { inspect_show_patch_time  (&previous_state, &updated_state)? };
+	if packet.occupation       .is_some() { inspect_occupation       (&previous_state, &updated_state)? };
+	if packet.specialization   .is_some() { inspect_specialization   (&previous_state, &updated_state)? };
+	if packet.mana_charge      .is_some() { inspect_mana_charge      (&previous_state, &updated_state)? };
+	if packet.unknown24        .is_some() { inspect_unknown24        (&previous_state, &updated_state)? };
+	if packet.unknown25        .is_some() { inspect_unknown25        (&previous_state, &updated_state)? };
+	if packet.aim_offset       .is_some() { inspect_aim_offset       (&previous_state, &updated_state)? };
+	if packet.health           .is_some() { inspect_health           (&previous_state, &updated_state)? };
+	if packet.mana             .is_some() { inspect_mana             (&previous_state, &updated_state)? };
+	if packet.blocking_gauge   .is_some() { inspect_blocking_gauge   (&previous_state, &updated_state)? };
+	if packet.multipliers      .is_some() { inspect_multipliers      (&previous_state, &updated_state)? };
+	if packet.unknown31        .is_some() { inspect_unknown31        (&previous_state, &updated_state)? };
+	if packet.unknown32        .is_some() { inspect_unknown32        (&previous_state, &updated_state)? };
+	if packet.level            .is_some() { inspect_level            (&previous_state, &updated_state)? };
+	if packet.experience       .is_some() { inspect_experience       (&previous_state, &updated_state)? };
+	if packet.master           .is_some() { inspect_master           (&previous_state, &updated_state)? };
+	if packet.unknown36        .is_some() { inspect_unknown36        (&previous_state, &updated_state)? };
+	if packet.rarity           .is_some() { inspect_rarity           (&previous_state, &updated_state)? };
+	if packet.unknown38        .is_some() { inspect_unknown38        (&previous_state, &updated_state)? };
+	if packet.home_zone        .is_some() { inspect_home_zone        (&previous_state, &updated_state)? };
+	if packet.home             .is_some() { inspect_home             (&previous_state, &updated_state)? };
+	if packet.zone_to_reveal   .is_some() { inspect_zone_to_reveal   (&previous_state, &updated_state)? };
+	if packet.unknown42        .is_some() { inspect_unknown42        (&previous_state, &updated_state)? };
+	if packet.consumable       .is_some() { inspect_consumable       (&previous_state, &updated_state)? };
+	if packet.equipment        .is_some() { inspect_equipment        (&previous_state, &updated_state)? };
+	if packet.name             .is_some() { inspect_name             (&previous_state, &updated_state)? };
+	if packet.skill_tree       .is_some() { inspect_skill_tree       (&previous_state, &updated_state)? };
+	if packet.mana_cubes       .is_some() { inspect_mana_cubes       (&previous_state, &updated_state)? };
 
 	Ok(())
 }

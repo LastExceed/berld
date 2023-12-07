@@ -10,15 +10,15 @@ use crate::server::Server;
 impl HandlePacket<CreatureUpdate> for Server {
 	#[expect(clippy::significant_drop_tightening, reason = "false positive")]
 	async fn handle_packet(&self, source: &Player, mut packet: CreatureUpdate) {
+		if let Err(message) = anti_cheat::inspect_creature_update(source, &packet).await {
+			self.kick(source, message).await;
+			return;
+		}
+
 		let mut character = source.character.write().await;
 		let snapshot = character.clone();
 		character.update(&packet);
 		let character = character.downgrade();
-
-		if let Err(message) = anti_cheat::inspect_creature_update(source, &packet, &snapshot, &character).await {
-			self.kick(source, message).await;
-			return;
-		}
 
 		if !filter(&mut packet, &snapshot, &character) {
 			return;

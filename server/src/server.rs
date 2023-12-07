@@ -81,7 +81,7 @@ impl Server {
 		write_abnormal_creature_update(&mut writer, assigned_id).await?;
 
 		let (initial_creature_update, character) = read_character_data(&mut reader).await?;
-		//todo: AC inspection beforehand
+
 		let (new_player, kick_receiver) = Player::new(
 			address,
 			assigned_id,
@@ -90,26 +90,27 @@ impl Server {
 		);
 		let player = Arc::new(new_player);
 		self.players.write().await.push(Arc::clone(&player));
+		self.announce(format!("[+] {}", player.character.read().await.name)).await;
+
+		self.handle_packet(&player, initial_creature_update).await;
 
 		select! {
 			biased;
 			_ = kick_receiver => (),
-			_ = self.handle_new_player(reader, &player, initial_creature_update) => ()
+			() = self.handle_new_player(reader, &player) => ()
 		}
+
 		self.remove_player(&player).await;
 		self.announce(format!("[-] {}", player.character.read().await.name)).await;
 		self.id_pool.write().await.free(assigned_id);
+
 		Ok(())
 	}
 
-	async fn handle_new_player(&self, reader: BufReader<OwnedReadHalf>, player: &Player, initial_creature_update: CreatureUpdate) {
-		self.handle_packet(player, initial_creature_update).await;
-
+	async fn handle_new_player(&self, reader: BufReader<OwnedReadHalf>, player: &Player) {
 		player.send_ignoring(&MapSeed(56345)).await;
 		player.notify("welcome to berld").await;
 		send_existing_creatures(self, player).await;
-
-		self.announce(format!("[+] {}", player.character.read().await.name)).await;
 
 		self.read_packets_forever(player, reader).await
 			.expect_err("impossible");
