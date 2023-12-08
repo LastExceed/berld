@@ -9,9 +9,11 @@ use protocol::packet::common::CreatureId;
 use protocol::packet::common::item::Kind::*;
 use protocol::packet::common::item::kind::Weapon::*;
 use protocol::packet::creature_update::CreatureFlag::{Climbing, Gliding};
+use protocol::packet::creature_update::equipment::Slot;
 use protocol::packet::creature_update::equipment::Slot::RightWeapon;
 use protocol::packet::creature_update::Occupation::Rogue;
 use protocol::packet::creature_update::PhysicsFlag::{OnGround, Swimming};
+use protocol::packet::hit::Kind;
 use protocol::packet::status_effect::Kind::{Anger, Swiftness};
 use protocol::packet::world_update::Sound;
 use protocol::packet::world_update::sound::Kind::{Magic01, SpikeTrap};
@@ -166,4 +168,27 @@ pub fn adjust_hit(hit: &mut Hit, source: &Creature, target: &Creature) {
 	if hit.stuntime > 0 {
 		hit.stuntime += effective_stun_bonus;
 	}
+}
+pub fn apply_block(hit: &mut Hit, _source: &Creature, target: &Creature) -> Vec<Hit> {
+	let mut hits_vec = vec![];
+	if hit.kind == Kind::Block {
+		let block_packet = Hit { // Show Block message when attack is Blocked
+			kind: Kind::Block,
+			damage: 0.0,
+			critical: true, // text is clearer like this
+			..*hit
+		};
+		hits_vec.push(block_packet); // To target
+
+		let left_weapon = &target.equipment[Slot::LeftWeapon];
+		let right_weapon = &target.equipment[Slot::RightWeapon];
+		if left_weapon.kind != Weapon(Shield) && right_weapon.kind != Weapon(Shield) { // No shield blocking
+			hit.damage /= 4.0;
+			hit.kind = Kind::Normal;
+			hits_vec.push(hit.clone()); // Normal hit packet, but with damage divided by 4
+		}
+	} else {
+		hits_vec.push(hit.clone());
+	}
+	return hits_vec;
 }

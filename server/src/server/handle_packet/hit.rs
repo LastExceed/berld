@@ -3,10 +3,7 @@ use tap::Tap;
 
 use protocol::packet::{CreatureUpdate, Hit, WorldUpdate};
 use protocol::packet::common::Race;
-use protocol::packet::common::item::Kind::Weapon;
-use protocol::packet::common::item::kind::Weapon::Shield;
 use protocol::packet::common::Race::*;
-use protocol::packet::creature_update::equipment::Slot;
 use protocol::packet::hit::Kind::{*, Absorb, Block};
 use protocol::packet::world_update::{Sound, sound};
 use protocol::packet::world_update::sound::Kind::*;
@@ -40,34 +37,13 @@ impl HandlePacket<Hit> for Server {
 			..Default::default()
 		}).await;
 
-		let mut hits_vec = vec![];
-		let mut hit_sounds = impact_sounds(&packet, target_character_guard.race);
-
-		if packet.kind == Block {
-			let block_packet = Hit { // Show Block message when attack is Blocked
-				kind: Block,
-				damage: 0.0,
-				critical: true, // text is clearer like this
-				..packet
-			};
-			hits_vec.push(block_packet); // To target
-
-			let left_weapon = &target_character_guard.equipment[Slot::LeftWeapon];
-			let right_weapon = &target_character_guard.equipment[Slot::RightWeapon];
-			if left_weapon.kind != Weapon(Shield) && right_weapon.kind != Weapon(Shield) { // No shield blocking
-				packet.damage /= 4.0;
-				packet.kind = Normal;
-				hits_vec.push(packet); // Normal hit packet, but with damage divided by 4
-			}
-		} else {
-			hits_vec.push(packet);
-		}
+		let hits_vec: Vec<Hit> = balancing::apply_block(&mut packet, &source_character_guard, &target_character_guard);
+		let hit_sounds = impact_sounds(&packet, target_character_guard.race);
 
 		let mut next_health = target_character_guard.health;
 		for hit in &hits_vec {
 			next_health -= hit.damage;
 		}
-
 
 		target.send_ignoring(&WorldUpdate {
 			sounds: hit_sounds, 	// the sound and hit effect can be heard/seen by every players
