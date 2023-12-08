@@ -28,9 +28,9 @@ impl Command for Act {
 		let kind = match action {
 			"sit" => Kind::Bench,
 			"sleep" => Kind::SleepingMat,
-			_ => {return Err("Unknown action")}
+			_ => {return Err("Unknown action. try: [sit, sleep]")}
 		};
-		let zone =  Point2::new(
+		let zone = Point2::new(
 			(character_guard.position[0] / SIZE_ZONE) as i32,
 			(character_guard.position[1] / SIZE_ZONE) as i32
 		);
