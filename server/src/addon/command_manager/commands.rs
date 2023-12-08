@@ -13,6 +13,7 @@ mod player;
 mod tp;
 mod test;
 mod team;
+mod act;
 
 #[derive(Debug, PartialEq, Eq, Hash, Clone, Default)]
 pub struct Who;
@@ -48,3 +49,6 @@ pub struct Test;
 
 #[derive(Debug, PartialEq, Eq, Hash, Clone, Default)]
 pub struct Team;
+
+#[derive(Debug, PartialEq, Eq, Hash, Clone, Default)]
+pub struct Act;
