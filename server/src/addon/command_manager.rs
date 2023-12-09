@@ -56,6 +56,7 @@ impl Default for CommandManager {
 			cm.register(Test);
 			cm.register(Team);
 			cm.register(Act);
+			cm.register(Heal);
 		})
 	}
 }

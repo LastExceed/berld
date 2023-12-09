@@ -14,6 +14,7 @@ mod tp;
 mod test;
 mod team;
 mod act;
+mod heal;
 
 #[derive(Debug, PartialEq, Eq, Hash, Clone, Default)]
 pub struct Who;
@@ -52,3 +53,6 @@ pub struct Team;
 
 #[derive(Debug, PartialEq, Eq, Hash, Clone, Default)]
 pub struct Act;
+
+#[derive(Debug, PartialEq, Eq, Hash, Clone, Default)]
+pub struct Heal;
