@@ -1,7 +1,7 @@
 use std::sync::Arc;
 use tap::Tap;
 
-use protocol::packet::{CreatureUpdate, Hit, WorldUpdate};
+use protocol::packet::{Hit, WorldUpdate};
 use protocol::packet::common::Race;
 use protocol::packet::common::Race::*;
 use protocol::packet::hit::Kind::{*, Absorb, Block};
@@ -30,14 +30,7 @@ impl HandlePacket<Hit> for Server {
 		balancing::adjust_hit(&mut packet, &source_character_guard, &target_character_guard);
 		packet.flash = true;//todo: (re-)move
 
-
-		source.send_ignoring(&CreatureUpdate { // Avoid the depletion of the target blocking gauge
-			id: target.id,
-			blocking_gauge: Some(target_character_guard.blocking_gauge),
-			..Default::default()
-		}).await;
-
-		let hits_vec: Vec<Hit> = balancing::apply_block(&mut packet, &source_character_guard, &target_character_guard);
+		let hits_vec: Vec<Hit> = balancing::apply_block(&mut packet, source, &target_character_guard).await;
 		let hit_sounds = impact_sounds(&packet, target_character_guard.race);
 
 		let mut next_health = target_character_guard.health;
@@ -57,6 +50,7 @@ impl HandlePacket<Hit> for Server {
 				..Default::default()
 			}, None).await;
 		}
+		drop(target_character_guard);
 	}
 }
 

@@ -4,13 +4,12 @@ use std::time::{Duration, Instant};
 
 use tokio::sync::RwLock;
 
-use protocol::packet::{Hit, StatusEffect, WorldUpdate};
+use protocol::packet::{CreatureUpdate, Hit, StatusEffect, WorldUpdate};
 use protocol::packet::common::CreatureId;
 use protocol::packet::common::item::Kind::*;
 use protocol::packet::common::item::kind::Weapon::*;
 use protocol::packet::creature_update::CreatureFlag::{Climbing, Gliding};
-use protocol::packet::creature_update::equipment::Slot;
-use protocol::packet::creature_update::equipment::Slot::RightWeapon;
+use protocol::packet::creature_update::equipment::Slot::{LeftWeapon, RightWeapon};
 use protocol::packet::creature_update::Occupation::Rogue;
 use protocol::packet::creature_update::PhysicsFlag::{OnGround, Swimming};
 use protocol::packet::hit::Kind;
@@ -169,7 +168,13 @@ pub fn adjust_hit(hit: &mut Hit, source: &Creature, target: &Creature) {
 		hit.stuntime += effective_stun_bonus;
 	}
 }
-pub fn apply_block(hit: &mut Hit, _source: &Creature, target: &Creature) -> Vec<Hit> {
+pub async fn apply_block(hit: &mut Hit, source: &Player, target: &Creature) -> Vec<Hit> {
+	source.send_ignoring(&CreatureUpdate { // Avoid the depletion of the target blocking gauge
+		id: hit.target,
+		blocking_gauge: Some(target.blocking_gauge),
+		..Default::default()
+	}).await;
+
 	let mut hits_vec = vec![];
 	if hit.kind == Kind::Block {
 		let block_packet = Hit { // Show Block message when attack is Blocked
@@ -180,8 +185,8 @@ pub fn apply_block(hit: &mut Hit, _source: &Creature, target: &Creature) -> Vec<
 		};
 		hits_vec.push(block_packet); // To target
 
-		let left_weapon = &target.equipment[Slot::LeftWeapon];
-		let right_weapon = &target.equipment[Slot::RightWeapon];
+		let left_weapon = &target.equipment[LeftWeapon];
+		let right_weapon = &target.equipment[RightWeapon];
 		if left_weapon.kind != Weapon(Shield) && right_weapon.kind != Weapon(Shield) { // No shield blocking
 			hit.damage /= 4.0;
 			hit.kind = Kind::Normal;
