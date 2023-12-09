@@ -5,7 +5,7 @@ use tap::Pipe;
 use tokio::time::sleep;
 
 use protocol::packet::{CreatureUpdate, IngameDatetime, WorldUpdate};
-use protocol::packet::world_update::{Sound, sound};
+use protocol::packet::world_update::Sound;
 use protocol::packet::world_update::sound::Kind::MenuSelect;
 use protocol::utils::sound_position_of;
 
@@ -13,7 +13,6 @@ use crate::addon::balancing::AirTimeTracker;
 use crate::addon::command_manager::CommandManager;
 use crate::addon::discord_integration::DiscordIntegration;
 use crate::server::creature::Creature;
-use crate::server::player::Player;
 use crate::server::Server;
 
 pub mod anti_cheat;
