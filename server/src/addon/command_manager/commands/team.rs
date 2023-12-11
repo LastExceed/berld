@@ -16,7 +16,7 @@ impl Command for Team {
 
 		let Some(param) = params.next()
 			else {
-				return Ok(Some(get_helper_message(caller).await));
+				return Ok(Some(get_howto_string(caller).await));
 			};
 
 		let team_id =
@@ -27,21 +27,21 @@ impl Command for Team {
 			};
 
 		pvp::change_team(server, caller, team_id).await;
-		Ok(Some(get_info_message(team_id)))
+		Ok(Some(get_current_team_string(team_id)))
 	}
 }
 
-async fn get_helper_message(player: &Player) -> String {
+async fn get_howto_string(player: &Player) -> String {
 	format!("-------------
 use /team [ID] to create & join a team
 to leave your team, use /team leave
 {}
 -------------",
-		get_info_message(player.addon_data.read().await.team)
+			get_current_team_string(player.addon_data.read().await.team)
 	)
 }
 
-fn get_info_message(team_id: Option<i32>) -> String {
+fn get_current_team_string(team_id: Option<i32>) -> String {
 	let team_name = team_id.map_or(
 		"None".into(),
 		|id| id.to_string()
