@@ -3,6 +3,9 @@ use std::sync::atomic::Ordering::Relaxed;
 use colour::{cyan, white_ln};
 
 use protocol::packet::ChatMessageFromClient;
+use protocol::packet::world_update::sound::Kind::*;
+use crate::addon::command_manager::CommandResult;
+use crate::addon::{play_chat_sound, play_sound_at_player};
 
 use crate::server::handle_packet::HandlePacket;
 use crate::server::player::Player;
@@ -15,6 +18,8 @@ impl HandlePacket<ChatMessageFromClient> for Server {
 		cyan!("{}: ", source_name);
 		white_ln!("{}", packet.text);
 
+		let callback = |command_result| { command_callback(command_result, source) };
+
 		let is_command = self
 			.addons
 			.command_manager
@@ -24,7 +29,7 @@ impl HandlePacket<ChatMessageFromClient> for Server {
 				source.admin.load(Relaxed),
 				&packet.text,
 				'/',
-				|message| { source.notify(message) }
+				callback
 			).await;
 		if is_command { return; }
 
@@ -41,6 +46,23 @@ impl HandlePacket<ChatMessageFromClient> for Server {
 			).await;
 
 		self.broadcast(&packet.into_reverse(source.id), None).await;
-		self.play_chat_sound().await;
+		play_chat_sound(self).await;
+	}
+}
+
+async fn command_callback(result: CommandResult, source: &Player) {
+	match result {
+		Ok(response_option) => {
+			play_sound_at_player(source, CraftProc, 1.0, 1.0).await;
+
+			let Some(response) = response_option
+				else { return };
+
+			source.notify(response).await; //send message
+		}
+		Err(error) => {
+			play_sound_at_player(source, MenuClose2, 0.5, 1.0).await;
+			source.notify(error).await; //send error
+		}
 	}
 }

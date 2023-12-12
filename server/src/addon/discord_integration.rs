@@ -8,6 +8,7 @@ use twilight_model::id::Id;
 
 use protocol::packet::ChatMessageFromServer;
 use protocol::packet::common::CreatureId;
+use crate::addon::command_manager::CommandResult;
 
 use crate::server::Server;
 
@@ -56,13 +57,15 @@ impl DiscordIntegration {
 							_ => continue,
 						};
 
+						let callback = |response| { Self::command_callback(server_static, response, admin) };
+
 						let is_command = server_static.addons.command_manager.on_message(
 							server_static,
 							None,
 							admin,
 							&message.content,
 							'.',
-							|response| async move { server_static.addons.discord_integration.post(&response, admin).await }//todo: oof
+							callback
 						).await;
 
 						if is_command {
@@ -94,5 +97,20 @@ impl DiscordIntegration {
 			.expect("setting content failed")
 			.await
 			.expect("create message failed");
+	}
+
+	async fn command_callback(server: &Server, result: CommandResult, admin: bool) {
+		match result {
+			Ok(response_option) => {
+				let Some(response) = response_option
+					else { return };
+
+				server.addons.discord_integration.post(&response, admin).await;
+			}
+			Err(error) => {
+				server.addons.discord_integration.post(error, admin).await;
+			}
+			// TODO: Remove duplicated code, by replacing &str with String
+		}
 	}
 }

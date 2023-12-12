@@ -5,7 +5,7 @@ use tap::Pipe;
 use tokio::time::sleep;
 
 use protocol::packet::{CreatureUpdate, IngameDatetime, WorldUpdate};
-use protocol::packet::world_update::Sound;
+use protocol::packet::world_update::{Sound, sound};
 use protocol::packet::world_update::sound::Kind::MenuSelect;
 use protocol::utils::sound_position_of;
 
@@ -13,6 +13,7 @@ use crate::addon::balancing::AirTimeTracker;
 use crate::addon::command_manager::CommandManager;
 use crate::addon::discord_integration::DiscordIntegration;
 use crate::server::creature::Creature;
+use crate::server::player::Player;
 use crate::server::Server;
 
 pub mod anti_cheat;
@@ -46,23 +47,23 @@ pub fn freeze_time(server: &Server) {
 	});
 }
 
-impl Server {
-	pub async fn play_chat_sound(&self) {
-		//cant use broadcast as sound position is different for each player
-		self.players
-			.read()
-			.await
-			.iter()
-			.map(|player| async {
-				let sound = Sound {
-					position: sound_position_of(player.character.read().await.position),
-					kind: MenuSelect,
-					pitch: 2.0,
-					volume: 0.5,
-				};
-				player.send_ignoring(&WorldUpdate::from(sound)).await;
-			})
-			.pipe(join_all)
-			.await;
-	}
+pub async fn play_chat_sound(server: &Server) {
+	//cant use broadcast as sound position is different for each player
+	server.players
+		.read()
+		.await
+		.iter()
+		.map(|player| play_sound_at_player(player, MenuSelect, 2.0, 0.5))
+		.pipe(join_all)
+		.await;
+}
+
+pub async fn play_sound_at_player(player: &Player, kind: sound::Kind, pitch: f32, volume: f32) {
+	let sound = Sound {
+		position: sound_position_of(player.character.read().await.position),
+		kind,
+		pitch,
+		volume,
+	};
+	player.send_ignoring(&WorldUpdate::from(sound)).await;
 }

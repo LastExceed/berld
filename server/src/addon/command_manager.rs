@@ -20,7 +20,6 @@ mod utils;
 type CommandFuture<'fut> = Pin<Box<dyn Future<Output=CommandResult> + Send + 'fut>>;
 pub type CommandResult = Result<Option<String>, &'static str>;
 
-
 pub struct CommandManager {
 	commands: HashMap<&'static str, Box<dyn CommandProxy>>,
 	admin_password: String
@@ -68,7 +67,7 @@ impl CommandManager {
 		self.commands.insert(C::LITERAL, Box::new(command));
 	}
 
-	pub async fn on_message<Fut: Future<Output=()>, Cb: FnOnce(String) -> Fut>(//todo: figure out lifetimes to optimize this to &str
+	pub async fn on_message<Fut: Future<Output=()>, Cb: FnOnce(CommandResult) -> Fut>(//todo: figure out lifetimes to optimize this to &str
 		&self,
 		server: &Server,
 		caller: Option<&Player>,
@@ -80,13 +79,8 @@ impl CommandManager {
 		let is_command = text.starts_with(command_prefix);
 
 		if is_command {
-			match self.handle_command(server, caller, admin, text).await {
-				Ok(Some(response)) => {
-					callback(response).await;
-				}
-				Ok(None) => {}
-				Err(error) => { callback(error.to_owned()).await }
-			}
+			let command_result = self.handle_command(server, caller, admin, text).await;
+			callback(command_result).await;
 		}
 
 		is_command
