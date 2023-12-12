@@ -53,9 +53,7 @@ pub async fn play_chat_sound(server: &Server) {
 		.read()
 		.await
 		.iter()
-		.map(|player| async {
-			play_sound_at_player(player, MenuSelect, 2.0, 0.5).await;
-		})
+		.map(|player| play_sound_at_player(player, MenuSelect, 2.0, 0.5))
 		.pipe(join_all)
 		.await;
 }
