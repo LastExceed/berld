@@ -4,7 +4,7 @@ use std::time::{Duration, Instant};
 
 use tokio::sync::RwLock;
 
-use protocol::packet::{Hit, StatusEffect, WorldUpdate};
+use protocol::packet::{CreatureUpdate, Hit, StatusEffect, WorldUpdate};
 use protocol::packet::common::CreatureId;
 use protocol::packet::common::item::Kind::*;
 use protocol::packet::common::item::kind::Weapon::*;
@@ -12,6 +12,7 @@ use protocol::packet::creature_update::CreatureFlag::{Climbing, Gliding};
 use protocol::packet::creature_update::equipment::Slot::RightWeapon;
 use protocol::packet::creature_update::Occupation::Rogue;
 use protocol::packet::creature_update::PhysicsFlag::{OnGround, Swimming};
+use protocol::packet::hit::Kind;
 use protocol::packet::status_effect::Kind::{Anger, Swiftness};
 use protocol::packet::world_update::Sound;
 use protocol::packet::world_update::sound::Kind::{Magic01, SpikeTrap};
@@ -166,4 +167,22 @@ pub fn adjust_hit(hit: &mut Hit, source: &Creature, target: &Creature) {
 	if hit.stuntime > 0 {
 		hit.stuntime += effective_stun_bonus;
 	}
+}
+pub async fn adjust_blocking(hit: &mut Hit, attacker: &Player, attacker_creature: &Creature, target_creature: &Creature) {
+	if hit.kind != Kind::Block {
+		return
+	}
+
+	let has_shield = attacker_creature
+		.equipment
+		.iter()
+		.any(|item| item.kind == Weapon(Shield));
+	hit.damage *= if has_shield { 0.5 } else { 0.0 };
+
+	let creature_update = &CreatureUpdate { // Avoid the depletion of the target blocking gauge
+		id: hit.target,
+		blocking_gauge: Some(target_creature.blocking_gauge),
+		..Default::default()
+	};
+	attacker.send_ignoring(creature_update).await;
 }
