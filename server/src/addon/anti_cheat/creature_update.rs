@@ -164,8 +164,8 @@ pub(super) async fn inspect_combo_timeout(previous_state: &Creature, updated_sta
 	let is_dead = updated_state.health == 0.0;
 
 	if was_dead && is_dead {
-		updated_state.combo_timeout.ensure_exact(&previous_state.combo_timeout, "combo_timeout")?;
-		return Ok(());//clock freezes while dead
+		//clock freezes while dead
+		return updated_state.combo_timeout.ensure_exact(&previous_state.combo_timeout, "combo_timeout");
 	}
 
 	let init = ac_data.last_combo_update.is_none();//todo: move to ac data init?
@@ -174,16 +174,33 @@ pub(super) async fn inspect_combo_timeout(previous_state: &Creature, updated_sta
 
 	if init || respawn || hit {
 		ac_data.last_combo_update = Some(Instant::now() - Duration::from_millis(updated_state.combo_timeout as _));
+		ac_data.strikes = 0;
 		return Ok(());
 	}
 
-	ac_data
-		.last_combo_update
-		.unwrap()
-		.elapsed()
-		.as_millis()
-		.abs_diff(updated_state.combo_timeout as _)
-		.ensure_at_most(2000, "combo_timeout.clockdesync")
+	let elapsed_nanos = ac_data.last_combo_update.unwrap().elapsed().as_nanos() as i128;
+	let reportet_nanos = updated_state.combo_timeout as i128 * 1_000_000;
+
+	let delta = reportet_nanos - elapsed_nanos;
+
+	if delta.abs() > 500_000_000 {
+		ac_data.strikes += 1;
+		if ac_data.strikes >= 50 {
+			if ac_data.last_lag_spike.is_some_and(|time| time.elapsed() < Duration::from_secs(15)) {
+				return Err("timewarp".into())
+			}
+			let now = Instant::now();
+			ac_data.last_lag_spike = Some(now);
+			ac_data.last_combo_update = Some(now - Duration::from_millis(updated_state.combo_timeout as _));
+			ac_data.strikes = 0;
+		}
+	} else if ac_data.strikes > 0 {
+		ac_data.strikes -= 1;
+	}
+
+	//println!("{} {}", ac_data.strikes, delta as f64 / 1_000_000.0);
+
+	Ok(())
 }
 
 #[expect(clippy::too_many_lines, reason = "TODO")] //TODO: extract constants

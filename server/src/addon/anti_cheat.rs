@@ -16,7 +16,9 @@ pub mod creature_update;
 
 #[derive(Debug, PartialEq, Eq, Hash, Clone, Default)]
 pub struct PlayerData {
-	last_combo_update: Option<Instant>
+	last_combo_update: Option<Instant>,
+	last_lag_spike: Option<Instant>,
+	strikes: u8
 }
 
 #[expect(clippy::significant_drop_tightening, reason = "cannot drop any earlier")]
