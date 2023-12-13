@@ -19,13 +19,7 @@ impl HandlePacket<StatusEffect> for Server {
 	async fn handle_packet(&self, source: &Player, packet: StatusEffect) {
 		match packet.kind {
 			Poison => {
-				let Some(target) = self //todo: duplicate code
-					.players
-					.read()
-					.await
-					.iter()
-					.find(|player| { player.id == packet.target })
-					.map(Arc::clone)
+				let Some(target) = self.find_player_by_id(packet.target).await
 					else { return; };//can happen when the target disconnected in this moment
 
 				apply_poison(source, target, &packet).await;

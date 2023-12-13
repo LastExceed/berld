@@ -1,4 +1,5 @@
 use std::mem::transmute;
+use std::sync::Arc;
 use std::time::Duration;
 
 use colour::white_ln;
@@ -63,6 +64,16 @@ impl Server {
 	pub fn extend_lifetime(&self) -> &'static Self {
 		#[expect(clippy::undocumented_unsafe_blocks, reason = "TODO")]
 		unsafe { transmute(self) } //TODO: figure out scoped tasks
+	}
+
+	pub async fn find_player_by_id(&self, id: CreatureId) -> Option<Arc<Player>> {
+		self
+			.players
+			.read()
+			.await
+			.iter()
+			.find(|player| { player.id == id })
+			.map(Arc::clone)
 	}
 }
 

@@ -15,14 +15,7 @@ use crate::server::Server;
 
 impl HandlePacket<Hit> for Server {
 	async fn handle_packet(&self, source: &Player, mut packet: Hit) {
-		//todo: duplicate code
-		let Some(target) = self
-			.players
-			.read()
-			.await
-			.iter()
-			.find(|player| { player.id == packet.target })
-			.map(Arc::clone)
+		let Some(target) = self.find_player_by_id(packet.target).await
 			else { return; };//can happen when the target disconnected in this moment
 		let target_character_guard = target.character.read().await;
 		let source_character_guard = source.character.read().await;
