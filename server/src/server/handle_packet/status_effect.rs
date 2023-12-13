@@ -69,15 +69,23 @@ async fn apply_poison(source: &Player, target: Arc<Player>, status_effect: &Stat
 	let tick_count = status_effect.duration / 500;
 
 	tokio::spawn(async move {
-		for i in 0..=tick_count {
-			if i != 0 {
-				sleep(Duration::from_millis(500)).await;
+		let mut nth = 0;
+		loop {
+			nth += 1;
+
+			if target.character.read().await.health == 0.0 {
+				break;
 			}
 
 			if target.send(&world_update).await.is_err() {
-				//disconnects are handled in the reading thread
-				break;
+				break; //disconnects are handled in the reading task
 			};
+
+			if nth == tick_count {
+				break;
+			}
+
+			sleep(Duration::from_millis(500)).await;
 		}
 	});
 }
