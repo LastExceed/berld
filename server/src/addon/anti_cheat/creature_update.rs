@@ -496,14 +496,15 @@ pub(super) fn inspect_effect_time_dodge(previous_state: &Creature, updated_state
 }
 
 pub(super) fn inspect_effect_time_stun(previous_state: &Creature, updated_state: &Creature) -> anti_cheat::Result {
-	if previous_state.health == 0.0 && updated_state.health > 0.0 {
-		updated_state.effect_time_stun
-			.ensure_at_most(-3000, "effect_time_stun")?; //value is set to -3000 on respawn
-	}
 	//todo: freeze at 0 would bypass this
 	if updated_state.effect_time_stun > previous_state.effect_time_stun {
-		updated_state.effect_time_stun
-			.ensure_not_negative("effect_time_stun")?;
+		if previous_state.health == 0.0 && updated_state.health > 0.0 {
+			updated_state.effect_time_stun
+				.ensure_at_most(-3000, "effect_time_stun")?; //value is set to -3000 on respawn
+		} else {
+			updated_state.effect_time_stun
+				.ensure_not_negative("effect_time_stun")?;
+		}
 	}
 	Ok(())
 }
