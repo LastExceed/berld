@@ -21,19 +21,16 @@ impl Command for Heal {
 			amount = str.parse().map_err(|_| "invalid amount specified")?;
 		};
 
-		let update = WorldUpdate {
-			hits: vec![Hit {
-				attacker: caller.id,
-				target: caller.id,
-				damage: -amount,
-				position: character_guard_lock.position,
-				kind: Normal,
-				..Default::default()
-			}],
+		let heal = Hit {
+			attacker: caller.id,
+			target: caller.id,
+			damage: -amount,
+			position: character_guard_lock.position,
+			kind: Normal,
 			..Default::default()
 		};
 
-		caller.send_ignoring(&update).await;
+		caller.send_ignoring(&WorldUpdate::from(heal)).await;
 		drop(character_guard_lock);
 
 		Ok(None)
