@@ -33,23 +33,11 @@ impl HandlePacket<Hit> for Server {
 		let hits_vec: Vec<Hit> = balancing::apply_block(&mut packet, source, &target_character_guard).await;
 		let hit_sounds = impact_sounds(&packet, target_character_guard.race);
 
-		let mut next_health = target_character_guard.health;
-		for hit in &hits_vec {
-			next_health -= hit.damage;
-		}
-
 		target.send_ignoring(&WorldUpdate {
 			sounds: hit_sounds, 	// the sound and hit effect can be heard/seen by every players
 			hits: hits_vec,			// the damages are only shown to the target
 			..Default::default()	// and the attacker damage is precalculated by the client
 		}).await;
-
-		if next_health <= 0.0 {
-			self.broadcast(&WorldUpdate { // send death sound to all players
-				sounds: vec![Sound::at(target_character_guard.position, Destroy2)],
-				..Default::default()
-			}, None).await;
-		}
 		drop(target_character_guard);
 	}
 }
