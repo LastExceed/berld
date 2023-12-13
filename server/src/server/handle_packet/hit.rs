@@ -28,7 +28,7 @@ impl HandlePacket<Hit> for Server {
 		let source_character_guard = source.character.read().await;
 
 		balancing::adjust_hit(&mut packet, &source_character_guard, &target_character_guard);
-		balancing::adjust_blocking(&mut packet, source, &target_character_guard).await;
+		balancing::adjust_blocking(&mut packet, source, &source_character_guard, &target_character_guard).await;
 		packet.flash = true;//todo: (re-)move
 
 		let world_update = &WorldUpdate {

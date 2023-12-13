@@ -168,17 +168,21 @@ pub fn adjust_hit(hit: &mut Hit, source: &Creature, target: &Creature) {
 		hit.stuntime += effective_stun_bonus;
 	}
 }
-pub async fn adjust_blocking(hit: &mut Hit, source: &Player, target: &Creature) {
+pub async fn adjust_blocking(hit: &mut Hit, attacker: &Player, attacker_creature: &Creature, target_creature: &Creature) {
 	if hit.kind != Kind::Block {
 		return
 	}
 
-	hit.damage = 0.0;
+	let has_shield = attacker_creature
+		.equipment
+		.iter()
+		.any(|item| item.kind == Weapon(Shield));
+	hit.damage *= if has_shield { 0.5 } else { 0.0 };
 
 	let creature_update = &CreatureUpdate { // Avoid the depletion of the target blocking gauge
 		id: hit.target,
-		blocking_gauge: Some(target.blocking_gauge),
+		blocking_gauge: Some(target_creature.blocking_gauge),
 		..Default::default()
 	};
-	source.send_ignoring(creature_update).await;
+	attacker.send_ignoring(creature_update).await;
 }
