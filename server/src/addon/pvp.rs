@@ -1,9 +1,11 @@
 use std::future::join;
 use std::ptr;
-use futures::future::join_all;
+use futures::future::{join, join_all};
 use tap::{Pipe, Tap};
 use protocol::packet::creature_update::CreatureFlag;
-use protocol::packet::CreatureUpdate;
+use protocol::packet::{CreatureUpdate, StatusEffect, WorldUpdate};
+use protocol::packet::common::CreatureId;
+use protocol::packet::status_effect::Kind::Affection;
 use protocol::utils::flagset::FlagSet;
 use crate::server::creature::Creature;
 
@@ -51,12 +53,12 @@ pub async fn change_team(server: &Server, player: &Player, new_team: Option<i32>
 	}
 
 	if let Some(old_team) = addon_data.team {
-		update_flags(server, player, old_team, true).await;
+		update_creatures(server, player, old_team, false).await;
 	}
 	addon_data.team = new_team;
 	drop(addon_data); //todo: might be able to drop this even earlier
 	if let Some(new_team) = new_team {
-		update_flags(server, player, new_team, false).await;
+		update_creatures(server, player, new_team, true).await;
 	}
 
 	true
@@ -70,8 +72,28 @@ pub fn get_modified_flags(creature: &Creature, friendly_fire: bool) -> Option<Fl
 		.pipe(Some)
 }
 
-async fn update_flags(server: &Server, player: &Player, team: i32, friendly_fire: bool) {
-	let flag_update_of_self = create_flag_update(player, friendly_fire).await;
+async fn create_flag_update(player: &Player, friendly_fire: bool) -> CreatureUpdate {
+	CreatureUpdate {
+		id: player.id,
+		flags: get_modified_flags(&*player.character.read().await, friendly_fire),
+		..Default::default()
+	}
+}
+
+fn create_heart_update(creature_id: CreatureId, enabled: bool) -> WorldUpdate {
+	StatusEffect {
+		source: creature_id,
+		target: creature_id,
+		kind: Affection,
+		modifier: 1.0,
+		duration: if enabled { i32::MAX } else { 0 },
+		creature_id3: CreatureId::default(),
+	}.into()
+}
+
+async fn update_creatures(server: &Server, player: &Player, team: i32, joined: bool) {
+	let flag_update_of_self = create_flag_update(player, !joined).await;
+	let heart_update_of_self = create_heart_update(player.id, joined);
 
 	server
 		.players
@@ -88,10 +110,13 @@ async fn update_flags(server: &Server, player: &Player, team: i32, friendly_fire
 					return;
 				}
 
-				let flag_update_of_other = create_flag_update(other_player, friendly_fire).await;
+				let flag_update_of_other = create_flag_update(other_player, !joined).await;
+				let heart_update_of_other = create_heart_update(other_player.id, joined);
 				join!(
 					player.send_ignoring(&flag_update_of_other),
-					other_player.send_ignoring(&flag_update_of_self)
+					player.send_ignoring(&heart_update_of_other),
+					other_player.send_ignoring(&flag_update_of_self),
+					other_player.send_ignoring(&heart_update_of_self)
 				).await;
 			};
 
@@ -99,12 +124,4 @@ async fn update_flags(server: &Server, player: &Player, team: i32, friendly_fire
 		})
 		.pipe(join_all)
 		.await;
-}
-
-async fn create_flag_update(player: &Player, friendly_fire: bool) -> CreatureUpdate {
-	CreatureUpdate {
-		id: player.id,
-		flags: get_modified_flags(&*player.character.read().await, friendly_fire),
-		..Default::default()
-	}
 }

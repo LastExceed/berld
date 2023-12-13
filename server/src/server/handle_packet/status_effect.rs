@@ -30,6 +30,7 @@ impl HandlePacket<StatusEffect> for Server {
 			ManaShield => {
 				source.notify(format!("manashield: {}", packet.modifier)).await;
 			}
+			Affection => return, //echoed by the client when applied by the server, no need to re-broadcast
 			_ => ()
 		}
 
