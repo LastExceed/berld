@@ -168,7 +168,7 @@ pub fn adjust_hit(hit: &mut Hit, source: &Creature, target: &Creature) {
 		hit.stuntime += effective_stun_bonus;
 	}
 }
-pub async fn apply_block(hit: &mut Hit, source: &Player, target: &Creature) -> Vec<Hit> {
+pub async fn adjust_blocking(hit: &mut Hit, source: &Player, target: &Creature) -> Vec<Hit> {
 	source.send_ignoring(&CreatureUpdate { // Avoid the depletion of the target blocking gauge
 		id: hit.target,
 		blocking_gauge: Some(target.blocking_gauge),

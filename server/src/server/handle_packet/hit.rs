@@ -32,7 +32,7 @@ impl HandlePacket<Hit> for Server {
 
 		let world_update = &WorldUpdate {
 			sounds: impact_sounds(&packet, target_character_guard.race),
-			hits: balancing::apply_block(&mut packet, source, &target_character_guard).await,
+			hits: balancing::adjust_blocking(&mut packet, source, &target_character_guard).await,
 			..Default::default()
 		};
 
