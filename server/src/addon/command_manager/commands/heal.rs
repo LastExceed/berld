@@ -14,7 +14,7 @@ impl Command for Heal {
 
 	async fn execute<'fut>(&'fut self, _server: &'fut Server, caller: Option<&'fut Player>, params: &'fut mut SplitWhitespace<'fut>) -> CommandResult {
 		let caller = caller.ok_or(INGAME_ONLY)?;
-		let character_guard_lock = caller.character.read().await;
+		let character = caller.character.read().await;
 
 		let mut amount: f32 = 9999.0;
 		if let Some(str) = params.next() {
@@ -25,13 +25,13 @@ impl Command for Heal {
 			attacker: caller.id,
 			target: caller.id,
 			damage: -amount,
-			position: character_guard_lock.position,
+			position: character.position,
 			kind: Normal,
 			..Default::default()
 		};
+		drop(character);
 
 		caller.send_ignoring(&WorldUpdate::from(heal)).await;
-		drop(character_guard_lock);
 
 		Ok(None)
 	}
