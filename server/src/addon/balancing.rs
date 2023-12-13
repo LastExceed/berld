@@ -9,7 +9,7 @@ use protocol::packet::common::CreatureId;
 use protocol::packet::common::item::Kind::*;
 use protocol::packet::common::item::kind::Weapon::*;
 use protocol::packet::creature_update::CreatureFlag::{Climbing, Gliding};
-use protocol::packet::creature_update::equipment::Slot::{LeftWeapon, RightWeapon};
+use protocol::packet::creature_update::equipment::Slot::RightWeapon;
 use protocol::packet::creature_update::Occupation::Rogue;
 use protocol::packet::creature_update::PhysicsFlag::{OnGround, Swimming};
 use protocol::packet::hit::Kind;
@@ -168,32 +168,17 @@ pub fn adjust_hit(hit: &mut Hit, source: &Creature, target: &Creature) {
 		hit.stuntime += effective_stun_bonus;
 	}
 }
-pub async fn adjust_blocking(hit: &mut Hit, source: &Player, target: &Creature) -> Vec<Hit> {
-	source.send_ignoring(&CreatureUpdate { // Avoid the depletion of the target blocking gauge
+pub async fn adjust_blocking(hit: &mut Hit, source: &Player, target: &Creature) {
+	if hit.kind != Kind::Block {
+		return
+	}
+
+	hit.damage = 0.0;
+
+	let creature_update = &CreatureUpdate { // Avoid the depletion of the target blocking gauge
 		id: hit.target,
 		blocking_gauge: Some(target.blocking_gauge),
 		..Default::default()
-	}).await;
-
-	let mut hits_vec = vec![];
-	if hit.kind == Kind::Block {
-		let block_packet = Hit { // Show Block message when attack is Blocked
-			kind: Kind::Block,
-			damage: 0.0,
-			critical: true, // text is clearer like this
-			..*hit
-		};
-		hits_vec.push(block_packet); // To target
-
-		let left_weapon = &target.equipment[LeftWeapon];
-		let right_weapon = &target.equipment[RightWeapon];
-		if left_weapon.kind != Weapon(Shield) && right_weapon.kind != Weapon(Shield) { // No shield blocking
-			hit.damage /= 4.0;
-			hit.kind = Kind::Normal;
-			hits_vec.push(hit.clone()); // Normal hit packet, but with damage divided by 4
-		}
-	} else {
-		hits_vec.push(hit.clone());
-	}
-	return hits_vec;
+	};
+	source.send_ignoring(creature_update).await;
 }
