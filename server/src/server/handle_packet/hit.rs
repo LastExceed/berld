@@ -1,4 +1,3 @@
-use std::sync::Arc;
 use tap::Tap;
 
 use protocol::packet::{Hit, WorldUpdate};
