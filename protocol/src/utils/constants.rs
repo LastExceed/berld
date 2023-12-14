@@ -1,3 +1,5 @@
+use crate::packet::common::item::kind::Weapon;
+use crate::packet::common::item::kind::Weapon::*;
 use crate::packet::common::Race;
 use crate::packet::common::Race::*;
 use crate::packet::creature_update::{Occupation, Specialization};
@@ -40,4 +42,17 @@ pub const PLAYABLE_RACES: [Race; 16] = [
 	FrogmanFemale,
 	UndeadMale,
 	UndeadFemale
+];
+
+pub const TWO_HANDED_WEAPONS: [Weapon; 10] = [
+	Longsword,
+	Bow,
+	Crossbow,
+	Boomerang,
+	Staff,
+	Wand,
+	Greatsword,
+	Greataxe,
+	Greatmace,
+	Pitchfork
 ];

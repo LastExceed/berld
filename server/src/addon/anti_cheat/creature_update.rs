@@ -9,7 +9,7 @@ use tap::Pipe;
 
 use protocol::nalgebra::Point3;
 use protocol::packet::common::{CreatureId, EulerAngles, Hitbox, item};
-use protocol::packet::common::item::KindDiscriminants;
+use protocol::packet::common::item::{Kind, KindDiscriminants};
 use protocol::packet::common::Race::*;
 use protocol::packet::creature_update::{Affiliation, Animation, CreatureFlag, PhysicsFlag};
 use protocol::packet::creature_update::Animation::*;
@@ -20,7 +20,7 @@ use protocol::packet::creature_update::skill_tree::Skill;
 use protocol::packet::creature_update::Specialization::*;
 use protocol::utils::{maximum_experience_of, power_of};
 use protocol::utils::constants::combat_classes::*;
-use protocol::utils::constants::PLAYABLE_RACES;
+use protocol::utils::constants::{PLAYABLE_RACES, TWO_HANDED_WEAPONS};
 use protocol::utils::constants::rarity::*;
 use protocol::utils::flagset::FlagSet;
 
@@ -724,6 +724,18 @@ pub(super) fn inspect_equipment(previous_state: &Creature, updated_state: &Creat
 		//item.seed
 		//	.ensure_not_negative(&format!("equipment[{:?}].seed", slot)) //tolerating negative seeds due to popularity
 	}
+
+	updated_state
+		.equipment
+		.iter()
+		.map(|item| {
+			let Kind::Weapon(weapon) = item.kind
+				else { return 0; };
+
+			if TWO_HANDED_WEAPONS.contains(&weapon) { 2 } else { 1 }
+		})
+		.sum::<usize>()
+		.ensure_at_most(2, "equipment.weapon_hand_count")?;
 
 	Ok(())
 }
