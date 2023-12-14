@@ -63,7 +63,6 @@ pub(super) fn inspect_acceleration(previous_state: &Creature, updated_state: &Cr
 //		actual_xy.ensure_within(&(0.0..=limit_xy), "acceleration.horizontal")?;
 //	}
 
-	#[expect(clippy::dbg_macro, reason = "testing in production lol")]
 	if updated_state.flags_physics.get(PhysicsFlag::Swimming) {
 		updated_state.acceleration.z.ensure_within(&(-80.0..=80.0), "acceleration.vertical")
 	} else if updated_state.flags.get(CreatureFlag::Climbing) || previous_state.flags.get(CreatureFlag::Climbing) {//possible fix for a false positive
@@ -191,7 +190,11 @@ pub(super) async fn inspect_combo_timeout(previous_state: &Creature, updated_sta
 			ac_data.last_combo_update = Some(now - Duration::from_millis(updated_state.combo_timeout as _));
 			ac_data.strikes = 0;
 		}
-	} else if ac_data.strikes > 0 {
+
+		return Ok(());
+	}
+
+	if ac_data.strikes > 0 {
 		ac_data.strikes -= 1;
 	}
 
