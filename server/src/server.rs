@@ -205,18 +205,28 @@ impl Server {
 
 	async fn read_packets_forever(&self, source: &Player, mut reader: BufReader<OwnedReadHalf>) -> io::Result<()> {
 		loop {
-			//todo: copypasta
-			match reader.read_id().await? {
-				CreatureUpdate       ::ID => self.handle_packet(source, reader.read_packet::<CreatureUpdate       >().await?).await,
-				CreatureAction       ::ID => self.handle_packet(source, reader.read_packet::<CreatureAction       >().await?).await,
-				Hit                  ::ID => self.handle_packet(source, reader.read_packet::<Hit                  >().await?).await,
-				StatusEffect         ::ID => self.handle_packet(source, reader.read_packet::<StatusEffect         >().await?).await,
-				Projectile           ::ID => self.handle_packet(source, reader.read_packet::<Projectile           >().await?).await,
-				ChatMessageFromClient::ID => self.handle_packet(source, reader.read_packet::<ChatMessageFromClient>().await?).await,
-				AreaRequest::<Zone>  ::ID => self.handle_packet(source, reader.read_packet::<AreaRequest<Zone>    >().await?).await,
-				AreaRequest::<Region>::ID => self.handle_packet(source, reader.read_packet::<AreaRequest<Region>  >().await?).await,
-				unexpected_packet_id => panic!("unexpected packet id {unexpected_packet_id:?}")
+			let iteration = async {
+				//todo: copypasta
+				match reader.read_id().await? {
+					CreatureUpdate       ::ID => self.handle_packet(source, reader.read_packet::<CreatureUpdate       >().await?).await,
+					CreatureAction       ::ID => self.handle_packet(source, reader.read_packet::<CreatureAction       >().await?).await,
+					Hit                  ::ID => self.handle_packet(source, reader.read_packet::<Hit                  >().await?).await,
+					StatusEffect         ::ID => self.handle_packet(source, reader.read_packet::<StatusEffect         >().await?).await,
+					Projectile           ::ID => self.handle_packet(source, reader.read_packet::<Projectile           >().await?).await,
+					ChatMessageFromClient::ID => self.handle_packet(source, reader.read_packet::<ChatMessageFromClient>().await?).await,
+					AreaRequest::<Zone>  ::ID => self.handle_packet(source, reader.read_packet::<AreaRequest<Zone>    >().await?).await,
+					AreaRequest::<Region>::ID => self.handle_packet(source, reader.read_packet::<AreaRequest<Region>  >().await?).await,
+					unexpected_packet_id => panic!("unexpected packet id {unexpected_packet_id:?}")
+				};
+
+				io::Result::<_>::Ok(()) //todo: why do we need explicit type annotation here?
 			};
+
+			select! {
+				biased;
+				result = iteration => { result?; continue; },
+				_ = sleep(Duration::from_secs(5)) => { self.kick(source, "connection timeout").await; }
+			}
 		}
 	}
 }
