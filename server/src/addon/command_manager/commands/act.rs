@@ -3,7 +3,7 @@ use std::time::Duration;
 use tokio::time::sleep;
 use protocol::nalgebra::Point2;
 use protocol::packet::WorldUpdate;
-use protocol::packet::common::Hitbox;
+use protocol::packet::common::{CreatureId, Hitbox};
 use protocol::packet::world_update::world_object::Kind;
 use protocol::packet::world_update::WorldObject;
 use protocol::utils::constants::SIZE_ZONE;
@@ -47,7 +47,7 @@ impl Command for Act {
 			is_closed: false,
 			transform_time: 0,
 			unknown_b: 0,
-			interactor: caller.id.0,
+			interactor: caller.id,
 		};
 		drop(character_guard);
 
@@ -60,7 +60,7 @@ impl Command for Act {
 
 		caller.send_ignoring(&WorldUpdate {
 			world_objects: vec![WorldObject {
-				interactor: 0,
+				interactor: CreatureId(0),
 				..world_object
 			}],
 			..Default::default()
