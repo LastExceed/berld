@@ -13,12 +13,12 @@ use crate::server::player::Player;
 use crate::server::Server;
 
 pub async fn on_creature_update(server: &Server, source: &Player, packet: &CreatureUpdate) -> bool {
-	let own_team = source.addon_data.read().await.team;
-
 	let mut packet_copy = packet.clone();
 	let Some(ref mut flags_of_copy) = packet_copy.flags
 		else { return false; };
 	flags_of_copy.set(CreatureFlag::FriendlyFire, true);
+
+	let own_team = source.addon_data.read().await.team;
 
 	server
 		.players
