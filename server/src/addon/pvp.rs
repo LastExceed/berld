@@ -13,10 +13,16 @@ use crate::server::player::Player;
 use crate::server::Server;
 
 pub async fn on_creature_update(server: &Server, source: &Player, packet: &CreatureUpdate) -> bool {
-	let mut packet_copy = packet.clone();
-	let Some(ref mut flags_of_copy) = packet_copy.flags
-		else { return false; };
-	flags_of_copy.set(CreatureFlag::FriendlyFire, true);
+	if packet.flags.is_none() {
+		return false;
+	};
+
+	let mut packet_with_friendly_fire = packet.clone();
+	packet_with_friendly_fire
+		.flags
+		.as_mut()
+		.unwrap()//checked above
+		.set(CreatureFlag::FriendlyFire, true);
 
 	let own_team = source.addon_data.read().await.team;
 
@@ -34,7 +40,7 @@ pub async fn on_creature_update(server: &Server, source: &Player, packet: &Creat
 				let other_team = other_player.addon_data.read().await.team;
 				let is_teammate = own_team.is_some() && own_team == other_team;
 
-				let packet_to_send = if is_teammate { packet } else { &packet_copy };
+				let packet_to_send = if is_teammate { packet } else { &packet_with_friendly_fire };
 				other_player.send_ignoring(packet_to_send).await;
 			};
 
