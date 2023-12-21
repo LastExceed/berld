@@ -245,7 +245,7 @@ async fn send_existing_creatures(server: &Server, player: &Player) {
 
 			let creature_update = character
 				.to_update(existing_player.id)
-				.tap_mut(|packet| packet.flags = pvp::get_modified_flags(&character, true));
+				.tap_mut(|packet| packet.flags = Some(pvp::get_modified_flags(&character, true)));
 			drop(character);
 
 			player.send_ignoring(&creature_update).await;

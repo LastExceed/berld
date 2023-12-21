@@ -70,18 +70,17 @@ pub async fn change_team(server: &Server, player: &Player, new_team: Option<i32>
 	true
 }
 
-pub fn get_modified_flags(creature: &Creature, friendly_fire: bool) -> Option<FlagSet<u16, CreatureFlag>> {
+pub fn get_modified_flags(creature: &Creature, friendly_fire: bool) -> FlagSet<u16, CreatureFlag> {
 	creature
 		.flags
 		.clone()
 		.tap_mut(|flags| flags.set(CreatureFlag::FriendlyFire, friendly_fire))
-		.pipe(Some)
 }
 
 async fn create_flag_update(player: &Player, friendly_fire: bool) -> CreatureUpdate {
 	CreatureUpdate {
 		id: player.id,
-		flags: get_modified_flags(&*player.character.read().await, friendly_fire),
+		flags: Some(get_modified_flags(&*player.character.read().await, friendly_fire)),
 		..Default::default()
 	}
 }
