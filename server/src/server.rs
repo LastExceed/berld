@@ -28,13 +28,14 @@ use protocol::utils::constants::SIZE_ZONE;
 use protocol::utils::io_extensions::{ReadPacket, WriteArbitrary, WritePacket};
 
 use crate::addon::{Addons, freeze_time};
+use crate::addon:: pvp::{reload_team_display, change_team, reserve_team_display_dummies};
 use crate::addon::pvp;
 use crate::server::creature::Creature;
 use crate::server::creature_id_pool::CreatureIdPool;
 use crate::server::handle_packet::HandlePacket;
 use crate::server::player::Player;
 
-mod creature_id_pool;
+pub mod creature_id_pool;
 pub mod player;
 mod handle_packet;
 pub mod creature;
@@ -50,7 +51,10 @@ pub struct Server {
 
 impl Server {
 	pub async fn run(self) {
-		let _ = self.id_pool.write().await.claim(); //reserve 0 for the server itself
+		let mut id_pool = self.id_pool.write().await;
+		let _ = id_pool.claim(); //reserve 0 for the server itself
+		reserve_team_display_dummies(&mut id_pool);
+		drop(id_pool);
 
 		let listener = TcpListener::bind("0.0.0.0:12345").await.expect("unable to bind listening socket");
 
@@ -111,6 +115,7 @@ impl Server {
 		player.send_ignoring(&MapSeed(56345)).await;
 		player.notify("welcome to berld").await;
 		send_existing_creatures(self, player).await;
+		reload_team_display(player, &vec![]).await;
 
 		self.read_packets_forever(player, reader).await
 			.expect_err("impossible");
@@ -189,6 +194,7 @@ impl Server {
 			.expect("this should be the only place where players get removed");
 		players.swap_remove(index);
 		drop(players);
+		change_team(self, player_to_remove, None).await;
 		self.remove_creature(&player_to_remove.id).await;
 	}
 
