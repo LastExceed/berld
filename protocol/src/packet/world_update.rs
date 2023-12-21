@@ -113,6 +113,7 @@ pub struct Sound {
 	pub volume: f32
 }
 
+///only tangible if the player is in the 3x3 mapblock square around the original location
 #[repr(C)]
 #[derive(Debug, PartialEq, Clone)]
 pub struct WorldObject {
@@ -158,6 +159,8 @@ pub struct Attack {
 	//pad4
 }
 
+///if the objective is [Objective::Monster], the crossed swords are located at `zone` and the UI never shows up (even in vanilla)
+///otherwise the crossed swords are located at `sector` and the `zone` seems to have no effect
 #[repr(C)]
 #[derive(Debug, PartialEq, Eq, Clone, Hash)]
 pub struct Mission {
