@@ -26,7 +26,7 @@ impl Command for Team {
 				Some(param.parse().map_err(|_| "invalid team id")?)
 			};
 
-		pvp::change_team(server, caller, team_id).await;
+		pvp::team::change_team(server, caller, team_id).await;
 		Ok(Some(get_current_team_string(team_id)))
 	}
 }
