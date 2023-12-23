@@ -45,19 +45,15 @@ pub async fn update(server: &Server, source: &Player, packet: &CreatureUpdate, t
         .read()
         .await
         .iter()
-        .filter_map(|player| {
+        .filter(|player| {
             let is_source = ptr::eq(player.as_ref(), source);
             let is_teammate = team_members
                 .iter()
                 .any(|member| Arc::ptr_eq(player, member));
 
-            if is_source || is_teammate {
-                return None;
-            }
-
-            let future = player.send_ignoring(&map_head_update);
-            Some(future)
+            !is_source && !is_teammate
         })
+        .map(|player| player.send_ignoring(&map_head_update))
         .pipe(join_all)
         .await;
 }

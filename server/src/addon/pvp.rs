@@ -40,20 +40,13 @@ pub async fn broadcast(server: &Server, source: &Player, packet: &CreatureUpdate
 		.read()
 		.await
 		.iter()
-		.filter_map(|other_player| {
-			if ptr::eq(other_player.as_ref(), source) {
-				return None;
-			}
+		.filter(|target| !ptr::eq(target.as_ref(), source))
+		.map(|target| async {
+			let other_team = target.addon_data.read().await.team;
+			let is_teammate = own_team.is_some() && own_team == other_team;
 
-			let future = async {
-				let other_team = other_player.addon_data.read().await.team;
-				let is_teammate = own_team.is_some() && own_team == other_team;
-
-				let packet_to_send = if is_teammate { packet } else { &pvp_enabled_packet };
-				other_player.send_ignoring(packet_to_send).await;
-			};
-
-			Some(future)
+			let packet_to_send = if is_teammate { packet } else { &pvp_enabled_packet };
+			target.send_ignoring(packet_to_send).await;
 		})
 		.pipe(join_all)
 		.await;

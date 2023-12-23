@@ -127,13 +127,8 @@ impl Server {
 			.read()
 			.await
 			.iter()
-			.filter_map(|player| {
-				if let Some(pts) = player_to_skip && ptr::eq(player.as_ref(), pts) {
-					return None;
-				}
-
-				Some(player.send_ignoring(packet))
-			})
+			.filter(|player| !player_to_skip.is_some_and(|pts| ptr::eq(player.as_ref(), pts)))
+			.map(|player| player.send_ignoring(packet))
 			.pipe(join_all)
 			.await;
 	}
@@ -246,30 +241,24 @@ async fn send_existing_creatures(server: &Server, player: &Player) {
 		.read()
 		.await
 		.iter()
-		.filter_map(|existing_player| {
-			if ptr::eq(existing_player.as_ref(), player) {
-				return None;
-			}
-			let future = async {
-				let character = existing_player
-					.character
-					.read()
-					.await;
+		.filter(|existing_player| !ptr::eq(existing_player.as_ref(), player))
+		.map(|existing_player| async {
+			let character = existing_player
+				.character
+				.read()
+				.await;
 
-				let other_team = existing_player.addon_data.read().await.team;
-				let is_teammate = own_team.is_some() && own_team == other_team;
+			let other_team = existing_player.addon_data.read().await.team;
+			let is_teammate = own_team.is_some() && own_team == other_team;
 
-				let creature_update = character
-					.to_update(existing_player.id)
-					.tap_mut(|packet| packet.affiliation = Some(if is_teammate { Affiliation::Player } else { Affiliation::Enemy }));
-				let map_head = map_head::create(&character, existing_player.id);
-				drop(character);
+			let creature_update = character
+				.to_update(existing_player.id)
+				.tap_mut(|packet| packet.affiliation = Some(if is_teammate { Affiliation::Player } else { Affiliation::Enemy }));
+			let map_head = map_head::create(&character, existing_player.id);
+			drop(character);
 
-				player.send_ignoring(&creature_update).await;
-				player.send_ignoring(&map_head).await;
-			};
-
-			Some(future)
+			player.send_ignoring(&creature_update).await;
+			player.send_ignoring(&map_head).await;
 		})
 		.pipe(join_all)
 		.await;

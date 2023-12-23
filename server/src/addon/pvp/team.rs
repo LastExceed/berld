@@ -73,30 +73,23 @@ async fn update_creatures(server: &Server, player: &Player, team: i32, joined: b
 		.read()
 		.await
 		.iter()
-		.filter_map(|other_player| {
-			if ptr::eq(other_player.as_ref(), player) {
-				return None;
+		.filter(|other_player| !ptr::eq(other_player.as_ref(), player))
+		.map(|other_player| async {
+			if other_player.addon_data.read().await.team != Some(team) {
+				return;
 			}
 
-			let future = async {
-				if other_player.addon_data.read().await.team != Some(team) {
-					return;
-				}
-
-				let attackability_update_of_other = create_attackability_update(other_player, !joined);
-				let heart_update_of_other = create_heart_update(other_player.id, joined);
-				let map_head_toggle_of_other = map_head::create_toggle_packet(other_player, !joined);
-				join!(
-					player.send_ignoring(&attackability_update_of_other),
-					player.send_ignoring(&heart_update_of_other),
-					player.send_ignoring(&map_head_toggle_of_other),
-					other_player.send_ignoring(&attackability_update_of_self),
-					other_player.send_ignoring(&heart_update_of_self),
-					other_player.send_ignoring(&map_head_toggle_of_self)
-				).await;
-			};
-
-			Some(future)
+			let attackability_update_of_other = create_attackability_update(other_player, !joined);
+			let heart_update_of_other = create_heart_update(other_player.id, joined);
+			let map_head_toggle_of_other = map_head::create_toggle_packet(other_player, !joined);
+			join!(
+				player.send_ignoring(&attackability_update_of_other),
+				player.send_ignoring(&heart_update_of_other),
+				player.send_ignoring(&map_head_toggle_of_other),
+				other_player.send_ignoring(&attackability_update_of_self),
+				other_player.send_ignoring(&heart_update_of_self),
+				other_player.send_ignoring(&map_head_toggle_of_self)
+			).await;
 		})
 		.pipe(join_all)
 		.await;
