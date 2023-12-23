@@ -17,7 +17,7 @@ use super::map_head;
 
 pub mod display;
 
-pub async fn change_team(server: &Server, player: &Player, new_team: Option<i32>) -> bool {
+pub async fn change_to(server: &Server, player: &Player, new_team: Option<i32>) -> bool {
 	let mut addon_data = player.addon_data.write().await;
 	if addon_data.team == new_team {
 		return false;

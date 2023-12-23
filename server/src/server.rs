@@ -193,7 +193,7 @@ impl Server {
 			.expect("this should be the only place where players get removed");
 		players.swap_remove(index);
 		drop(players);
-		pvp::team::change_team(self, player_to_remove, None).await;
+		pvp::team::change_to(self, player_to_remove, None).await;
 		self.remove_creature(&player_to_remove.id).await;
 	}
 
