@@ -31,8 +31,8 @@ pub struct Addons {
 }
 
 pub fn fix_cutoff_animations(creature_update: &mut CreatureUpdate, previous_state: &Creature) {
-	if let Some(animation_time) = creature_update.animation_time && animation_time <= previous_state.animation_time {
-		creature_update.animation_time = Some(0); //starts all animations from the beginning to prevent cut-off animations, at the cost of some minimal delay
+	if let Some(ref mut animation_time) = creature_update.animation_time && *animation_time <= previous_state.animation_time {
+		*animation_time = 0; //starts all animations from the beginning to prevent cut-off animations, at the cost of some minimal delay
 	}
 }
 
