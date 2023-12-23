@@ -28,6 +28,7 @@ use protocol::utils::constants::SIZE_ZONE;
 use protocol::utils::io_extensions::{ReadPacket, WriteArbitrary, WritePacket};
 
 use crate::addon::{Addons, freeze_time};
+use crate::addon::pvp::map_head;
 use crate::addon::pvp;
 use crate::server::creature::Creature;
 use crate::server::creature_id_pool::CreatureIdPool;
@@ -250,10 +251,12 @@ async fn send_existing_creatures(server: &Server, player: &Player) {
 
 			let creature_update = character
 				.to_update(existing_player.id)
-				.tap_mut(|packet| packet.flags = Some(pvp::get_modified_flags(&character, true)));
+				.tap_mut(|packet| packet.affiliation = Some(Affiliation::Enemy));//todo: move to pvp module
+			let map_head = map_head::create(&character, existing_player.id);
 			drop(character);
 
 			player.send_ignoring(&creature_update).await;
+			player.send_ignoring(&map_head).await;
 		})
 		.pipe(join_all)
 		.await;

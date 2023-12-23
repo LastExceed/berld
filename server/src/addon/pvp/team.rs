@@ -1,16 +1,19 @@
 use std::ptr;
+use std::sync::Arc;
+use std::convert::identity;
 use std::future::join;
 
 use futures::future::join_all;
 use protocol::packet::{CreatureUpdate, StatusEffect, WorldUpdate};
+use protocol::packet::creature_update::Affiliation;
 use protocol::packet::status_effect::Kind::Affection;
 use protocol::packet::common::CreatureId;
-use tap::Pipe;
+use tap::{Pipe, Tap};
 
 use crate::server::Server;
 use crate::server::player::Player;
 
-use super::get_modified_flags;
+use super::map_head;
 
 pub mod display;
 
@@ -42,10 +45,10 @@ pub async fn change_team(server: &Server, player: &Player, new_team: Option<i32>
 	true
 }
 
-async fn create_flag_update(player: &Player, friendly_fire: bool) -> CreatureUpdate {
+fn create_attackability_update(player: &Player, enabled: bool) -> CreatureUpdate {
 	CreatureUpdate {
 		id: player.id,
-		flags: Some(get_modified_flags(&*player.character.read().await, friendly_fire)),
+		affiliation: Some(if enabled { Affiliation::Enemy } else { Affiliation::Player }),
 		..Default::default()
 	}
 }
@@ -62,8 +65,9 @@ fn create_heart_update(creature_id: CreatureId, enabled: bool) -> WorldUpdate {
 }
 
 async fn update_creatures(server: &Server, player: &Player, team: i32, joined: bool) {
-	let flag_update_of_self = create_flag_update(player, !joined).await;
+	let attackability_update_of_self = create_attackability_update(player, !joined);
 	let heart_update_of_self = create_heart_update(player.id, joined);
+	let map_head_toggle_of_self = map_head::create_toggle_packet(player, !joined);
 
 	server
 		.players
@@ -80,13 +84,16 @@ async fn update_creatures(server: &Server, player: &Player, team: i32, joined: b
 					return;
 				}
 
-				let flag_update_of_other = create_flag_update(other_player, !joined).await;
+				let attackability_update_of_other = create_attackability_update(other_player, !joined);
 				let heart_update_of_other = create_heart_update(other_player.id, joined);
+				let map_head_toggle_of_other = map_head::create_toggle_packet(other_player, !joined);
 				join!(
-					player.send_ignoring(&flag_update_of_other),
+					player.send_ignoring(&attackability_update_of_other),
 					player.send_ignoring(&heart_update_of_other),
-					other_player.send_ignoring(&flag_update_of_self),
-					other_player.send_ignoring(&heart_update_of_self)
+					player.send_ignoring(&map_head_toggle_of_other),
+					other_player.send_ignoring(&attackability_update_of_self),
+					other_player.send_ignoring(&heart_update_of_self),
+					other_player.send_ignoring(&map_head_toggle_of_self)
 				).await;
 			};
 
@@ -94,4 +101,27 @@ async fn update_creatures(server: &Server, player: &Player, team: i32, joined: b
 		})
 		.pipe(join_all)
 		.await;
+}
+
+pub async fn get_members(server: &Server, target_team: i32) -> Vec<Arc<Player>> {
+	server
+		.players
+		.read()
+		.await
+		.iter()
+		.map(|player| async {
+			let team = player.addon_data.read().await.team;
+
+			if team != Some(target_team) {
+				return None;
+			}
+
+			Some(Arc::clone(player))
+		})
+		.pipe(join_all) //todo: should probably use a stream or sth
+		.await
+		.into_iter()
+		.filter_map(identity)
+		.collect::<Vec<_>>()
+		.tap_mut(|vec| vec.sort_unstable_by_key(|player| player.id.0))
 }

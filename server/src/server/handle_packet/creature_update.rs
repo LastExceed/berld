@@ -15,6 +15,9 @@ impl HandlePacket<CreatureUpdate> for Server {
 			return;
 		}
 
+		self.addons.air_time_tracker.on_creature_update(source).await;
+		pvp::on_creature_update(self, source, &packet).await;
+
 		let mut character = source.character.write().await;
 		let snapshot = character.clone();
 		character.update(&packet);
@@ -26,9 +29,8 @@ impl HandlePacket<CreatureUpdate> for Server {
 		drop(character);
 
 		fix_cutoff_animations(&mut packet, &snapshot);
-		self.addons.air_time_tracker.on_creature_update(source).await;
 
-		if pvp::on_creature_update(self, source, &packet).await {
+		if pvp::broadcast(self, source, &packet).await {
 			return;
 		};
 

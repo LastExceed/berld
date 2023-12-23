@@ -1,28 +1,37 @@
 use std::ptr;
 use futures::future::join_all;
-use tap::{Pipe, Tap};
-use protocol::packet::creature_update::CreatureFlag;
+use tap::Pipe;
+use protocol::packet::creature_update::Affiliation;
 use protocol::packet::CreatureUpdate;
-use protocol::utils::flagset::FlagSet;
-use crate::server::creature::Creature;
 
 pub mod team;
+pub mod map_head;
 
 use crate::server::player::Player;
 use crate::server::Server;
 
-pub async fn on_creature_update(server: &Server, source: &Player, packet: &CreatureUpdate) -> bool {
-	team::display::update_for_all_members(server, packet, source).await;
-	if packet.flags.is_none() {
+pub async fn on_creature_update(server: &Server, source: &Player, packet: &CreatureUpdate) {
+	let team_members =
+		if let Some(target_team) = source.addon_data.read().await.team {
+			team::get_members(server, target_team).await
+		} else {
+			vec![]
+		};
+	team::display::update_for_all_members(packet, source, &team_members).await;
+	map_head::update(server, source, packet, &team_members).await;
+}
+
+pub async fn broadcast(server: &Server, source: &Player, packet: &CreatureUpdate) -> bool {
+	if packet.affiliation.is_none() {//if packet.flags.is_none() {
 		return false;
 	};
 
-	let mut packet_with_friendly_fire = packet.clone();
-	packet_with_friendly_fire
-		.flags
+	let mut pvp_enabled_packet = packet.clone();
+	*pvp_enabled_packet
+		.affiliation//.flags
 		.as_mut()
 		.unwrap()//checked above
-		.set(CreatureFlag::FriendlyFire, true);
+		= Affiliation::Enemy;
 
 	let own_team = source.addon_data.read().await.team;
 
@@ -40,7 +49,7 @@ pub async fn on_creature_update(server: &Server, source: &Player, packet: &Creat
 				let other_team = other_player.addon_data.read().await.team;
 				let is_teammate = own_team.is_some() && own_team == other_team;
 
-				let packet_to_send = if is_teammate { packet } else { &packet_with_friendly_fire };
+				let packet_to_send = if is_teammate { packet } else { &pvp_enabled_packet };
 				other_player.send_ignoring(packet_to_send).await;
 			};
 
@@ -50,11 +59,4 @@ pub async fn on_creature_update(server: &Server, source: &Player, packet: &Creat
 		.await;
 
 	true
-}
-
-pub fn get_modified_flags(creature: &Creature, friendly_fire: bool) -> FlagSet<u16, CreatureFlag> {
-	creature
-		.flags
-		.clone()
-		.tap_mut(|flags| flags.set(CreatureFlag::FriendlyFire, friendly_fire))
 }

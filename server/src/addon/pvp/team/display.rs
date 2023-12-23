@@ -17,7 +17,7 @@ pub fn reserve_dummy_ids(pool: &mut CreatureIdPool) {
 }
 
 pub async fn reload_for_all_members(server: &Server, team: i32) {
-	let members = get_all_members(server, team).await;
+	let members = super::get_members(server, team).await;
 
 	members
 		.iter()
@@ -48,7 +48,7 @@ async fn reload_slot(pov: &Player, dummy_id: CreatureId, occupant: Option<&Arc<P
 	pov.send_ignoring(&display_update).await;
 }
 
-pub async fn update_for_all_members(server: &Server, packet: &CreatureUpdate, source: &Player) {
+pub async fn update_for_all_members(packet: &CreatureUpdate, source: &Player, members: &Vec<Arc<Player>>) {
 	let relevant = packet.health.is_some()
 		|| packet.appearance.is_some()
 		|| packet.name.is_some();
@@ -56,11 +56,6 @@ pub async fn update_for_all_members(server: &Server, packet: &CreatureUpdate, so
 	if !relevant {
 		return;
 	}
-
-	let Some(target_team) = source.addon_data.read().await.team
-		else { return; };
-
-	let members = get_all_members(server, target_team).await;
 
 	members
 		.iter()
@@ -122,27 +117,4 @@ fn get_displayed_members<'team>(members: &'team Vec<Arc<Player>>, pov: &Player) 
 		.collect::<Vec<_>>()
 		.try_into()
 		.unwrap()
-}
-
-async fn get_all_members(server: &Server, target_team: i32) -> Vec<Arc<Player>> {
-	server
-		.players
-		.read()
-		.await
-		.iter()
-		.map(|player| async {
-			let team = player.addon_data.read().await.team;
-
-			if team != Some(target_team) {
-				return None;
-			}
-
-			Some(Arc::clone(player))
-		})
-		.pipe(join_all) //todo: should probably use a stream or sth
-		.await
-		.into_iter()
-		.filter_map(identity)
-		.collect::<Vec<_>>()
-		.tap_mut(|vec| vec.sort_unstable_by_key(|player| player.id.0))
 }
