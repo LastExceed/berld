@@ -16,6 +16,8 @@ use protocol::packet::world_update::Kill;
 use crate::server::player::Player;
 use crate::server::Server;
 
+use super::send_existing_creatures;
+
 impl Server {
 	pub async fn announce(&self, text: impl Into<String>) {
 		let text = text.into();//todo: is there a way to prevent this boilerplate?
@@ -54,10 +56,7 @@ impl Server {
 		sleep(Duration::from_millis(100)).await;
 		player.send_ignoring(&ServerTick).await;
 		player.send_ignoring(&ServerTick).await;
-		#[expect(clippy::significant_drop_in_scrutinee, reason = "TODO")]
-		for other_player in self.players.read().await.iter() {//todo: "on_reload" ? see server.on_join()
-			player.send_ignoring(&other_player.character.read().await.to_update(other_player.id)).await;
-		}
+		send_existing_creatures(self, player).await;
 	}
 
 	///terrible hack due to my inexperience. unsafe as fuck

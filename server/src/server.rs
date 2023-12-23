@@ -115,7 +115,6 @@ impl Server {
 		player.send_ignoring(&MapSeed(56345)).await;
 		player.notify("welcome to berld").await;
 		send_existing_creatures(self, player).await;
-		pvp::team::display::reload(player, &vec![]).await;
 
 		self.read_packets_forever(player, reader).await
 			.expect_err("impossible");
@@ -237,26 +236,40 @@ impl Server {
 	}
 }
 
+//todo: way too much pvp stuff in here
+//todo: status effects (including team hearts)
 async fn send_existing_creatures(server: &Server, player: &Player) {
+	pvp::team::display::reload(player, &vec![]).await;
+	let own_team = player.addon_data.read().await.team;
 	server
 		.players
 		.read()
 		.await
 		.iter()
-		.map(|existing_player| async {
-			let character = existing_player
-				.character
-				.read()
-				.await;
+		.filter_map(|existing_player| {
+			if ptr::eq(existing_player.as_ref(), player) {
+				return None;
+			}
+			let future = async {
+				let character = existing_player
+					.character
+					.read()
+					.await;
 
-			let creature_update = character
-				.to_update(existing_player.id)
-				.tap_mut(|packet| packet.affiliation = Some(Affiliation::Enemy));//todo: move to pvp module
-			let map_head = map_head::create(&character, existing_player.id);
-			drop(character);
+				let other_team = existing_player.addon_data.read().await.team;
+				let is_teammate = own_team.is_some() && own_team == other_team;
 
-			player.send_ignoring(&creature_update).await;
-			player.send_ignoring(&map_head).await;
+				let creature_update = character
+					.to_update(existing_player.id)
+					.tap_mut(|packet| packet.affiliation = Some(if is_teammate { Affiliation::Player } else { Affiliation::Enemy }));
+				let map_head = map_head::create(&character, existing_player.id);
+				drop(character);
+
+				player.send_ignoring(&creature_update).await;
+				player.send_ignoring(&map_head).await;
+			};
+
+			Some(future)
 		})
 		.pipe(join_all)
 		.await;
