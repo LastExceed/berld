@@ -25,7 +25,7 @@ pub fn create_toggle_packet(source: &Player, enabled: bool) -> CreatureUpdate {
     }
 }
 
-pub async fn update(server: &Server, source: &Player, packet: &CreatureUpdate, team_members: &Vec<Arc<Player>>) {
+pub async fn update(server: &Server, source: &Player, packet: &CreatureUpdate, team_members: &[Arc<Player>]) {
 	if packet.position.is_none() && packet.rotation.is_none() && packet.appearance.is_none() {
 		return;
 	}

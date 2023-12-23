@@ -1,12 +1,11 @@
 use std::{ptr, iter};
-use std::convert::identity;
 use std::sync::Arc;
 
 use futures::future::join_all;
 use protocol::packet::CreatureUpdate;
 use protocol::packet::creature_update::{Affiliation, Appearance};
 use protocol::packet::common::CreatureId;
-use tap::{Pipe, Tap};
+use tap::Pipe;
 
 use crate::server::{Server, player::Player, creature_id_pool::CreatureIdPool};
 
@@ -26,7 +25,7 @@ pub async fn reload_for_all_members(server: &Server, team: i32) {
 		.await;
 }
 
-pub async fn reload(recipient: &Player, members: &Vec<Arc<Player>>) {
+pub async fn reload(recipient: &Player, members: &[Arc<Player>]) {
 	get_displayed_members(members, recipient)
 		.map(|(dummy_id, occupant)| reload_slot(recipient, dummy_id, occupant))
 		.pipe(join_all)
@@ -48,7 +47,7 @@ async fn reload_slot(pov: &Player, dummy_id: CreatureId, occupant: Option<&Arc<P
 	pov.send_ignoring(&display_update).await;
 }
 
-pub async fn update_for_all_members(packet: &CreatureUpdate, source: &Player, members: &Vec<Arc<Player>>) {
+pub async fn update_for_all_members(packet: &CreatureUpdate, source: &Player, members: &[Arc<Player>]) {
 	let relevant = packet.health.is_some()
 		|| packet.appearance.is_some()
 		|| packet.name.is_some();
@@ -64,7 +63,7 @@ pub async fn update_for_all_members(packet: &CreatureUpdate, source: &Player, me
 				return None;
 			}
 
-			let Some((id, _)) = get_displayed_members(&members, recipient)
+			let Some((id, _)) = get_displayed_members(members, recipient)
 				.into_iter()
 				.find(|(_id, member)|
 					member.is_some_and(|member|
@@ -107,11 +106,11 @@ fn create_placeholder(id: CreatureId) -> CreatureUpdate {
 	}
 }
 
-fn get_displayed_members<'team>(members: &'team Vec<Arc<Player>>, pov: &Player) -> [(CreatureId, Option<&'team Arc<Player>>); 3] {
+fn get_displayed_members<'team>(members: &'team [Arc<Player>], pov: &Player) -> [(CreatureId, Option<&'team Arc<Player>>); 3] {
     members
         .iter()
         .filter(|other| !ptr::eq(pov, other.as_ref()))
-		.map(|other| Some(other))
+		.map(Some)
 		.chain(iter::repeat(None))
 		.take(3)
 		.enumerate()

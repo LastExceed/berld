@@ -1,6 +1,5 @@
 use std::ptr;
 use std::sync::Arc;
-use std::convert::identity;
 use std::future::join;
 
 use futures::future::join_all;
@@ -121,7 +120,7 @@ pub async fn get_members(server: &Server, target_team: i32) -> Vec<Arc<Player>> 
 		.pipe(join_all) //todo: should probably use a stream or sth
 		.await
 		.into_iter()
-		.filter_map(identity)
+		.flatten()
 		.collect::<Vec<_>>()
 		.tap_mut(|vec| vec.sort_unstable_by_key(|player| player.id.0))
 }
