@@ -89,6 +89,7 @@ fn create_display_update(packet: &CreatureUpdate, id: CreatureId) -> CreatureUpd
 		id,
 		appearance: packet.appearance.clone(),
 		health: packet.health,
+		level: packet.level,
 		name: packet.name.clone(),
 		..Default::default()
 	}
@@ -100,6 +101,7 @@ fn create_placeholder(id: CreatureId) -> CreatureUpdate {
 		affiliation: Some(Affiliation::Player),
 		appearance: Some(Appearance { head_model: -1, hair_model: -1, ..Default::default() }), //todo: default for Appearance?,
 		health: Some(0.0),
+		level: Some(0),
 		name: Some("".into()),
 		..Default::default()
 	}
