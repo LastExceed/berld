@@ -1,5 +1,7 @@
+use strum_macros::EnumIter;
+
 #[repr(i32)]
-#[derive(Debug, PartialEq, Eq, Hash, Clone, Copy)]
+#[derive(Debug, PartialEq, Eq, Hash, Clone, Copy, EnumIter)]
 pub enum Kind {
 	Statue,
 	Door,

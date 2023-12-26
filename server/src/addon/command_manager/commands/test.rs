@@ -2,12 +2,18 @@ use std::ops::{Div, Mul};
 use std::str::SplitWhitespace;
 
 use protocol::nalgebra::{Point3, Vector3};
-use protocol::packet::common::Hitbox;
-use protocol::packet::world_update::{Block, WorldObject};
-use protocol::packet::world_update::block::Kind::Solid;
-use protocol::packet::world_update::world_object::Kind::Crate;
-use protocol::packet::WorldUpdate;
-use protocol::utils::constants::{SIZE_BLOCK, SIZE_ZONE};
+use protocol::packet::{StatusEffect, WorldUpdate};
+use protocol::packet::common::{Hitbox, Race};
+use protocol::packet::status_effect::Kind;
+use protocol::packet::world_update::{Block, Mission, Sound, WorldObject};
+use protocol::packet::world_update::block::Kind::*;
+use protocol::packet::world_update::mission::Objective;
+use protocol::packet::world_update::mission::Objective::RemoveMission;
+use protocol::packet::world_update::mission::State::InProgress;
+use protocol::packet::world_update::sound::Kind::{DropCoin, MenuSelect};
+use protocol::packet::world_update::world_object::Kind::{Crate, FireTrap};
+use protocol::rgb::{RGB8, RGBA8};
+use protocol::utils::constants::{SIZE_BLOCK, SIZE_SECTOR, SIZE_ZONE};
 
 use crate::addon::command_manager::{Command, CommandResult};
 use crate::addon::command_manager::commands::Test;
@@ -27,7 +33,10 @@ impl Command for Test {
 		match params.next() {
 			Some("check") => checkerboard(caller, &character).await,
 			Some("obj") => world_object(caller, &character).await,
+			Some("objs") => objs(caller, &character).await,
 			Some("block") => place_block(caller, &character).await,
+			Some("ba") => place_blocks::<true>(caller, &character).await,
+			Some("bs") => place_blocks::<false>(caller, &character).await,
 			Some(_) => { return Err("unknown sub-command") }
 			None => { return Err("too few arguments") },
 		}
@@ -47,6 +56,33 @@ async fn place_block(caller: &Player, character: &Creature) {
 	caller.send_ignoring(&WorldUpdate::from(block)).await;
 }
 
+async fn place_blocks<const B: bool>(caller: &Player, character: &Creature) {
+	let pos = character.position.map(|scalar| (scalar / SIZE_BLOCK) as _);
+
+	let mut blocks = vec![];
+	for dx in 0..8 {
+		for dy in 0..8 {
+			for dz in 0..1000 {
+				let block = Block {
+					position: pos + Vector3::new(dx, dy, -dz),
+					color: [0,0,0].into(),
+					kind: if B { Air } else { Solid },
+					padding: 0,
+				};
+
+				blocks.push(block);
+			}
+		}
+	}
+
+	let wu = WorldUpdate {
+		blocks,
+		..Default::default()
+	};
+
+	caller.send_ignoring(&wu).await;
+}
+
 async fn world_object(caller: &Player, character: &Creature) {
 	let object = WorldObject {
 		zone: character.position.xy().map(|scalar| (scalar / SIZE_ZONE) as _),
@@ -64,7 +100,7 @@ async fn world_object(caller: &Player, character: &Creature) {
 		kind: Crate,
 
 		unknown_a: 0,
-		interactor: caller.id.0,
+		interactor: caller.id,
 	};
 
 	caller.send_ignoring(&WorldUpdate::from(object)).await;
@@ -137,6 +173,33 @@ async fn checkerboard(caller: &Player, character: &Creature) {
 
 	let wu = WorldUpdate {
 		blocks,
+		..Default::default()
+	};
+
+	caller.send_ignoring(&wu).await;
+}
+
+async fn objs(caller: &Player, character: &Creature) {
+	let wu = WorldUpdate {
+		world_objects: (0_i64..100)
+			.map(|i| WorldObject {
+				zone: character.position.xy().map(|scalar| (scalar / SIZE_ZONE) as _),
+				id: i as _,
+				unknown_a: i as _,
+				kind: FireTrap,
+				position: character.position + Vector3::new((i % 10) * 4 * SIZE_BLOCK, (i / 10) * 4 * SIZE_BLOCK, -SIZE_BLOCK),
+				orientation: i as _,
+				size: Hitbox {
+					width: 2.0,
+					depth: 2.0,
+					height: 2.0,
+				},
+				is_closed: true,
+				transform_time: 1,
+				unknown_b: i as _,
+				interactor: caller.id,
+			})
+			.collect(),
 		..Default::default()
 	};
 
