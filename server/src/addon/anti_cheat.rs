@@ -18,7 +18,7 @@ pub mod creature_update;
 pub struct PlayerData {
 	last_combo_update: Option<Instant>,
 	last_lag_spike: Option<Instant>,
-	strikes: u8
+	shift_nanos: i64
 }
 
 #[expect(clippy::significant_drop_tightening, reason = "cannot drop any earlier")]

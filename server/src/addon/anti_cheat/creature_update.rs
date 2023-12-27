@@ -170,35 +170,40 @@ pub(super) async fn inspect_combo_timeout(previous_state: &Creature, updated_sta
 
 	if init || respawn || hit {
 		ac_data.last_combo_update = Some(Instant::now() - Duration::from_millis(updated_state.combo_timeout as _));
-		ac_data.strikes = 0;
 		return Ok(());
 	}
 
-	let elapsed_nanos = ac_data.last_combo_update.unwrap().elapsed().as_nanos() as i128;
-	let reportet_nanos = updated_state.combo_timeout as i128 * 1_000_000;
+	let last_combo_change = ac_data.last_combo_update.as_mut().unwrap();
 
-	let delta = reportet_nanos - elapsed_nanos;
+	let elapsed_nanos = last_combo_change.elapsed().as_nanos() as i64;
+	let reported_nanos = updated_state.combo_timeout as i64 * 1_000_000;
+	let delta = reported_nanos - elapsed_nanos;
 
-	if delta.abs() > 500_000_000 {
-		ac_data.strikes += 1;
-		if ac_data.strikes >= 50 {
-			if ac_data.last_lag_spike.is_some_and(|time| time.elapsed() < Duration::from_secs(15)) {
-				return Err("timewarp".into())
-			}
-			let now = Instant::now();
-			ac_data.last_lag_spike = Some(now);
-			ac_data.last_combo_update = Some(now - Duration::from_millis(updated_state.combo_timeout as _));
-			ac_data.strikes = 0;
-		}
+	if delta.is_negative() {//necessary because [Duration] cannot be negative
+		*last_combo_change += Duration::from_nanos((delta * -1) as _);
+	} else {
+		*last_combo_change -= Duration::from_nanos(delta as _);
+	}
 
+	let last_lag_spike = ac_data.last_lag_spike.get_or_insert(Instant::now());
+	if last_lag_spike.elapsed() < Duration::from_secs(1) {
 		return Ok(());
 	}
 
-	if ac_data.strikes > 0 {
-		ac_data.strikes -= 1;
+	let new_spike = Duration::from_nanos(delta.abs() as _) > Duration::from_millis(300);
+	if new_spike {
+		*last_lag_spike = Instant::now();
+		return Ok(());
 	}
 
-	//println!("{} {}", ac_data.strikes, delta as f64 / 1_000_000.0);
+	ac_data.shift_nanos += delta;
+	ac_data.shift_nanos -= ac_data.shift_nanos.signum() * 1_000_000; //decay for tolerance
+
+	dbg!(ac_data.shift_nanos / 1_000_000);
+
+	if Duration::from_nanos(ac_data.shift_nanos.abs() as _) > Duration::from_millis(500) {
+		return Err("timewarp".into());
+	}
 
 	Ok(())
 }
