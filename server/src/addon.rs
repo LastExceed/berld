@@ -47,13 +47,13 @@ pub fn freeze_time(server: &Server) {
 	});
 }
 
-pub async fn play_chat_sound(server: &Server) {
+pub async fn play_sound_for_everyone(server: &Server, kind: sound::Kind, pitch: f32, volume: f32) {
 	//cant use broadcast as sound position is different for each player
 	server.players
 		.read()
 		.await
 		.iter()
-		.map(|player| play_sound_at_player(player, MenuSelect, 2.0, 0.5))
+		.map(|player| play_sound_at_player(player, kind, pitch, volume))
 		.pipe(join_all)
 		.await;
 }

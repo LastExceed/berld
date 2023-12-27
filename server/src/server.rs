@@ -27,7 +27,7 @@ use protocol::packet::world_update::sound::Kind::*;
 use protocol::utils::constants::SIZE_ZONE;
 use protocol::utils::io_extensions::{ReadPacket, WriteArbitrary, WritePacket};
 
-use crate::addon::{Addons, freeze_time};
+use crate::addon::{Addons, freeze_time, play_sound_for_everyone};
 use crate::addon::pvp::map_head;
 use crate::addon::pvp;
 use crate::server::creature::Creature;
@@ -95,6 +95,7 @@ impl Server {
 		let player = Arc::new(new_player);
 		self.players.write().await.push(Arc::clone(&player));
 		self.announce(format!("[+] {}", player.character.read().await.name)).await;
+		play_sound_for_everyone(self, MenuOpen2, 2.0, 1.0).await;
 
 		self.handle_packet(&player, initial_creature_update).await;
 
@@ -105,7 +106,6 @@ impl Server {
 		}
 
 		self.remove_player(&player).await;
-		self.announce(format!("[-] {}", player.character.read().await.name)).await;
 		self.id_pool.write().await.free(assigned_id);
 
 		Ok(())
@@ -186,8 +186,10 @@ impl Server {
 			.iter()
 			.position(|player| ptr::eq(player_to_remove, player.as_ref()))
 			.expect("this should be the only place where players get removed");
-		players.swap_remove(index);
+		let player = players.swap_remove(index);
 		drop(players);
+		self.announce(format!("[-] {}", player.character.read().await.name)).await;
+		play_sound_for_everyone(self, MenuClose2, 2.0, 1.0).await;
 		pvp::team::change_to(self, player_to_remove, None).await;
 		self.remove_creature(&player_to_remove.id).await;
 	}
