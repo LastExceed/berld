@@ -69,12 +69,7 @@ async fn place_blocks<const B: bool>(caller: &Player, character: &Creature) {
 		}
 	}
 
-	let wu = WorldUpdate {
-		blocks,
-		..Default::default()
-	};
-
-	caller.send_ignoring(&wu).await;
+	caller.send_ignoring(&WorldUpdate::from(blocks)).await;
 }
 
 async fn world_object(caller: &Player, character: &Creature) {
@@ -165,17 +160,11 @@ async fn checkerboard(caller: &Player, character: &Creature) {
 		}
 	}
 
-	let wu = WorldUpdate {
-		blocks,
-		..Default::default()
-	};
-
-	caller.send_ignoring(&wu).await;
+	caller.send_ignoring(&WorldUpdate::from(blocks)).await;
 }
 
 async fn objs(caller: &Player, character: &Creature) {
-	let wu = WorldUpdate {
-		world_objects: (0_i64..100)
+	let world_objects: Vec<_> = (0_i64..100)
 			.map(|i| WorldObject {
 				zone: character.position.xy().map(|scalar| (scalar / SIZE_ZONE) as _),
 				id: i as _,
@@ -193,9 +182,9 @@ async fn objs(caller: &Player, character: &Creature) {
 				unknown_b: i as _,
 				interactor: caller.id,
 			})
-			.collect(),
-		..Default::default()
-	};
+		.collect();
 
-	caller.send_ignoring(&wu).await;
+	caller.send_ignoring(&WorldUpdate::from(world_objects)).await;
+}
+
 }

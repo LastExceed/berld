@@ -24,18 +24,18 @@ impl Command for Gear {
 		let caller = caller.ok_or(INGAME_ONLY)?;
 		let character = caller.character.read().await;
 
-		let world_update = WorldUpdate {
-			pickups: create_items(character.occupation, character.level as i16)
-				.into_iter()
-				.map(|item| Pickup {
-					interactor: caller.id,
-					item,
-				}).collect(),
-			..Default::default()
-		};
+		let items = create_items(character.occupation, character.level as i16);
 		drop(character);
 
-		caller.send_ignoring(&world_update).await;
+		let pickups: Vec<_> = items
+			.into_iter()
+			.map(|item| Pickup {
+				interactor: caller.id,
+				item,
+			})
+			.collect();
+
+		caller.send_ignoring(&WorldUpdate::from(pickups)).await;
 
 		Ok(Option::None)
 	}

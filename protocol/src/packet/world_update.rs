@@ -264,6 +264,21 @@ impl From<Projectile> for WorldUpdate {
 	}
 }
 
+impl From<Vec<Sound>> for WorldUpdate {
+    fn from(sounds: Vec<Sound>) -> Self {
+        Self {
+			sounds,
+			..Default::default()
+		}
+    }
+}
+
+impl From<Sound> for WorldUpdate {
+	fn from(sound: Sound) -> Self {
+		vec![sound].into()
+	}
+}
+
 impl From<Vec<WorldObject>> for WorldUpdate {
     fn from(world_objects: Vec<WorldObject>) -> Self {
         Self {

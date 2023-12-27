@@ -36,7 +36,7 @@ impl Command for Act {
 			(character_guard.position[1] / SIZE_ZONE) as i32
 		);
 
-		let world_object = WorldObject {
+		let mut world_object = WorldObject {
 			zone,
 			id: 0,
 			unknown_a: 0,
@@ -51,20 +51,12 @@ impl Command for Act {
 		};
 		drop(character_guard);
 
-		caller.send_ignoring(&WorldUpdate {
-			world_objects: vec![world_object.clone()],
-			..Default::default()
-		}).await;
+		caller.send_ignoring(&WorldUpdate::from(world_object.clone())).await;
 
 		sleep(Duration::from_millis(10)).await; // We need this or the packet is not affecting the player.
 
-		caller.send_ignoring(&WorldUpdate {
-			world_objects: vec![WorldObject {
-				interactor: CreatureId(0),
-				..world_object
-			}],
-			..Default::default()
-		}).await;
+		world_object.interactor = CreatureId(0);
+		caller.send_ignoring(&WorldUpdate::from(world_object)).await;
 
 		Ok(None)
 	}
