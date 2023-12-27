@@ -50,7 +50,7 @@ pub struct Server {
 }
 
 impl Server {
-	pub async fn run(self) {
+	pub async fn run(self) -> ! {
 		let mut id_pool = self.id_pool.write().await;
 		let _ = id_pool.claim(); //reserve 0 for the server itself
 		pvp::team::display::reserve_dummy_ids(&mut id_pool);
@@ -234,7 +234,7 @@ impl Server {
 //todo: way too much pvp stuff in here
 //todo: status effects (including team hearts)
 async fn send_existing_creatures(server: &Server, player: &Player) {
-	pvp::team::display::reload(player, &vec![]).await;
+	pvp::team::display::reload(player, &[]).await;
 	let own_team = player.addon_data.read().await.team;
 	server
 		.players

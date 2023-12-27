@@ -65,8 +65,8 @@ pub async fn update_for_all_members(packet: &CreatureUpdate, source: &Player, me
 
 			let Some((id, _)) = get_displayed_members(members, recipient)
 				.into_iter()
-				.find(|(_id, member)|
-					member.is_some_and(|member|
+				.find(|(_id, occupant)|
+					occupant.is_some_and(|member|
 						ptr::eq(member.as_ref(), source)
 					)
 				)

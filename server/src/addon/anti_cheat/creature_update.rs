@@ -180,7 +180,7 @@ pub(super) async fn inspect_combo_timeout(previous_state: &Creature, updated_sta
 	let delta = reported_nanos - elapsed_nanos;
 
 	if delta.is_negative() {//necessary because [Duration] cannot be negative
-		*last_combo_change += Duration::from_nanos((delta * -1) as _);
+		*last_combo_change += Duration::from_nanos(-delta as _);
 	} else {
 		*last_combo_change -= Duration::from_nanos(delta as _);
 	}
@@ -190,7 +190,7 @@ pub(super) async fn inspect_combo_timeout(previous_state: &Creature, updated_sta
 		return Ok(());
 	}
 
-	let new_spike = Duration::from_nanos(delta.abs() as _) > Duration::from_millis(300);
+	let new_spike = Duration::from_nanos(delta.unsigned_abs()) > Duration::from_millis(300);
 	if new_spike {
 		*last_lag_spike = Instant::now();
 		return Ok(());
@@ -199,9 +199,7 @@ pub(super) async fn inspect_combo_timeout(previous_state: &Creature, updated_sta
 	ac_data.shift_nanos += delta;
 	ac_data.shift_nanos -= ac_data.shift_nanos.signum() * 1_000_000; //decay for tolerance
 
-	dbg!(ac_data.shift_nanos / 1_000_000);
-
-	if Duration::from_nanos(ac_data.shift_nanos.abs() as _) > Duration::from_millis(500) {
+	if Duration::from_nanos(ac_data.shift_nanos.unsigned_abs()) > Duration::from_millis(500) {
 		return Err("timewarp".into());
 	}
 

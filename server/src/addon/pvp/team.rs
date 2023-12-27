@@ -38,7 +38,7 @@ pub async fn change_to(server: &Server, player: &Player, new_team: Option<i32>) 
 			display::reload_for_all_members(server, new_team)
 		).await;
 	} else {
-		display::reload(player, &vec![]).await;
+		display::reload(player, &[]).await;
 	}
 
 	true

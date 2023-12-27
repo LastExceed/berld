@@ -2,18 +2,12 @@ use std::ops::{Div, Mul};
 use std::str::SplitWhitespace;
 
 use protocol::nalgebra::{Point3, Vector3};
-use protocol::packet::{StatusEffect, WorldUpdate};
-use protocol::packet::common::{Hitbox, Race};
-use protocol::packet::status_effect::Kind;
-use protocol::packet::world_update::{Block, Mission, Sound, WorldObject};
+use protocol::packet::WorldUpdate;
+use protocol::packet::common::Hitbox;
+use protocol::packet::world_update::{Block, WorldObject};
 use protocol::packet::world_update::block::Kind::*;
-use protocol::packet::world_update::mission::Objective;
-use protocol::packet::world_update::mission::Objective::RemoveMission;
-use protocol::packet::world_update::mission::State::InProgress;
-use protocol::packet::world_update::sound::Kind::{DropCoin, MenuSelect};
 use protocol::packet::world_update::world_object::Kind::{Crate, FireTrap};
-use protocol::rgb::{RGB8, RGBA8};
-use protocol::utils::constants::{SIZE_BLOCK, SIZE_SECTOR, SIZE_ZONE};
+use protocol::utils::constants::{SIZE_BLOCK, SIZE_ZONE};
 
 use crate::addon::command_manager::{Command, CommandResult};
 use crate::addon::command_manager::commands::Test;

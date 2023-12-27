@@ -48,7 +48,7 @@ pub fn sound_position_of(position: Point3<i64>) -> Point3<f32> { //todo: move to
 	position.map(|scalar| scalar as f32 / SIZE_BLOCK as f32)
 }
 
-///ideally this would be done with a #[derive()] macro instead,
+///ideally this would be done with a `#[derive()]` macro instead,
 ///but the boilerplate required for that is completely overkill for this use case
 #[macro_export]
 macro_rules! bulk_impl {
