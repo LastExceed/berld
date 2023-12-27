@@ -204,119 +204,182 @@ impl<Writable: AsyncWrite + Unpin> WriteCwData<Mission    > for Writable {}
 
 
 //todo: copypasta
-impl From<Block> for WorldUpdate {
-	fn from(value: Block) -> Self {
-		Self {
-			blocks: vec![value],
+impl From<Vec<Block>> for WorldUpdate {
+    fn from(blocks: Vec<Block>) -> Self {
+        Self {
+			blocks,
 			..Default::default()
 		}
+    }
+}
+
+impl From<Block> for WorldUpdate {
+	fn from(block: Block) -> Self {
+		vec![block].into()
 	}
+}
+
+impl From<Vec<Hit>> for WorldUpdate {
+    fn from(hits: Vec<Hit>) -> Self {
+        Self {
+			hits,
+			..Default::default()
+		}
+    }
 }
 
 impl From<Hit> for WorldUpdate {
-	fn from(value: Hit) -> Self {
-		Self {
-			hits: vec![value],
+	fn from(hit: Hit) -> Self {
+		vec![hit].into()
+	}
+}
+
+impl From<Vec<Particle>> for WorldUpdate {
+    fn from(particles: Vec<Particle>) -> Self {
+        Self {
+			particles,
 			..Default::default()
 		}
-	}
+    }
 }
 
 impl From<Particle> for WorldUpdate {
-	fn from(value: Particle) -> Self {
-		Self {
-			particles: vec![value],
-			..Default::default()
-		}
+	fn from(particle: Particle) -> Self {
+		vec![particle].into()
 	}
 }
 
-impl From<Sound> for WorldUpdate {
-	fn from(value: Sound) -> Self {
-		Self {
-			sounds: vec![value],
+impl From<Vec<Projectile>> for WorldUpdate {
+    fn from(projectiles: Vec<Projectile>) -> Self {
+        Self {
+			projectiles,
 			..Default::default()
 		}
-	}
+    }
 }
 
 impl From<Projectile> for WorldUpdate {
-	fn from(value: Projectile) -> Self {
-		Self {
-			projectiles: vec![value],
-			..Default::default()
-		}
+	fn from(projectile: Projectile) -> Self {
+		vec![projectile].into()
 	}
 }
 
-impl From<WorldObject> for WorldUpdate {
-	fn from(value: WorldObject) -> Self {
-		Self {
-			world_objects: vec![value],
+impl From<Vec<WorldObject>> for WorldUpdate {
+    fn from(world_objects: Vec<WorldObject>) -> Self {
+        Self {
+			world_objects,
 			..Default::default()
 		}
+    }
+}
+
+impl From<WorldObject> for WorldUpdate {
+	fn from(world_object: WorldObject) -> Self {
+		vec![world_object].into()
 	}
+}
+
+impl From<HashMap<Point2<i32>, Vec<GroundItem>>> for WorldUpdate {
+    fn from(loot: HashMap<Point2<i32>, Vec<GroundItem>>) -> Self {
+        Self {
+			loot,
+			..Default::default()
+		}
+    }
 }
 
 impl From<(Point2<i32>, Vec<GroundItem>)> for WorldUpdate {
 	fn from(value: (Point2<i32>, Vec<GroundItem>)) -> Self {
-		Self {
-			loot: HashMap::from([value]),
+		HashMap::from([value]).into()
+	}
+}
+
+impl From<HashMap<Point2<i32>, Vec<P48sub>>> for WorldUpdate {
+    fn from(p48: HashMap<Point2<i32>, Vec<P48sub>>) -> Self {
+        Self {
+			p48,
 			..Default::default()
 		}
-	}
+    }
 }
 
 impl From<(Point2<i32>, Vec<P48sub>)> for WorldUpdate {
 	fn from(value: (Point2<i32>, Vec<P48sub>)) -> Self {
-		Self {
-			p48: HashMap::from([value]),
+		HashMap::from([value]).into()
+	}
+}
+
+impl From<Vec<Pickup>> for WorldUpdate {
+    fn from(pickups: Vec<Pickup>) -> Self {
+        Self {
+			pickups,
 			..Default::default()
 		}
-	}
+    }
 }
 
 impl From<Pickup> for WorldUpdate {
-	fn from(value: Pickup) -> Self {
-		Self {
-			pickups: vec![value],
+	fn from(pickup: Pickup) -> Self {
+		vec![pickup].into()
+	}
+}
+
+impl From<Vec<Kill>> for WorldUpdate {
+    fn from(kills: Vec<Kill>) -> Self {
+        Self {
+			kills,
 			..Default::default()
 		}
-	}
+    }
 }
 
 impl From<Kill> for WorldUpdate {
-	fn from(value: Kill) -> Self {
-		Self {
-			kills: vec![value],
+	fn from(kill: Kill) -> Self {
+		vec![kill].into()
+	}
+}
+
+impl From<Vec<Attack>> for WorldUpdate {
+    fn from(attacks: Vec<Attack>) -> Self {
+        Self {
+			attacks,
 			..Default::default()
 		}
-	}
+    }
 }
 
 impl From<Attack> for WorldUpdate {
-	fn from(value: Attack) -> Self {
-		Self {
-			attacks: vec![value],
+	fn from(attack: Attack) -> Self {
+		vec![attack].into()
+	}
+}
+
+impl From<Vec<StatusEffect>> for WorldUpdate {
+    fn from(status_effects: Vec<StatusEffect>) -> Self {
+        Self {
+			status_effects,
 			..Default::default()
 		}
-	}
+    }
 }
 
 impl From<StatusEffect> for WorldUpdate {
-	fn from(value: StatusEffect) -> Self {
-		Self {
-			status_effects: vec![value],
-			..Default::default()
-		}
+	fn from(status_effect: StatusEffect) -> Self {
+		vec![status_effect].into()
 	}
 }
 
-impl From<Mission> for WorldUpdate {
-	fn from(value: Mission) -> Self {
-		Self {
-			missions: vec![value],
+impl From<Vec<Mission>> for WorldUpdate {
+    fn from(missions: Vec<Mission>) -> Self {
+        Self {
+			missions,
 			..Default::default()
 		}
+    }
+}
+
+impl From<Mission> for WorldUpdate {
+	fn from(mission: Mission) -> Self {
+		vec![mission].into()
 	}
 }
