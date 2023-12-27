@@ -12,9 +12,8 @@ impl HandlePacket<AreaRequest<Zone>> for Server {
 		let world_update = WorldUpdate {
 			//todo: filter to just this + adjacent zones
 			loot: self.loot.read().await.clone(),
-			//in case there are no items in the current zone
-			//we still want the client to stop asking
-			..(packet.0, vec![p48sub]).into()
+			p48: [(packet.0, vec![p48sub])].into(),
+			..Default::default()
 		};
 
 		source.send_ignoring(&world_update).await;
