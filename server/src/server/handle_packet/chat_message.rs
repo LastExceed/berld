@@ -33,6 +33,9 @@ impl HandlePacket<ChatMessageFromClient> for Server {
 			).await;
 		if is_command { return; }
 
+		let echo = packet.into_reverse(source.id);
+		self.broadcast(&echo, None).await;
+		play_sound_for_everyone(self, MenuSelect, 2.0, 0.5).await;
 		//TODO: move to addon
 		self.addons
 			.discord_integration
@@ -40,13 +43,10 @@ impl HandlePacket<ChatMessageFromClient> for Server {
 				&format!(
 					"**{}:** {}",
 					source_name,
-					packet.text
+					echo.text
 				),
 				false
 			).await;
-
-		self.broadcast(&packet.into_reverse(source.id), None).await;
-		play_sound_for_everyone(self, MenuSelect, 2.0, 0.5).await;
 	}
 }
 
