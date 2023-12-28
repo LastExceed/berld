@@ -48,6 +48,7 @@ fn create_attackability_update(player: &Player, enabled: bool) -> CreatureUpdate
 	CreatureUpdate {
 		id: player.id,
 		affiliation: Some(if enabled { Affiliation::Enemy } else { Affiliation::Player }),
+		rarity: Some(if enabled { 4 } else { 0 }),
 		..Default::default()
 	}
 }
