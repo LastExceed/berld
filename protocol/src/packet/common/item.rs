@@ -1,13 +1,14 @@
 use std::mem::transmute;
 
 use nalgebra::Point3;
+use num_enum::IntoPrimitive;
 use strum_macros::{EnumCount, EnumDiscriminants, EnumIter};
 use tokio::io;
 use tokio::io::{AsyncRead, AsyncReadExt, AsyncWrite, AsyncWriteExt};
 
 use kind::*;
 
-use crate::{ReadCwData, Validate, Validator, WriteCwData};
+use crate::{ReadCwData, Validate, Validator, WriteCwData, utils::ArrayWrapperIndex};
 use crate::packet::common::{Item, Race};
 use crate::utils::{ArrayWrapper, level_scaling_factor, rarity_scaling_factor};
 use crate::utils::io_extensions::{ReadArbitrary, WriteArbitrary};
@@ -194,7 +195,8 @@ impl<Readable: AsyncRead + Unpin> ReadCwData<Item> for Readable {
 }
 
 
-#[derive(Debug, PartialEq, Eq, Hash, Clone, Copy, EnumIter, EnumCount)]
+#[derive(Debug, PartialEq, Eq, Hash, Clone, Copy, EnumIter, EnumCount, IntoPrimitive)]
+#[repr(usize)]
 pub enum Stat {
 	Damage,
 	Armor,
@@ -205,13 +207,11 @@ pub enum Stat {
 	Tempo
 }
 
-impl From<Stat> for usize {
-	fn from(value: Stat) -> Self {
-		value as Self
-	}
+impl ArrayWrapperIndex for Stat {
+	type Item = f32;
 }
 
-type Stats = ArrayWrapper<Stat, f32>;
+type Stats = ArrayWrapper<Stat>;
 
 impl Item {
 	#[must_use]

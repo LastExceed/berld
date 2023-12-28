@@ -1,6 +1,10 @@
+use num_enum::IntoPrimitive;
 use strum_macros::{EnumCount, EnumIter};
 
-#[derive(Debug, PartialEq, Eq, Hash, Clone, Copy, EnumIter, EnumCount)]
+use crate::utils::ArrayWrapperIndex;
+
+#[derive(Debug, PartialEq, Eq, Hash, Clone, Copy, EnumIter, EnumCount, IntoPrimitive)]
+#[repr(usize)]
 pub enum Skill {
 	PetMaster,
 	PetRiding,
@@ -15,8 +19,6 @@ pub enum Skill {
 	Ability5
 }
 
-impl From<Skill> for usize {
-	fn from(value: Skill) -> Self {
-		value as Self
-	}
+impl ArrayWrapperIndex for Skill {
+	type Item = i32;
 }

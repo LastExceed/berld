@@ -1,10 +1,10 @@
 use std::collections::HashMap;
 use std::hash::Hash;
-use std::marker::PhantomData;
 use std::mem::size_of;
 use std::ops::{Index, IndexMut};
 use std::slice::Iter;
 
+use array_init::array_init;
 use nalgebra::Point3;
 use strum::EnumCount;
 use tokio::io;
@@ -112,32 +112,44 @@ impl<Key, Value, Writable: WriteCwData<Value>> WriteCwData<HashMap<Key, Value>> 
 	}
 }
 
+pub trait ArrayWrapperIndex: EnumCount + Into<usize> {
+	type Item: Default;
+}
 
 #[repr(C)]
 #[derive(Debug, PartialEq, Eq, Hash, Clone)]
-pub struct ArrayWrapper<Idx: Into<usize> + EnumCount, Element>([Element; Idx::COUNT], PhantomData<Idx>)
+pub struct ArrayWrapper<Idx: ArrayWrapperIndex>([Idx::Item; Idx::COUNT])
 	where [(); Idx::COUNT]:;
 
-impl<Idx: Into<usize> + EnumCount, Element> ArrayWrapper<Idx, Element>
+impl<Idx: ArrayWrapperIndex> ArrayWrapper<Idx>
 	where [(); Idx::COUNT]:
 {
 	#[expect(clippy::iter_without_into_iter, reason = "TODO")]
-	pub fn iter(&self) -> Iter<'_, Element> {
+	pub fn iter(&self) -> Iter<'_, Idx::Item> {
 		self.0.iter()
 	}
 }
 
-impl<Idx: Into<usize> + EnumCount, Element> Index<Idx> for ArrayWrapper<Idx, Element>
+//deriving this would require `Idx` to impl `Default` as well
+impl<Idx: ArrayWrapperIndex> Default for ArrayWrapper<Idx>
 	where [(); Idx::COUNT]:
 {
-	type Output = Element;
+    fn default() -> Self {
+        Self(array_init(|_| Default::default()))
+    }
+}
+
+impl<Idx: ArrayWrapperIndex> Index<Idx> for ArrayWrapper<Idx>
+	where [(); Idx::COUNT]:
+{
+	type Output = Idx::Item;
 
 	fn index(&self, index: Idx) -> &Self::Output {
 		&self.0[index.into()]
 	}
 }
 
-impl<Idx: Into<usize> + EnumCount, Element> IndexMut<Idx> for ArrayWrapper<Idx, Element>
+impl<Idx: ArrayWrapperIndex> IndexMut<Idx> for ArrayWrapper<Idx>
 	where [(); Idx::COUNT]:
 {
 	fn index_mut(&mut self, index: Idx) -> &mut Self::Output {
@@ -145,10 +157,10 @@ impl<Idx: Into<usize> + EnumCount, Element> IndexMut<Idx> for ArrayWrapper<Idx, 
 	}
 }
 
-impl<Idx: Into<usize> + EnumCount, Element> From<[Element; Idx::COUNT]> for ArrayWrapper<Idx, Element>
+impl<Idx: ArrayWrapperIndex> From<[Idx::Item; Idx::COUNT]> for ArrayWrapper<Idx>
 	where [(); Idx::COUNT]:
 {
-	fn from(value: [Element; Idx::COUNT]) -> Self {
-		Self(value, PhantomData)
+	fn from(value: [Idx::Item; Idx::COUNT]) -> Self {
+		Self(value)
 	}
 }

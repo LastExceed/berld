@@ -20,6 +20,8 @@ strum_macros = "0.25.3"
 strum = "0.25.0"
 boolinator = "2.4.0"
 num-traits = "0.2.17"
+num_enum = "0.7.1"
+array-init = "2.1.0"
 
 [lints]
 workspace = true

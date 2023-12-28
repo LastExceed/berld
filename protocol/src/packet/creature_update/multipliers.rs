@@ -1,6 +1,10 @@
 use strum_macros::{EnumCount, EnumIter};
+use num_enum::IntoPrimitive;
 
-#[derive(Debug, PartialEq, Eq, Hash, Clone, Copy, EnumIter, EnumCount)]
+use crate::utils::ArrayWrapperIndex;
+
+#[derive(Debug, PartialEq, Eq, Hash, Clone, Copy, EnumIter, EnumCount, IntoPrimitive)]
+#[repr(usize)]
 pub enum Multiplier {
 	Health,
 	AttackSpeed,
@@ -9,8 +13,6 @@ pub enum Multiplier {
 	Resi
 }
 
-impl From<Multiplier> for usize {
-	fn from(value: Multiplier) -> Self {
-		value as Self
-	}
+impl ArrayWrapperIndex for Multiplier {
+	type Item = f32;
 }

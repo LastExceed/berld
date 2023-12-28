@@ -1,6 +1,11 @@
+use num_enum::IntoPrimitive;
 use strum_macros::{EnumCount, EnumIter};
 
-#[derive(Debug, PartialEq, Eq, Hash, Clone, Copy, EnumIter, EnumCount)]
+use crate::utils::ArrayWrapperIndex;
+use crate::packet::common::Item;
+
+#[derive(Debug, PartialEq, Eq, Hash, Clone, Copy, EnumIter, EnumCount, IntoPrimitive)]
+#[repr(usize)]
 pub enum Slot {
 	Unknown,
 	Neck,
@@ -17,8 +22,6 @@ pub enum Slot {
 	Pet,
 }
 
-impl From<Slot> for usize {
-	fn from(value: Slot) -> Self {
-		value as Self
-	}
+impl ArrayWrapperIndex for Slot {
+	type Item = Item;
 }

@@ -555,8 +555,8 @@ pub enum Specialization {
 	Witch
 }
 
-pub type Multipliers = ArrayWrapper<Multiplier, f32>;
+pub type Multipliers = ArrayWrapper<Multiplier>;
 
-pub type Equipment = ArrayWrapper<Slot, Item>;
+pub type Equipment = ArrayWrapper<Slot>;
 
-pub type SkillTree = ArrayWrapper<Skill, i32>;
+pub type SkillTree = ArrayWrapper<Skill>;
