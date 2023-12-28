@@ -2,7 +2,7 @@ use std::fs;
 use std::io::ErrorKind::NotFound;
 use std::str::SplitWhitespace;
 
-use tap::Tap;
+use tap::{Tap, Pipe};
 
 use protocol::nalgebra::Point3;
 
@@ -56,13 +56,22 @@ impl Command for Warp {
 	async fn execute<'fut>(&'fut self, server: &'fut Server, caller: Option<&'fut Player>, params: &'fut mut SplitWhitespace<'fut>) -> CommandResult {
 		let caller = caller.ok_or(INGAME_ONLY)?;
 
-		let location_name = params
-			.next()
-			.ok_or("no destination specified")?;
+		let Some(destination) = params.next()
+			else {
+				return self
+					.locations
+					.keys()
+					.map(|location_name| location_name as &str)
+					.intersperse(", ")
+					.collect::<String>()
+					.pipe(|names| format!("---\navailable locations:\n{names}\n---"))
+					.pipe(Some)
+					.pipe(Ok)
+			};
 
 		let coordinates = self.locations
-			.get(location_name)
-			.ok_or("unkown destination")?;
+			.get(destination)
+			.ok_or("unkown destination (type /warp for a list)")?;
 
 		server.teleport(caller, *coordinates).await;
 

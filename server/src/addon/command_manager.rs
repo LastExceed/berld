@@ -92,7 +92,7 @@ impl CommandManager {
 
 		let command_literal = fragments
 			.next()
-			.ok_or("no command specified")?;
+			.ok_or("no command specified (type /help for a list)")?;
 
 		match command_literal {
 			//implementing these as regular command structs would effectively require inserting a reference to the command map into itself
@@ -101,7 +101,7 @@ impl CommandManager {
 			_ => {
 				let command = self.commands
 					.get(command_literal)
-					.ok_or("unknown command")?;
+					.ok_or("unknown command (type /help for a list)")?;
 
 				if command.get_admin_only() && !admin {
 					return Err("no permission");
