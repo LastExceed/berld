@@ -750,7 +750,7 @@ pub(super) fn inspect_name(previous_state: &Creature, updated_state: &Creature) 
 	//character names are serialized as a cstring and thus guaranteed to be comprised of single-byte characters exclusively
 	updated_state.name.chars().count().ensure_within(&(1..=15), "name.length")?;
 	for (n, character) in updated_state.name.chars().enumerate() {
-		character.ensure_within(&('!'..='~'), &format!("name[{n}]"))?;
+		character.ensure_within(&('!'..='~'), &format!("name contains invalid (non-ascii) characters (use /name in singleplayer to fix it) - char #{}", n+1))?; //a bit more verbose to make sure players understand
 		//all printable ASCII characters except space (0x20)
 		//cubeworld doesn't recognize 0x80+ in character names, only in chat messages
 	}
