@@ -255,7 +255,10 @@ async fn send_existing_creatures(server: &Server, player: &Player) {
 
 			let creature_update = character
 				.to_update(existing_player.id)
-				.tap_mut(|packet| packet.affiliation = Some(if is_teammate { Affiliation::Player } else { Affiliation::Enemy }));
+				.tap_mut(|packet| {
+					packet.affiliation = Some(if is_teammate { Affiliation::Player } else { Affiliation::Enemy });
+					packet.rarity = Some(if is_teammate { 0 } else { 4 });
+				});
 			let map_head = map_head::create(&character, existing_player.id);
 			drop(character);
 

@@ -3,6 +3,7 @@ use std::sync::Arc;
 
 use futures::future::join_all;
 use protocol::packet::CreatureUpdate;
+use protocol::packet::creature_update::Occupation;
 use protocol::packet::creature_update::{Affiliation, Appearance};
 use protocol::packet::common::CreatureId;
 use tap::Pipe;
@@ -48,8 +49,13 @@ async fn reload_slot(pov: &Player, dummy_id: CreatureId, occupant: Option<&Arc<P
 }
 
 pub async fn update_for_all_members(packet: &CreatureUpdate, source: &Player, members: &[Arc<Player>]) {
-	let relevant = packet.health.is_some()
-		|| packet.appearance.is_some()
+	let relevant = packet.appearance.is_some()
+		|| packet.occupation.is_some()
+		|| packet.specialization.is_some()
+		|| packet.health.is_some()
+		|| packet.multipliers.is_some()
+		|| packet.level.is_some()
+		|| packet.equipment.is_some()
 		|| packet.name.is_some();
 
 	if !relevant {
@@ -87,8 +93,12 @@ fn create_display_update(packet: &CreatureUpdate, id: CreatureId) -> CreatureUpd
 	CreatureUpdate {
 		id,
 		appearance: packet.appearance.clone(),
+		occupation: packet.occupation,
+		specialization: packet.specialization,
 		health: packet.health,
+		multipliers: packet.multipliers.clone(),
 		level: packet.level,
+		equipment: packet.equipment.clone(),
 		name: packet.name.clone(),
 		..Default::default()
 	}
@@ -99,8 +109,11 @@ fn create_placeholder(id: CreatureId) -> CreatureUpdate {
 		id,
 		affiliation: Some(Affiliation::Player),
 		appearance: Some(Appearance { head_model: -1, hair_model: -1, ..Default::default() }), //todo: default for Appearance?,
+		occupation: Some(Occupation::None),
 		health: Some(0.0),
+		multipliers: Some(Default::default()),
 		level: Some(0),
+		equipment: Some(Default::default()),
 		name: Some("".into()),
 		..Default::default()
 	}

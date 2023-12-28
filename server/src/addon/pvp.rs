@@ -22,16 +22,19 @@ pub async fn on_creature_update(server: &Server, source: &Player, packet: &Creat
 }
 
 pub async fn broadcast(server: &Server, source: &Player, packet: &CreatureUpdate) -> bool {
-	if packet.affiliation.is_none() {//if packet.flags.is_none() {
+	if packet.affiliation.is_none() && packet.rarity.is_none() {//if packet.flags.is_none() {
 		return false;
 	};
 
 	let mut pvp_enabled_packet = packet.clone();
-	*pvp_enabled_packet
-		.affiliation//.flags
-		.as_mut()
-		.unwrap()//checked above
-		= Affiliation::Enemy;
+
+	if let Some(ref mut affiliation) = pvp_enabled_packet.affiliation {
+		*affiliation = Affiliation::Enemy;
+	}
+
+	if let Some(ref mut rarity) = pvp_enabled_packet.rarity {
+		*rarity = 4;
+	}
 
 	let own_team = source.addon_data.read().await.team;
 
