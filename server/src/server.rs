@@ -128,7 +128,8 @@ impl Server {
 
 	async fn handle_new_player(&self, reader: BufReader<OwnedReadHalf>, player: &Player) {
 		player.send_ignoring(&MapSeed(self.mapseed)).await;
-		player.notify("welcome to berld").await;
+		let player_count = self.players.read().await.len();
+		player.notify(format!("welcome to berld\n{} player(s) connected", player_count)).await;
 		send_existing_creatures(self, player).await;
 
 		self.read_packets_forever(player, reader).await
