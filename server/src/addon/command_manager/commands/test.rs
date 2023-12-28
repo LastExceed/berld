@@ -18,7 +18,7 @@ use crate::server::Server;
 
 impl Command for Test {
 	const LITERAL: &'static str = "t";
-	const ADMIN_ONLY: bool = false;
+	const ADMIN_ONLY: bool = true;
 
 	async fn execute<'fut>(&'fut self, _server: &'fut Server, caller: Option<&'fut Player>, params: &'fut mut SplitWhitespace<'fut>) -> CommandResult {
 		let caller = caller.ok_or(INGAME_ONLY)?;
