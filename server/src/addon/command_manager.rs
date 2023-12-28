@@ -64,7 +64,7 @@ impl CommandManager {
 		let is_command = text.starts_with(command_prefix);
 
 		if is_command {
-			let command_result = self.handle_command(server, caller, admin, text).await;
+			let command_result = self.handle_command(server, caller, admin, text.trim_start_matches(command_prefix)).await;
 			callback(command_result).await;
 		}
 
@@ -72,7 +72,7 @@ impl CommandManager {
 	}
 
 	async fn handle_command(&self, server: &Server, caller: Option<&Player>, admin: bool, text: &str) -> CommandResult {
-		let mut fragments = text.trim_start_matches('/').split_whitespace();
+		let mut fragments = text.split_whitespace();
 
 		let command_literal = fragments
 			.next()
