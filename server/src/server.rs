@@ -5,6 +5,7 @@ use std::ptr;
 use std::sync::Arc;
 use std::time::Duration;
 
+use config::{Config, ConfigError};
 use futures::future::join_all;
 use tap::{Pipe, Tap};
 use tokio::{io, select};
@@ -35,21 +36,35 @@ use crate::server::creature_id_pool::CreatureIdPool;
 use crate::server::handle_packet::HandlePacket;
 use crate::server::player::Player;
 
+use self::utils::extend_lifetime;
+
 pub mod creature_id_pool;
 pub mod player;
 mod handle_packet;
 pub mod creature;
 pub mod utils;
 
-#[derive(Default)]
 pub struct Server {
 	id_pool: RwLock<CreatureIdPool>,
 	pub players: RwLock<Vec<Arc<Player>>>,
 	loot: RwLock<HashMap<Point2<i32>, Vec<GroundItem>>>,
+	mapseed: i32,
 	pub addons: Addons
 }
 
 impl Server {
+	pub fn new(config: Config) -> Result<Self, ConfigError> {
+		let instance = Self {
+			id_pool: Default::default(),
+			players: Default::default(),
+			loot: Default::default(),
+			mapseed: config.get("seed")?,
+			addons: Addons::new(&config)?,
+		};
+
+		Ok(instance)
+	}
+
 	pub async fn run(self) -> ! {
 		let mut id_pool = self.id_pool.write().await;
 		let _ = id_pool.claim(); //reserve 0 for the server itself
@@ -64,7 +79,7 @@ impl Server {
 		loop {
 			let (stream, address) = listener.accept().await.unwrap();
 
-			let self_static = self.extend_lifetime();
+			let self_static = extend_lifetime(&self);
 			tokio::spawn(async move {
 				#[expect(clippy::redundant_pattern_matching, reason = "TODO")]
 				if let Err(_) = self_static.handle_new_connection(stream, address).await {
@@ -112,7 +127,7 @@ impl Server {
 	}
 
 	async fn handle_new_player(&self, reader: BufReader<OwnedReadHalf>, player: &Player) {
-		player.send_ignoring(&MapSeed(56345)).await;
+		player.send_ignoring(&MapSeed(self.mapseed)).await;
 		player.notify("welcome to berld").await;
 		send_existing_creatures(self, player).await;
 
@@ -157,7 +172,7 @@ impl Server {
 			..Default::default()
 		}, None).await;
 
-		let server_static = self.extend_lifetime();
+		let server_static = extend_lifetime(self);
 		tokio::spawn(async move {
 			sleep(Duration::from_millis(500)).await;
 			server_static.broadcast(&WorldUpdate::from(Sound::at(position, DropItem)), None).await;

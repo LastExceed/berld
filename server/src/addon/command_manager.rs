@@ -1,13 +1,11 @@
 use std::collections::HashMap;
-use std::fs;
 use std::future::Future;
-use std::io::ErrorKind::NotFound;
 use std::pin::Pin;
 use std::str::SplitWhitespace;
 use std::sync::atomic::Ordering::Relaxed;
 
 use boolinator::Boolinator;
-use tap::Tap;
+use config::{Config, ConfigError};
 
 use crate::addon::command_manager::commands::*;
 use crate::addon::command_manager::utils::INGAME_ONLY;
@@ -25,44 +23,30 @@ pub struct CommandManager {
 	admin_password: String
 }
 
-impl Default for CommandManager {
-	fn default() -> Self {
-		let admin_password = match fs::read_to_string(Self::FILE_PATH) {
-			Ok(content) => content,
-
-			Err(error) if error.kind() == NotFound => {
-				"change-me"
-					.tap(|content| fs::write(Self::FILE_PATH, content).unwrap())
-					.to_owned()
-			}
-
-			Err(error) => panic!("failed to load {} - {}", Self::FILE_PATH, error)
+impl CommandManager {
+	pub fn new(config: &Config) -> Result<Self, ConfigError> {
+		let mut manager = Self {
+			commands: HashMap::new(),
+			admin_password: config.get("admin_password")?
 		};
 
-		Self {
-			commands: HashMap::new(),
-			admin_password
-		}.tap_mut(|cm| {
-			cm.register(Who);
-			cm.register(WhoIp);
-			cm.register(Player);
-			cm.register(Xp);
-			cm.register(Level);
-			cm.register(Countdown);
-			cm.register(Warp::new());
-			cm.register(Gear);
-			cm.register(Kick);
-			cm.register(Tp);
-			cm.register(Test);
-			cm.register(Team);
-			cm.register(Act);
-			cm.register(Heal);
-		})
-	}
-}
+		manager.register(Who);
+		manager.register(WhoIp);
+		manager.register(Player);
+		manager.register(Xp);
+		manager.register(Level);
+		manager.register(Countdown);
+		manager.register(Warp::new(config)?);
+		manager.register(Gear);
+		manager.register(Kick);
+		manager.register(Tp);
+		manager.register(Test);
+		manager.register(Team);
+		manager.register(Act);
+		manager.register(Heal);
 
-impl CommandManager {
-	const FILE_PATH: &'static str = "admin_password.txt";
+		Ok(manager)
+	}
 
 	pub fn register<C: Command + 'static>(&mut self, command: C) {//todo: can the lifetime be relaxed?
 		self.commands.insert(C::LITERAL, Box::new(command));

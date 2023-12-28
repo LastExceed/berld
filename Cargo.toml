@@ -86,6 +86,7 @@ cast_precision_loss = "allow" # unneeded
 trivially_copy_pass_by_ref = "allow" # TODO
 unnecessary_wraps = "allow" # unsure
 manual_string_new = "allow" # disagree
+default_trait_access = "allow" # disagree
 no_effect_underscore_binding = "allow" # broken (false positive in trait impls)
 
 # nursery exceptions

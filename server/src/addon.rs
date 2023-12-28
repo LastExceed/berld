@@ -1,5 +1,6 @@
 use std::time::Duration;
 
+use config::{Config, ConfigError};
 use futures::future::join_all;
 use tap::Pipe;
 use tokio::time::sleep;
@@ -9,6 +10,7 @@ use protocol::packet::world_update::{Sound, sound};
 use protocol::utils::sound_position_of;
 
 use crate::addon::balancing::AirTimeTracker;
+use crate::server::utils::extend_lifetime;
 use crate::addon::command_manager::CommandManager;
 use crate::addon::discord_integration::DiscordIntegration;
 use crate::server::creature::Creature;
@@ -22,11 +24,22 @@ pub mod discord_integration;
 pub mod command_manager;
 pub mod pvp;
 
-#[derive(Default)]
 pub struct Addons {
 	pub discord_integration: DiscordIntegration,
 	pub air_time_tracker: AirTimeTracker,
 	pub command_manager: CommandManager
+}
+
+impl Addons {
+	pub fn new(config: &Config) -> Result<Self, ConfigError> {
+		let instance = Self {
+			discord_integration: DiscordIntegration::new(config)?,
+			air_time_tracker: AirTimeTracker::default(),
+			command_manager: CommandManager::new(config)?
+		};
+
+		Ok(instance)
+	}
 }
 
 pub fn fix_cutoff_animations(creature_update: &mut CreatureUpdate, previous_state: &Creature) {
@@ -36,7 +49,7 @@ pub fn fix_cutoff_animations(creature_update: &mut CreatureUpdate, previous_stat
 }
 
 pub fn freeze_time(server: &Server) {
-	let server_static = server.extend_lifetime();
+	let server_static = extend_lifetime(server);
 
 	tokio::spawn(async move {
 		loop {

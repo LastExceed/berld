@@ -3,7 +3,7 @@ use std::time::Duration;
 
 use tokio::time::sleep;
 
-use crate::addon::command_manager::{Command, CommandResult};
+use crate::{addon::command_manager::{Command, CommandResult}, server::utils::extend_lifetime};
 use crate::addon::command_manager::commands::Countdown;
 use crate::server::player::Player;
 use crate::server::Server;
@@ -13,7 +13,7 @@ impl Command for Countdown {
 	const ADMIN_ONLY: bool = false;
 
 	async fn execute<'fut>(&'fut self, server: &'fut Server, _caller: Option<&'fut Player>, _params: &'fut mut SplitWhitespace<'fut>) -> CommandResult {
-		let server_static = server.extend_lifetime();
+		let server_static = extend_lifetime(server);
 
 		tokio::spawn(async move {
 			let mut count = 3;

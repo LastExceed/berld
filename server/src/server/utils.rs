@@ -59,12 +59,6 @@ impl Server {
 		send_existing_creatures(self, player).await;
 	}
 
-	///terrible hack due to my inexperience. unsafe as fuck
-	pub fn extend_lifetime(&self) -> &'static Self {
-		#[expect(clippy::undocumented_unsafe_blocks, reason = "TODO")]
-		unsafe { transmute(self) } //TODO: figure out scoped tasks
-	}
-
 	pub async fn find_player_by_id(&self, id: CreatureId) -> Option<Arc<Player>> {
 		self
 			.players
@@ -74,6 +68,12 @@ impl Server {
 			.find(|player| { player.id == id })
 			.map(Arc::clone)
 	}
+}
+
+///terrible hack due to my inexperience. unsafe as fuck
+pub fn extend_lifetime<T>(t: &T) -> &'static T {
+	#[expect(clippy::undocumented_unsafe_blocks, reason = "TODO")]
+	unsafe { transmute(t) } //TODO: figure out scoped tasks
 }
 
 pub async fn give_xp(player: &Player, experience: i32) {

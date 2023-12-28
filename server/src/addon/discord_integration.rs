@@ -1,5 +1,4 @@
-use std::fs;
-
+use config::{Config, ConfigError};
 use twilight_gateway::Shard;
 use twilight_http::Client;
 use twilight_model::gateway::{Intents, ShardId};
@@ -9,35 +8,34 @@ use twilight_model::id::Id;
 use protocol::packet::ChatMessageFromServer;
 use protocol::packet::common::CreatureId;
 use crate::addon::command_manager::CommandResult;
+use crate::server::utils::extend_lifetime;
 
 use crate::server::Server;
-
-const PUBLIC_CHANNEL_ID: u64 = 1067011357129580667;
-const ADMIN_CHANNEL_ID: u64 = 1088047136698011659;
 
 #[derive(Debug)]
 pub struct DiscordIntegration {
 	http: Client,
-	token: String
+	token: String,
+	public_channel: u64,
+	admin_channel: u64
 }
 
-impl Default for DiscordIntegration {
-	fn default() -> Self {
-		let Ok(token) = fs::read_to_string(Self::FILE_PATH) else {
-			fs::write(Self::FILE_PATH, "insert token here").unwrap();
-			panic!("{} not found, created dummy file", Self::FILE_PATH);
-		};
+impl DiscordIntegration {
+	pub fn new(config: &Config) -> Result<Self, ConfigError> {
+		let token = config.get_string("discord_bot_token")?;
 
-		Self {
+		let instance = Self {
 			http: Client::new(token.clone()),
 			token,
-		}
+			public_channel: config.get("discord_public_channel_id")?,
+			admin_channel: config.get("discord_admin_channel_id")?,
+		};
+
+		Ok(instance)
 	}
 }
 
 impl DiscordIntegration {
-	const FILE_PATH: &'static str = "discord_bot_token.txt";
-
 	pub fn run(&self, server: &Server) {
 		let mut shard = Shard::new(
 			ShardId::ONE,
@@ -45,16 +43,20 @@ impl DiscordIntegration {
 			Intents::GUILD_MESSAGES | Intents::MESSAGE_CONTENT
 		);
 
-		let server_static = server.extend_lifetime();
+		let server_static = extend_lifetime(server);
+		let self_static = extend_lifetime(self);
 
 		tokio::spawn(async move {
 			loop {
 				match shard.next_event().await {
 					Ok(MessageCreate(message)) if !message.author.bot => {
-						let admin = match message.channel_id.get() {
-							PUBLIC_CHANNEL_ID => false,
-							ADMIN_CHANNEL_ID => true,
-							_ => continue,
+						let channel_id = message.channel_id.get();
+						let admin = if channel_id == self_static.admin_channel {
+							true
+						} else if channel_id == self_static.public_channel {
+							false
+						} else {
+							continue
 						};
 
 						let callback = |response| { Self::command_callback(server_static, response, admin) };
@@ -92,7 +94,7 @@ impl DiscordIntegration {
 	}
 
 	pub async fn post(&self, message: &str, admin: bool) {
-		self.http.create_message(Id::new(if admin { ADMIN_CHANNEL_ID } else { PUBLIC_CHANNEL_ID }))
+		self.http.create_message(Id::new(if admin { self.admin_channel } else { self.public_channel }))
 			.content(message)
 			.expect("setting content failed")
 			.await

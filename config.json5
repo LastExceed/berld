@@ -1,0 +1,10 @@
+{
+  seed: 26879,
+  discord_bot_token: '',
+  discord_public_channel_id: 0,
+  discord_admin_channel_id: 0,
+  admin_password: 'change-me',
+  warps: {
+    spawn: [550301073408, 550301073408,0]
+  }
+}

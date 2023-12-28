@@ -10,14 +10,22 @@
 #![allow(unreachable_pub)] //this isn't a lib, so adding `(crate)` to every `pub` is just pointless noise
 
 use colour::magenta_ln;
-
+use config::{Config, ConfigError, File, Environment};
 use server::Server;
 
 mod server;
 mod addon;
 
 #[tokio::main]
-async fn main() {
+async fn main() -> Result<(), ConfigError> {
 	magenta_ln!("===== Berld =====");
-	Server::default().run().await;
+
+	let config = Config::builder()
+		.add_source(File::with_name("config"))
+		.add_source(Environment::with_prefix("BERLD"))
+		.build()?;
+
+	Server::new(config)?.run().await;
+
+	Ok(())
 }
