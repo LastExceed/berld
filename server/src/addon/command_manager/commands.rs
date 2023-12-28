@@ -15,6 +15,7 @@ mod test;
 mod team;
 mod act;
 mod heal;
+mod ping;
 
 #[derive(Debug, PartialEq, Eq, Hash, Clone, Default)]
 pub struct Who;
@@ -22,6 +23,8 @@ pub struct Who;
 pub struct WhoIp;
 #[derive(Debug, PartialEq, Eq, Hash, Clone, Default)]
 pub struct Player;
+#[derive(Debug, PartialEq, Eq, Hash, Clone, Default)]
+pub struct Ping;
 
 #[derive(Debug, PartialEq, Eq, Hash, Clone, Default)]
 pub struct Xp;
