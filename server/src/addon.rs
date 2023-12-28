@@ -6,7 +6,6 @@ use tokio::time::sleep;
 
 use protocol::packet::{CreatureUpdate, IngameDatetime, WorldUpdate};
 use protocol::packet::world_update::{Sound, sound};
-use protocol::packet::world_update::sound::Kind::MenuSelect;
 use protocol::utils::sound_position_of;
 
 use crate::addon::balancing::AirTimeTracker;
