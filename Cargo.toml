@@ -85,6 +85,8 @@ cast_possible_wrap = "allow" # unsure
 cast_precision_loss = "allow" # unneeded
 trivially_copy_pass_by_ref = "allow" # TODO
 unnecessary_wraps = "allow" # unsure
+manual_string_new = "allow" # disagree
+no_effect_underscore_binding = "allow" # broken (false positive in trait impls)
 
 # nursery exceptions
 or_fun_call = "allow" # unsure
@@ -116,6 +118,7 @@ impl_trait_in_params = "allow" #disagree
 little_endian_bytes = "allow" # using `big_endian_bytes` instead
 pub_with_shorthand = "allow" # using `pub_without_shorthand` instead
 iter_over_hash_type = "allow" # disagree
+infinite_loop = "allow" # broken (complains even after suggestion was applied)
 
 pattern_type_mismatch = "allow" # unsure
 multiple_inherent_impl = "allow" # unsure
