@@ -8,8 +8,11 @@ use protocol::packet::world_update::{Block, WorldObject};
 use protocol::packet::world_update::block::Kind::*;
 use protocol::packet::world_update::world_object::Kind::{Crate, FireTrap};
 use protocol::utils::constants::{SIZE_BLOCK, SIZE_ZONE};
+use strum::IntoEnumIterator;
+use protocol::rgb::{RGBA8, RGB8};
+use protocol::packet::world_update::sound;
 
-use crate::addon::command_manager::{Command, CommandResult};
+use crate::addon::{command_manager::{Command, CommandResult}, play_sound_at_player};
 use crate::addon::command_manager::commands::Test;
 use crate::addon::command_manager::utils::INGAME_ONLY;
 use crate::server::creature::Creature;
@@ -20,7 +23,7 @@ impl Command for Test {
 	const LITERAL: &'static str = "t";
 	const ADMIN_ONLY: bool = true;
 
-	async fn execute<'fut>(&'fut self, _server: &'fut Server, caller: Option<&'fut Player>, params: &'fut mut SplitWhitespace<'fut>) -> CommandResult {
+	async fn execute<'fut>(&'fut self, server: &'fut Server, caller: Option<&'fut Player>, params: &'fut mut SplitWhitespace<'fut>) -> CommandResult {
 		let caller = caller.ok_or(INGAME_ONLY)?;
 		let character = caller.character.read().await;
 
@@ -31,12 +34,22 @@ impl Command for Test {
 			Some("block") => place_block(caller, &character).await,
 			Some("ba") => place_blocks::<true>(caller, &character).await,
 			Some("bs") => place_blocks::<false>(caller, &character).await,
+			Some("s") => play_sound(caller, params).await,
+			Some("model") => model(server, &character).await,
 			Some(_) => { return Err("unknown sub-command") }
 			None => { return Err("too few arguments") },
 		}
 
 		Ok(None)
 	}
+}
+
+async fn play_sound(caller: &Player, params: &mut SplitWhitespace<'_>) {
+	let nth = params.next().unwrap().parse().unwrap();
+	let pitch = params.next().map_or(1.0, |it| it.parse().unwrap());
+	let kind = sound::Kind::iter().nth(nth).unwrap();
+	play_sound_at_player(caller, kind, pitch, 1.0).await;
+
 }
 
 async fn place_block(caller: &Player, character: &Creature) {
@@ -165,26 +178,50 @@ async fn checkerboard(caller: &Player, character: &Creature) {
 
 async fn objs(caller: &Player, character: &Creature) {
 	let world_objects: Vec<_> = (0_i64..100)
-			.map(|i| WorldObject {
-				zone: character.position.xy().map(|scalar| (scalar / SIZE_ZONE) as _),
-				id: i as _,
-				unknown_a: i as _,
-				kind: FireTrap,
-				position: character.position + Vector3::new((i % 10) * 4 * SIZE_BLOCK, (i / 10) * 4 * SIZE_BLOCK, -SIZE_BLOCK),
-				orientation: i as _,
-				size: Hitbox {
-					width: 2.0,
-					depth: 2.0,
-					height: 2.0,
-				},
-				is_closed: true,
-				transform_time: 1,
-				unknown_b: i as _,
-				interactor: caller.id,
-			})
+		.map(|i| WorldObject {
+			zone: character.position.xy().map(|scalar| (scalar / SIZE_ZONE) as _),
+			id: i as _,
+			unknown_a: i as _,
+			kind: FireTrap,
+			position: character.position + Vector3::new((i % 10) * 4 * SIZE_BLOCK, (i / 10) * 4 * SIZE_BLOCK, -SIZE_BLOCK),
+			orientation: i as _,
+			size: Hitbox {
+				width: 2.0,
+				depth: 2.0,
+				height: 2.0,
+			},
+			is_closed: true,
+			transform_time: 1,
+			unknown_b: i as _,
+			interactor: caller.id,
+		})
 		.collect();
 
 	caller.send_ignoring(&WorldUpdate::from(world_objects)).await;
 }
 
+//let player_block_position = character.position.map(|scalar| (scalar / SIZE_BLOCK) as i32) - Point3::default();
+async fn model(server: &Server, character: &Creature) {//fulcnix/FD_A_2B_minifed
+	let vox = dot_vox::load("D:/software/MagicaVoxel-0.99.7.1-win64/vox/lxc/arena2.vox").expect("vox load failed");
+
+	let mut blocks: Vec<_> = vox.models.iter().flat_map(|model| {
+		model.voxels.iter().map(|voxel| {
+			let color = RGBA8::from(<[u8; 4]>::from(vox.palette[voxel.i as usize])).rgb();
+
+			Block {
+				position: Point3::new(voxel.x, voxel.y, voxel.z).cast(),
+				color,
+				kind: if color == PURE_BLUE { Liquid } else { Solid },
+				padding: 0,
+			}
+		})
+	}).collect();
+
+	for block in &mut blocks {
+		block.position += (character.position / SIZE_BLOCK).cast().coords;
+	}
+
+	server.broadcast(&WorldUpdate::from(blocks), None).await;
 }
+
+const PURE_BLUE: RGB8 = RGB8::new(0, 0, 255);

@@ -23,6 +23,7 @@ twilight-model = "0.15.4"
 twilight-gateway = { version = "0.15.4", default-features = false, features = ["rustls-webpki-roots"] } #todo: workaround for corrupt certificate cache
 tap = "1.0.1"
 config = "0.13.4"
+dot_vox = "5.1.1"
 
 [lints]
 workspace = true
