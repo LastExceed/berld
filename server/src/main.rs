@@ -25,7 +25,7 @@ async fn main() -> Result<(), ConfigError> {
 		.add_source(Environment::with_prefix("BERLD"))
 		.build()?;
 
-	Server::new(config)?.run().await;
+	Server::new(&config)?.run().await;
 
 	Ok(())
 }

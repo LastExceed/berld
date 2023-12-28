@@ -71,9 +71,9 @@ impl Server {
 }
 
 ///terrible hack due to my inexperience. unsafe as fuck
-pub fn extend_lifetime<T>(t: &T) -> &'static T {
+pub fn extend_lifetime<T>(it: &T) -> &'static T {
 	#[expect(clippy::undocumented_unsafe_blocks, reason = "TODO")]
-	unsafe { transmute(t) } //TODO: figure out scoped tasks
+	unsafe { transmute(it) } //TODO: figure out scoped tasks
 }
 
 pub async fn give_xp(player: &Player, experience: i32) {

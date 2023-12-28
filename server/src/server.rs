@@ -53,13 +53,13 @@ pub struct Server {
 }
 
 impl Server {
-	pub fn new(config: Config) -> Result<Self, ConfigError> {
+	pub fn new(config: &Config) -> Result<Self, ConfigError> {
 		let instance = Self {
 			id_pool: Default::default(),
 			players: Default::default(),
 			loot: Default::default(),
 			mapseed: config.get("seed")?,
-			addons: Addons::new(&config)?,
+			addons: Addons::new(config)?,
 		};
 
 		Ok(instance)
