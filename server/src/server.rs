@@ -90,7 +90,7 @@ impl Server {
 	}
 
 	async fn handle_new_connection(&self, stream: TcpStream, address: SocketAddr) -> io::Result<()> {
-		stream.set_nodelay(true).unwrap();
+		stream.set_nodelay(true)?;
 		let (mut reader, mut writer) = split_and_buffer(stream);
 
 		check_version(&mut reader, &mut writer).await?;
