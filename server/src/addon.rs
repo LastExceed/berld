@@ -8,6 +8,7 @@ use tokio::time::sleep;
 use protocol::packet::{CreatureUpdate, IngameDatetime, WorldUpdate};
 use protocol::packet::world_update::{Sound, sound};
 use protocol::utils::sound_position_of;
+use protocol::packet::world_update::sound::Kind::{MenuOpen2, MenuClose2};
 
 use crate::addon::balancing::AirTimeTracker;
 use crate::server::utils::extend_lifetime;
@@ -40,6 +41,15 @@ impl Addons {
 
 		Ok(instance)
 	}
+}
+
+pub async fn announce_join_leave(server: &Server, player: &Player, joined: bool) {
+	let name = &player.character.read().await.name;
+	let sign = if joined { '+' } else { '-' };
+	let sound = if joined { MenuOpen2 } else { MenuClose2 };
+
+	server.announce(format!("[{sign}] {name}")).await;
+	play_sound_for_everyone(server, sound, 2.0, 1.0).await;
 }
 
 pub fn fix_cutoff_animations(creature_update: &mut CreatureUpdate, previous_state: &Creature) {
