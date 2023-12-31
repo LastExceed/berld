@@ -33,6 +33,7 @@ impl CommandManager {
 		manager.register(Who);
 		manager.register(WhoIp);
 		manager.register(Player);
+		manager.register(Ping);
 		manager.register(Xp);
 		manager.register(Level);
 		manager.register(Countdown);
