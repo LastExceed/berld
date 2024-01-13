@@ -7,7 +7,7 @@ use twilight_model::id::Id;
 
 use protocol::packet::ChatMessageFromServer;
 use protocol::packet::common::CreatureId;
-use crate::addon::command_manager::CommandResult;
+use crate::{addon::command_manager::CommandResult, server::utils::log_error};
 use crate::server::utils::extend_lifetime;
 
 use crate::server::Server;
@@ -94,11 +94,16 @@ impl DiscordIntegration {
 	}
 
 	pub async fn post(&self, message: &str, admin: bool) {
-		self.http.create_message(Id::new(if admin { self.admin_channel } else { self.public_channel }))
+		let channel_id = Id::new(if admin { self.admin_channel } else { self.public_channel });
+		let Ok(create_message) = self.http
+			.create_message(channel_id)
 			.content(message)
-			.expect("setting content failed")
-			.await
-			.expect("create message failed");
+			.inspect_err(|err| log_error("discord-set-message-content", err))
+			else { return };
+
+		if let Err(err) = create_message.await {
+			log_error("discord-create-message", err);
+		}
 	}
 
 	async fn command_callback(server: &Server, result: CommandResult, admin: bool) {

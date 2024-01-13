@@ -1,8 +1,10 @@
+use std::{error::Error, fs};
 use std::mem::transmute;
+use std::time::{UNIX_EPOCH, SystemTime};
 use std::sync::Arc;
 use std::time::Duration;
 
-use colour::white_ln;
+use colour::{white_ln, red_ln};
 use tokio::time::sleep;
 
 use protocol::nalgebra::Point3;
@@ -68,6 +70,22 @@ impl Server {
 			.find(|player| { player.id == id })
 			.map(Arc::clone)
 	}
+}
+
+pub fn log_error(description: &str, err: impl Error) {
+	red_ln!("error at {description}: {err}");
+
+	let filename = SystemTime::now()
+		.duration_since(UNIX_EPOCH)
+		.expect("time went backwards")
+		.as_millis()
+		.to_string();
+
+	let _result = fs::create_dir_all(format!("logs/{description}")); //if it already exists thats fine too
+
+	fs::write(format!("logs/{description}/{filename}.log"), err.to_string())
+		.expect("failed writing log file");
+
 }
 
 ///terrible hack due to my inexperience. unsafe as fuck

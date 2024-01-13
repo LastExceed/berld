@@ -36,7 +36,7 @@ use crate::server::creature_id_pool::CreatureIdPool;
 use crate::server::handle_packet::HandlePacket;
 use crate::server::player::Player;
 
-use self::utils::extend_lifetime;
+use self::utils::{extend_lifetime, log_error};
 
 pub mod creature_id_pool;
 pub mod player;
@@ -77,13 +77,17 @@ impl Server {
 		freeze_time(&self);
 
 		loop {
-			let (stream, address) = listener.accept().await.unwrap();
+			let Ok((stream, address)) = listener
+				.accept()
+				.await
+				.inspect_err(|err| log_error("tcp-accept", err))
+				else { continue };
 
 			let self_static = extend_lifetime(&self);
 			tokio::spawn(async move {
-				#[expect(clippy::redundant_pattern_matching, reason = "TODO")]
-				if let Err(_) = self_static.handle_new_connection(stream, address).await {
-					//TODO: error logging
+				let result = self_static.handle_new_connection(stream, address).await;
+				if let Err(err) = result {
+					log_error("handle-new-connection", err);
 				}
 			});
 		}
