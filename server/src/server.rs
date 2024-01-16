@@ -28,7 +28,7 @@ use protocol::packet::world_update::sound::Kind::*;
 use protocol::utils::constants::SIZE_ZONE;
 use protocol::utils::io_extensions::{ReadPacket, WriteArbitrary, WritePacket};
 
-use crate::addon::{Addons, freeze_time, announce_join_leave};
+use crate::addon::{Addons, freeze_time, announce_join_leave, listforge_api};
 use crate::addon::pvp::map_head;
 use crate::addon::pvp;
 use crate::server::creature::Creature;
@@ -48,7 +48,7 @@ pub struct Server {
 	id_pool: RwLock<CreatureIdPool>,
 	pub players: RwLock<Vec<Arc<Player>>>,
 	loot: RwLock<HashMap<Point2<i32>, Vec<GroundItem>>>,
-	mapseed: i32,
+	pub mapseed: i32,
 	pub addons: Addons
 }
 
@@ -73,6 +73,7 @@ impl Server {
 
 		let listener = TcpListener::bind("0.0.0.0:12345").await.expect("unable to bind listening socket");
 
+		listforge_api::run(&self).await;
 		self.addons.discord_integration.run(&self);
 		freeze_time(&self);
 

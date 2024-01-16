@@ -24,6 +24,7 @@ pub mod balancing;
 pub mod discord_integration;
 pub mod command_manager;
 pub mod pvp;
+pub mod listforge_api;
 
 pub struct Addons {
 	pub discord_integration: DiscordIntegration,
