@@ -28,7 +28,7 @@ use protocol::packet::world_update::sound::Kind::*;
 use protocol::utils::constants::SIZE_ZONE;
 use protocol::utils::io_extensions::{ReadPacket, WriteArbitrary, WritePacket};
 
-use crate::addon::{Addons, freeze_time, announce_join_leave, listforge_api};
+use crate::addon::{Addons, freeze_time, announce_join_leave};
 use crate::addon::pvp::map_head;
 use crate::addon::pvp;
 use crate::server::creature::Creature;
@@ -73,7 +73,7 @@ impl Server {
 
 		let listener = TcpListener::bind("0.0.0.0:12345").await.expect("unable to bind listening socket");
 
-		listforge_api::run(&self).await;
+		self.addons.listforge_api.run(&self).await;
 		self.addons.discord_integration.run(&self);
 		freeze_time(&self);
 

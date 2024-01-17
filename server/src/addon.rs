@@ -18,6 +18,8 @@ use crate::server::creature::Creature;
 use crate::server::player::Player;
 use crate::server::Server;
 
+use listforge_api::ListforgeApi;
+
 pub mod anti_cheat;
 pub mod traffic_filter;
 pub mod balancing;
@@ -29,7 +31,8 @@ pub mod listforge_api;
 pub struct Addons {
 	pub discord_integration: DiscordIntegration,
 	pub air_time_tracker: AirTimeTracker,
-	pub command_manager: CommandManager
+	pub command_manager: CommandManager,
+	pub listforge_api: ListforgeApi,
 }
 
 impl Addons {
@@ -37,7 +40,8 @@ impl Addons {
 		let instance = Self {
 			discord_integration: DiscordIntegration::new(config)?,
 			air_time_tracker: AirTimeTracker::default(),
-			command_manager: CommandManager::new(config)?
+			command_manager: CommandManager::new(config)?,
+			listforge_api: ListforgeApi::new(config)?
 		};
 
 		Ok(instance)
