@@ -6,6 +6,7 @@ use std::ptr;
 use std::sync::Arc;
 use std::time::Duration;
 
+use colour::dark_grey_ln;
 use config::{Config, ConfigError};
 use futures::future::join_all;
 use tap::{Pipe, Tap};
@@ -85,6 +86,7 @@ impl Server {
 				.await
 				.inspect_err(|err| log_error("tcp-accept", err))
 				else { continue };
+			dark_grey_ln!("new connection from {}", address);
 
 			let self_static = extend_lifetime(&self);
 			tokio::spawn(async move {
