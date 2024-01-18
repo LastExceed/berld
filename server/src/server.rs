@@ -1,5 +1,5 @@
 use std::collections::HashMap;
-use std::net::Ipv6Addr;
+use std::net::Ipv4Addr;
 use std::io::ErrorKind::{InvalidData, InvalidInput};
 use std::net::SocketAddr;
 use std::ptr;
@@ -72,7 +72,8 @@ impl Server {
 		pvp::team::display::reserve_dummy_ids(&mut id_pool);
 		drop(id_pool);
 
-		let listener = TcpListener::bind((Ipv6Addr::UNSPECIFIED, 12345)).await.expect("unable to bind listening socket");
+		//cubeworld is incapable of ipv6 networking
+		let listener = TcpListener::bind((Ipv4Addr::UNSPECIFIED, 12345)).await.expect("unable to bind listening socket");
 
 		self.addons.listforge_api.run(&self).await;
 		self.addons.discord_integration.run(&self);
