@@ -1,6 +1,6 @@
 use std::collections::HashMap;
 use std::net::Ipv4Addr;
-use std::io::ErrorKind::{InvalidData, InvalidInput};
+use std::io::ErrorKind::{InvalidData, InvalidInput, UnexpectedEof};
 use std::net::SocketAddr;
 use std::ptr;
 use std::sync::Arc;
@@ -102,7 +102,13 @@ impl Server {
 		stream.set_nodelay(true)?;
 		let (mut reader, mut writer) = split_and_buffer(stream);
 
-		check_version(&mut reader, &mut writer).await?;
+		let check_version_result = check_version(&mut reader, &mut writer).await;
+		if let Err(ref error) = check_version_result && error.kind() == UnexpectedEof {
+			//prevent listforge's preiodic connections from flooding the logs
+			return Ok(());
+		}
+		check_version_result?;
+
 		writer.write_packet(&ConnectionAcceptance).await?;
 
 		let assigned_id = self.id_pool.write().await.claim();
