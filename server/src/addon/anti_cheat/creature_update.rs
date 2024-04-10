@@ -76,7 +76,7 @@ pub(super) fn inspect_velocity_extra(previous_state: &Creature, updated_state: &
 	let (max_xy, max_z): (f32, f32) =
 		match updated_state.occupation {
 			Ranger => (35.0, 17.0),
-			_      => ( 0.1,  0.0)//0.1 because the game doesnt reset all the way to 0
+			_      => ( 0.1,  0.1)//0.1 because the game doesnt reset all the way to 0
 		};
 
 	updated_state.velocity_extra.xy()
