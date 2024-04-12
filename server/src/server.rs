@@ -19,7 +19,7 @@ use tokio::sync::RwLock;
 use tokio::time::sleep;
 
 use protocol::{Packet, WriteCwData};
-use protocol::nalgebra::{Point2, Point3};
+use protocol::nalgebra::{Point2, Point3, Vector3};
 use protocol::packet::{*, Hit};
 use protocol::packet::area_request::{Region, Zone};
 use protocol::packet::common::{CreatureId, Item};
@@ -27,7 +27,7 @@ use protocol::packet::creature_update::Affiliation;
 use protocol::packet::world_update::loot::GroundItem;
 use protocol::packet::world_update::Sound;
 use protocol::packet::world_update::sound::Kind::*;
-use protocol::utils::constants::SIZE_ZONE;
+use protocol::utils::constants::{SIZE_BLOCK, SIZE_ZONE};
 use protocol::utils::io_extensions::{ReadPacket, WriteArbitrary, WritePacket};
 
 use crate::addon::{Addons, freeze_time, announce_join_leave};
@@ -170,7 +170,7 @@ impl Server {
 		let zone_loot = loot.entry(zone).or_insert(vec![]);
 		zone_loot.push(GroundItem {
 			item,
-			position,
+			position: position + Vector3::new(0, 0, SIZE_BLOCK / 10),
 			rotation,
 			scale: 0.1,
 			unknown_a: 0,
