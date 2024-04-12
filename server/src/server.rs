@@ -194,10 +194,15 @@ impl Server {
 		});
 	}
 
-	///returns none if a player picks up an item they dropped in single player
+	//returns none if a player picks up an item that doesn't exist
+	//this can happen when the item was dropped in single player
+	//or when spamming pickup really fast
 	pub async fn remove_drop(&self, zone: Point2<i32>, item_index: usize) -> Option<Item> {
 		let mut drops_guard = self.loot.write().await;
 		let Some(zone_drops) = drops_guard.get_mut(&zone) else { return None; };
+		if !(0..zone_drops.len()).contains(&item_index) {
+			return None;
+		}
 		let removed_drop = zone_drops.swap_remove(item_index);
 		let zone_drops_owned = zone_drops.clone();
 		if zone_drops.is_empty() {

@@ -31,7 +31,7 @@ impl HandlePacket<CreatureAction> for Server {
 			PickUp => {
 				#[expect(clippy::cast_sign_loss, reason = "TODO")] //todo: make item_index unsigned?
 				let Some(item) = self.remove_drop(packet.zone, packet.item_index as usize).await
-					else { return; }; //todo: kick if invalid?
+					else { return; };
 
 				source.send_ignoring(&WorldUpdate {
 					pickups: vec![Pickup { item, interactor: source.id }],
