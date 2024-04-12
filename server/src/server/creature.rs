@@ -50,7 +50,7 @@ pub struct Creature {
 	pub unknown32: i8,
 	pub level: i32,
 	pub experience: i32,
-	/**for pets this is the [CreatureId] of their owner*/
+	/**for pets this is the [`CreatureId`] of their owner*/
 	pub master: CreatureId,
 	pub unknown36: i64,
 	/**this is the '+#' that monsters in some dungeons have next to their [race]*/

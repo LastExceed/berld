@@ -175,7 +175,7 @@ pub struct Projectile {
 	pub velocity: Vector3<f32>,
 	///This is NOT the damage that the target will receive (refer to [Hit] for that).
 	///
-	///It is merely used to calculate the heal power of puddles (5% of base_damage)
+	///It is merely used to calculate the heal power of puddles (5% of [`Projectile::base_damage`])
 	pub base_damage: f32,
 	pub unknown_b: f32, //2-4 depending on mana for boomerangs, otherwise 0.5
 	pub scale: f32,

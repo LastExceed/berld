@@ -509,7 +509,7 @@ pub enum CreatureFlag {
 	Gliding,
 	FriendlyFire,
 	Sprinting,
-	///causes all incoming hits to "miss". only works when this creature is [Affiliation::Enemy]
+	///causes all incoming hits to "miss". only works when this creature is [`Affiliation::Enemy`]
 	Unreachable,
 	Unkown8,
 	Lamp,

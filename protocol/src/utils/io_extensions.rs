@@ -1,3 +1,4 @@
+use std::ptr;
 use std::mem::size_of;
 use std::slice;
 
@@ -22,7 +23,12 @@ pub trait ReadArbitrary: AsyncRead + Unpin {
 pub trait WriteArbitrary: AsyncWrite + Unpin {
 	async fn write_arbitrary<T>(&mut self, data: &T) -> io::Result<()> {
 		//SAFETY: infallible
-		let data_as_bytes = unsafe { slice::from_raw_parts((data as *const T).cast::<u8>(), size_of::<T>()) };
+		let data_as_bytes = unsafe { //todo: there gotta be an easier way to do this
+			slice::from_raw_parts(
+				ptr::from_ref(data).cast::<u8>(),
+				size_of::<T>()
+			)
+		};
 		self.write_all(data_as_bytes).await
 	}
 }

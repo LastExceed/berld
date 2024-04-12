@@ -69,14 +69,13 @@ pub async fn update_for_all_members(packet: &CreatureUpdate, source: &Player, me
 				return None;
 			}
 
-			let Some((id, _)) = get_displayed_members(members, recipient)
+			let (id, _) = get_displayed_members(members, recipient)
 				.into_iter()
 				.find(|(_id, occupant)|
 					occupant.is_some_and(|member|
 						ptr::eq(member.as_ref(), source)
 					)
-				)
-				else { return None; }; //in case [source] is not displayed
+				)?; //in case [source] is not displayed
 
 			let future = async move {
 				let display_update = create_display_update(packet, id);

@@ -143,7 +143,7 @@ impl Server {
 	async fn handle_new_player(&self, reader: BufReader<OwnedReadHalf>, player: &Player) {
 		player.send_ignoring(&MapSeed(self.mapseed)).await;
 		let player_count = self.players.read().await.len();
-		player.notify(format!("welcome to berld\n{} player(s) connected", player_count)).await;
+		player.notify(format!("welcome to berld\n{player_count} player(s) connected")).await;
 		send_existing_creatures(self, player).await;
 
 		self.read_packets_forever(player, reader).await
@@ -199,7 +199,7 @@ impl Server {
 	//or when spamming pickup really fast
 	pub async fn remove_drop(&self, zone: Point2<i32>, item_index: usize) -> Option<Item> {
 		let mut drops_guard = self.loot.write().await;
-		let Some(zone_drops) = drops_guard.get_mut(&zone) else { return None; };
+		let zone_drops = drops_guard.get_mut(&zone)?;
 		if !(0..zone_drops.len()).contains(&item_index) {
 			return None;
 		}

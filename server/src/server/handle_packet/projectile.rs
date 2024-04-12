@@ -25,6 +25,7 @@ impl HandlePacket<Projectile> for Server {
 async fn get_sound(source: &Player, packet: Projectile) -> Option<Sound> {
 	let character = source.character.read().await;
 
+	#[allow(clippy::match_same_arms, reason = "comments")]
 	match packet.kind {
 		Arrow if packet.is_yellow
 			=> Some((sound::Kind::Salvo2, 1.25, true)),

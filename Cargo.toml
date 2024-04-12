@@ -49,7 +49,6 @@ unused_lifetimes = "warn"
 unused_macro_rules = "warn"
 # unused_qualifications = "warn" # e.g. packet::Id
 # unused_results = "warn" # [must-use] already covers this
-unused_tuple_struct_fields = "warn"
 variant_size_differences = "warn"
 
 
@@ -120,6 +119,7 @@ little_endian_bytes = "allow" # using `big_endian_bytes` instead
 pub_with_shorthand = "allow" # using `pub_without_shorthand` instead
 iter_over_hash_type = "allow" # disagree
 infinite_loop = "allow" # broken (complains even after suggestion was applied)
+integer_division_remainder_used = "allow"
 
 pattern_type_mismatch = "allow" # unsure
 multiple_inherent_impl = "allow" # unsure
@@ -142,3 +142,4 @@ as_conversions = "allow" # unsure
 
 # suspicious exceptions
 blanket_clippy_restriction_lints = "allow" # disagree
+missing_transmute_annotations = "allow" # disagree
