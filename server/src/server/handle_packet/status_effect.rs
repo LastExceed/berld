@@ -16,7 +16,7 @@ use crate::server::player::Player;
 use crate::server::Server;
 
 impl HandlePacket<StatusEffect> for Server {
-	async fn handle_packet(&self, source: &Player, packet: StatusEffect) {
+	async fn handle_packet(&self, source: &Player, mut packet: StatusEffect) {
 		match packet.kind {
 			Poison => {
 				let Some(target) = self.find_player_by_id(packet.target).await
@@ -28,7 +28,12 @@ impl HandlePacket<StatusEffect> for Server {
 				balancing::buff_warfrenzy(&packet, self).await;
 			}
 			ManaShield => {
-				source.notify(format!("manashield: {}", packet.modifier)).await;
+				if packet.duration == 30000 { //client echo's the packet, so we must make sure not to cause a feedback loop
+					self.addons.balancing.adjust_manashield(&mut packet);
+					source.send_ignoring(&WorldUpdate::from(packet.clone())).await;
+				} else {
+					source.notify(format!("manashield: {} ({} ms)", packet.modifier, packet.duration)).await;
+				}
 			}
 			Affection => return, //echoed by the client when applied by the server, no need to re-broadcast
 			_ => ()

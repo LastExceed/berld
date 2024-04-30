@@ -166,6 +166,15 @@ impl Balancing {
 			hit.stuntime += effective_stun_bonus;
 		}
 	}
+
+	pub fn adjust_manashield(&self, packet: &mut StatusEffect) {
+		packet.duration = self.values.manashield_duration;
+		if let Some(absolute_value) = self.values.manashield_capacity_absolute {
+			packet.modifier = absolute_value;
+		} else {
+			packet.modifier *= self.values.manashield_capacity_relative;
+		}
+	}
 }
 
 pub async fn buff_warfrenzy(warfrenzy: &StatusEffect, server: &Server) {
@@ -204,4 +213,7 @@ struct BalanceConfigValues {
 	shield_defense: f32,
 	damage: HashMap<String, f32>,
 	stun: HashMap<String, i32>,
+	manashield_duration: i32,
+	manashield_capacity_relative: f32,
+	manashield_capacity_absolute: Option<f32>
 }
