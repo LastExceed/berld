@@ -23,11 +23,11 @@ use crate::server::player::Player;
 use crate::server::Server;
 
 #[derive(Debug, Default)]
-pub struct AirTimeTracker {
+pub struct Balancing {
 	airtime_map: RwLock<HashMap<CreatureId, (Instant, bool)>>//todo: figure out a proper name
 }
 
-impl AirTimeTracker {
+impl Balancing {
 	pub async fn on_creature_update(&self, source: &Player) {
 		let character = source.character.read().await;
 

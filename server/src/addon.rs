@@ -10,7 +10,7 @@ use protocol::packet::world_update::{Sound, sound};
 use protocol::utils::sound_position_of;
 use protocol::packet::world_update::sound::Kind::{MenuOpen2, MenuClose2};
 
-use crate::addon::balancing::AirTimeTracker;
+use crate::addon::balancing::Balancing;
 use crate::server::utils::extend_lifetime;
 use crate::addon::command_manager::CommandManager;
 use crate::addon::discord_integration::DiscordIntegration;
@@ -30,7 +30,7 @@ pub mod listforge_api;
 
 pub struct Addons {
 	pub discord_integration: DiscordIntegration,
-	pub air_time_tracker: AirTimeTracker,
+	pub balancing: Balancing,
 	pub command_manager: CommandManager,
 	pub listforge_api: ListforgeApi,
 }
@@ -39,7 +39,7 @@ impl Addons {
 	pub fn new(config: &Config) -> Result<Self, ConfigError> {
 		let instance = Self {
 			discord_integration: DiscordIntegration::new(config)?,
-			air_time_tracker: AirTimeTracker::default(),
+			balancing: Balancing::default(),
 			command_manager: CommandManager::new(config)?,
 			listforge_api: ListforgeApi::new(config)?
 		};
