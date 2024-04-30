@@ -2,6 +2,8 @@ use std::collections::HashMap;
 use std::ptr;
 use std::time::{Duration, Instant};
 
+use config::{Config, ConfigError};
+use serde::Deserialize;
 use tokio::sync::RwLock;
 
 use protocol::packet::{CreatureUpdate, Hit, StatusEffect, WorldUpdate};
@@ -22,12 +24,20 @@ use crate::server::creature::Creature;
 use crate::server::player::Player;
 use crate::server::Server;
 
-#[derive(Debug, Default)]
+#[derive(Debug)]
 pub struct Balancing {
+	values: BalanceConfigValues,
 	airtime_map: RwLock<HashMap<CreatureId, (Instant, bool)>>//todo: figure out a proper name
 }
 
 impl Balancing {
+	pub fn new(config: &Config) -> Result<Self, ConfigError> {
+		Ok(Self {
+			values: config.get("balance")?,
+			airtime_map: Default::default()
+		})
+	}
+
 	pub async fn on_creature_update(&self, source: &Player) {
 		let character = source.character.read().await;
 
@@ -185,4 +195,12 @@ pub async fn adjust_blocking(hit: &mut Hit, attacker: &Player, attacker_creature
 		..Default::default()
 	};
 	attacker.send_ignoring(creature_update).await;
+}
+
+#[derive(Debug, Deserialize)]
+struct BalanceConfigValues {
+	heal_self: f32,
+	heal_other: f32,
+	damage: HashMap<String, f32>,
+	stun: HashMap<String, i32>,
 }

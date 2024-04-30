@@ -39,7 +39,7 @@ impl Addons {
 	pub fn new(config: &Config) -> Result<Self, ConfigError> {
 		let instance = Self {
 			discord_integration: DiscordIntegration::new(config)?,
-			balancing: Balancing::default(),
+			balancing: Balancing::new(config)?,
 			command_manager: CommandManager::new(config)?,
 			listforge_api: ListforgeApi::new(config)?
 		};
