@@ -15,7 +15,7 @@ impl HandlePacket<CreatureUpdate> for Server {
 			return;
 		}
 
-		self.addons.balancing.on_creature_update(source).await;
+		self.addons.balancing.track_airtime(source).await;
 		pvp::on_creature_update(self, source, &packet).await;
 
 		let mut character = source.character.write().await;

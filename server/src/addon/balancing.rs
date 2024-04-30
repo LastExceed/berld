@@ -38,7 +38,7 @@ impl Balancing {
 		})
 	}
 
-	pub async fn on_creature_update(&self, source: &Player) {
+	pub async fn track_airtime(&self, source: &Player) {
 		let character = source.character.read().await;
 
 		if character.occupation != Rogue {
