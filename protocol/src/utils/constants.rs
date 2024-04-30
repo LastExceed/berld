@@ -25,6 +25,23 @@ pub struct CombatClass {
 	pub specialization: Specialization
 }
 
+impl CombatClass {
+	pub fn config_name(&self) -> &'static str {
+		use combat_classes::*;
+		match *self {
+			BERSERKER  => "berserker",
+			GUARDIAN   => "guardian",
+			SNIPER     => "sniper",
+			SCOUT      => "scout",
+			FIRE_MAGE  => "fire_mage",
+			WATER_MAGE => "water_mage",
+			ASSASSIN   => "assassin",
+			NINJA      => "ninja",
+			_          => todo!()
+		}
+	}
+}
+
 pub const PLAYABLE_RACES: [Race; 16] = [
 	ElfMale,
 	ElfFemale,

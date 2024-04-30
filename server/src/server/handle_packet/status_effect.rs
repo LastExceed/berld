@@ -22,7 +22,7 @@ impl HandlePacket<StatusEffect> for Server {
 				let Some(target) = self.find_player_by_id(packet.target).await
 					else { return; };//can happen when the target disconnected in this moment
 
-				apply_poison(source, target, &packet).await;
+				apply_poison(self, source, target, &packet).await;
 			}
 			WarFrenzy => {
 				balancing::buff_warfrenzy(&packet, self).await;
@@ -39,7 +39,7 @@ impl HandlePacket<StatusEffect> for Server {
 	}
 }
 
-async fn apply_poison(source: &Player, target: Arc<Player>, status_effect: &StatusEffect) {
+async fn apply_poison(server: &Server, source: &Player, target: Arc<Player>, status_effect: &StatusEffect) {
 	let source_character_guard = source.character.read().await;
 	let target_character_guard = target.character.read().await;
 
@@ -56,7 +56,7 @@ async fn apply_poison(source: &Player, target: Arc<Player>, status_effect: &Stat
 		flash: true,
 	};
 
-	balancing::adjust_hit(&mut hit, &source_character_guard, &target_character_guard);
+	server.addons.balancing.adjust_hit(&mut hit, &source_character_guard, &target_character_guard);
 	drop(source_character_guard);
 	drop(target_character_guard);
 

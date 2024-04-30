@@ -1,4 +1,4 @@
-use strum_macros::EnumIter;
+use strum_macros::{Display, EnumIter};
 
 #[repr(u8)]
 #[derive(Debug, PartialEq, Eq, Hash, Clone, Copy, Default, EnumIter)]
@@ -16,7 +16,7 @@ pub enum Consumable {
 }
 
 #[repr(u8)]
-#[derive(Debug, PartialEq, Eq, Hash, Clone, Copy, Default, EnumIter)]
+#[derive(Debug, Display, PartialEq, Eq, Hash, Clone, Copy, Default, EnumIter)]
 pub enum Weapon {
 	#[default]
 	Sword,

@@ -18,7 +18,6 @@ use protocol::packet::hit::Kind;
 use protocol::packet::status_effect::Kind::{Anger, Swiftness};
 use protocol::packet::world_update::Sound;
 use protocol::packet::world_update::sound::Kind::{Magic01, SpikeTrap};
-use protocol::utils::constants::combat_classes::*;
 
 use crate::server::creature::Creature;
 use crate::server::player::Player;
@@ -106,6 +105,67 @@ impl Balancing {
 			airtime_map.remove(&source.id);
 		}
 	}
+
+	pub fn adjust_hit(&self, hit: &mut Hit, source: &Creature, target: &Creature) {
+		let heals = hit.damage.is_sign_negative();
+
+		if heals {
+			let self_inflicted = ptr::eq(source, target);
+
+			let heal_multiplier =
+				if self_inflicted { self.values.heal_self - 1.0 } //self-heals are applied client side as well (bug), so we need to subtract the vanilla amount
+				else              { self.values.heal_other };
+			hit.damage *= heal_multiplier;
+			return;
+		}
+
+		let weapon_offense_multiplier = match source.equipment[RightWeapon].kind {
+			Weapon(weapon)  => *self.values.damage.get(&weapon.to_string().to_lowercase()).unwrap_or(&1.0),
+			_               => 1.0
+		};
+
+		let weapon_stun_bonus = match source.equipment[RightWeapon].kind {
+			Weapon(weapon)  => *self.values.stun.get(&weapon.to_string().to_lowercase()).unwrap_or(&0),
+			_               => 0
+		};
+
+		let class_offense_multiplier = *self
+			.values
+			.damage
+			.get(source.combat_class().config_name())
+			.unwrap_or(&0.0);
+
+		let class_stun_bonus = *self
+			.values
+			.stun
+			.get(source.combat_class().config_name())
+			.unwrap_or(&0);
+
+		let equipment_defense_multiplier = 1.0 -
+			target.equipment
+				.iter()
+				.map(|item| match item.kind {
+					Weapon(Shield) => self.values.shield_defense,
+					_              => 0.0
+				})
+				.sum::<f32>();
+
+		let effective_damage_multiplier =
+			self.values.damage["global"]
+				* weapon_offense_multiplier
+				* class_offense_multiplier
+				* equipment_defense_multiplier;
+
+		let effective_stun_bonus =
+			self.values.stun["global"]
+				+ weapon_stun_bonus
+				+ class_stun_bonus;
+
+		hit.damage *= effective_damage_multiplier;
+		if hit.stuntime > 0 {
+			hit.stuntime += effective_stun_bonus;
+		}
+	}
 }
 
 pub async fn buff_warfrenzy(warfrenzy: &StatusEffect, server: &Server) {
@@ -118,66 +178,6 @@ pub async fn buff_warfrenzy(warfrenzy: &StatusEffect, server: &Server) {
 	server.broadcast(&WorldUpdate::from(swiftness), None).await;
 }
 
-const GLOBAL_DAMAGE_MULTIPLIER: f32 = 0.5;
-const GLOBAL_STUN_BONUS: i32 = -375;
-
-pub fn adjust_hit(hit: &mut Hit, source: &Creature, target: &Creature) {
-	let heals = hit.damage.is_sign_negative();
-
-	if heals {
-		let self_inflicted = ptr::eq(source, target);
-
-		let heal_multiplier =
-			if self_inflicted { 0.5 - 1.0 } //self-heals are applied client side as well (bug), so we need to subtract the vanilla amount
-			else              { 0.3 };
-		hit.damage *= heal_multiplier;
-		return;
-	}
-
-	let (weapon_offense_multiplier, weapon_stun_bonus) =
-		match source.equipment[RightWeapon].kind {
-			Weapon(Wand)  => (1.0, 375),
-			Weapon(Staff) => (1.1,   0),
-			Weapon(Fist)  => (1.2, 375),
-			_             => (1.0,   0)
-		};
-
-	let (class_offense_multiplier, class_stun_bonus) =
-		match source.combat_class() {
-			BERSERKER => (1.2, 750),
-			SNIPER    => (1.1, 375),
-			SCOUT     => (1.1,   0),
-			ASSASSIN  => (1.5,   0),
-			NINJA     => (0.9,   0),
-			FIRE_MAGE => (0.8,   0),
-			_         => (1.0,   0)
-		};
-
-	let equipment_defense_multiplier = 1.0 +
-		target.equipment
-			.iter()
-			.map(|item| match item.kind {
-				Weapon(Shield) => 0.25,
-				_              => 0.0
-			})
-			.sum::<f32>();
-
-	let effective_damage_multiplier =
-		GLOBAL_DAMAGE_MULTIPLIER
-			* weapon_offense_multiplier
-			* class_offense_multiplier
-			* equipment_defense_multiplier.recip();
-
-	let effective_stun_bonus =
-		GLOBAL_STUN_BONUS
-			+ weapon_stun_bonus
-			+ class_stun_bonus;
-
-	hit.damage *= effective_damage_multiplier;
-	if hit.stuntime > 0 {
-		hit.stuntime += effective_stun_bonus;
-	}
-}
 pub async fn adjust_blocking(hit: &mut Hit, attacker: &Player, attacker_creature: &Creature, target_creature: &Creature) {
 	if hit.kind != Kind::Block {
 		return
@@ -201,6 +201,7 @@ pub async fn adjust_blocking(hit: &mut Hit, attacker: &Player, attacker_creature
 struct BalanceConfigValues {
 	heal_self: f32,
 	heal_other: f32,
+	shield_defense: f32,
 	damage: HashMap<String, f32>,
 	stun: HashMap<String, i32>,
 }
