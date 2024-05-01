@@ -1,7 +1,7 @@
 use std::ops::{Div, Mul};
 use std::str::SplitWhitespace;
 
-use protocol::nalgebra::{Point3, Vector3};
+use protocol::{nalgebra::{Point3, Vector3}, packet::{status_effect, StatusEffect}};
 use protocol::packet::WorldUpdate;
 use protocol::packet::common::Hitbox;
 use protocol::packet::world_update::{Block, WorldObject};
@@ -36,6 +36,7 @@ impl Command for Test {
 			Some("bs") => place_blocks::<false>(caller, &character).await,
 			Some("s") => play_sound(caller, params).await,
 			Some("model") => model(server, &character).await,
+			Some("shield") => shield(caller).await,
 			Some(_) => { return Err("unknown sub-command") }
 			None => { return Err("too few arguments") },
 		}
@@ -202,7 +203,7 @@ async fn objs(caller: &Player, character: &Creature) {
 
 //let player_block_position = character.position.map(|scalar| (scalar / SIZE_BLOCK) as i32) - Point3::default();
 async fn model(server: &Server, character: &Creature) {//fulcnix/FD_A_2B_minifed
-	let vox = dot_vox::load("D:/software/MagicaVoxel-0.99.7.1-win64/vox/lxc/arena2.vox").expect("vox load failed");
+	let vox = dot_vox::load("arena2.vox").expect("vox load failed");
 
 	let mut blocks: Vec<_> = vox.models.iter().flat_map(|model| {
 		model.voxels.iter().map(|voxel| {
@@ -222,6 +223,19 @@ async fn model(server: &Server, character: &Creature) {//fulcnix/FD_A_2B_minifed
 	}
 
 	server.broadcast(&WorldUpdate::from(blocks), None).await;
+}
+
+async fn shield(caller: &Player) {
+	let se = StatusEffect {
+		source: caller.id,
+		target: caller.id,
+		kind: status_effect::Kind::ManaShield,
+		modifier: 999.0,
+		duration: 1,
+		creature_id3: caller.id,
+	};
+
+	caller.send_ignoring(&WorldUpdate::from(se)).await
 }
 
 const PURE_BLUE: RGB8 = RGB8::new(0, 0, 255);
