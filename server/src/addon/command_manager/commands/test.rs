@@ -235,7 +235,7 @@ async fn shield(caller: &Player) {
 		creature_id3: caller.id,
 	};
 
-	caller.send_ignoring(&WorldUpdate::from(se)).await
+	caller.send_ignoring(&WorldUpdate::from(se)).await;
 }
 
 const PURE_BLUE: RGB8 = RGB8::new(0, 0, 255);

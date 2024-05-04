@@ -26,7 +26,8 @@ pub struct CombatClass {
 }
 
 impl CombatClass {
-	pub fn config_name(&self) -> &'static str {
+	#[must_use]
+	pub const fn config_name(&self) -> &'static str {
 		use combat_classes::*;
 		match *self {
 			BERSERKER  => "berserker",
@@ -37,7 +38,7 @@ impl CombatClass {
 			WATER_MAGE => "water_mage",
 			ASSASSIN   => "assassin",
 			NINJA      => "ninja",
-			_          => todo!()
+			_          => "other_class"
 		}
 	}
 }
