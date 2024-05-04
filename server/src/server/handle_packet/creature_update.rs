@@ -1,6 +1,6 @@
 use protocol::packet::CreatureUpdate;
 
-use crate::addon::{anti_cheat, pvp};
+use crate::addon::{anti_cheat, kill_feed, pvp};
 use crate::addon::fix_cutoff_animations;
 use crate::addon::traffic_filter::filter;
 use crate::server::handle_packet::HandlePacket;
@@ -17,6 +17,7 @@ impl HandlePacket<CreatureUpdate> for Server {
 
 		self.addons.balancing.track_airtime(source).await;
 		pvp::on_creature_update(self, source, &packet).await;
+		kill_feed::on_creature_update(self, source, &packet).await;
 
 		let mut character = source.character.write().await;
 		let snapshot = character.clone();

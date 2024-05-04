@@ -7,7 +7,7 @@ use protocol::packet::hit::Kind::{*, Absorb, Block};
 use protocol::packet::world_update::{Sound, sound};
 use protocol::packet::world_update::sound::Kind::*;
 
-use crate::addon::balancing;
+use crate::addon::{balancing, kill_feed};
 use crate::server::handle_packet::HandlePacket;
 use crate::server::player::Player;
 use crate::server::Server;
@@ -25,6 +25,8 @@ impl HandlePacket<Hit> for Server {
 		self.addons.balancing.adjust_hit(&mut packet, &source_character_guard, &target_character_guard);
 		balancing::adjust_blocking(&mut packet, source, &source_character_guard, &target_character_guard).await;
 		packet.flash = true;//todo: (re-)move
+
+		kill_feed::set_last_attacker(&target, source_character_guard.name.clone()).await;
 
 		let mut wu_for_target = WorldUpdate::from(packet);
 

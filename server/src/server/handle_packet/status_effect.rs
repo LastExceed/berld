@@ -10,7 +10,7 @@ use protocol::packet::status_effect::Kind::*;
 use protocol::packet::world_update::Sound;
 use protocol::packet::world_update::sound::Kind::*;
 
-use crate::addon::balancing;
+use crate::addon::{balancing, kill_feed};
 use crate::server::handle_packet::HandlePacket;
 use crate::server::player::Player;
 use crate::server::Server;
@@ -60,7 +60,7 @@ async fn apply_poison(server: &Server, source: &Player, target: Arc<Player>, sta
 		kind: Normal,
 		flash: true,
 	};
-
+	let attacker_name = source_character_guard.name.clone();
 	server.addons.balancing.adjust_hit(&mut hit, &source_character_guard, &target_character_guard);
 	drop(source_character_guard);
 	drop(target_character_guard);
@@ -82,6 +82,7 @@ async fn apply_poison(server: &Server, source: &Player, target: Arc<Player>, sta
 				break;
 			}
 
+			kill_feed::set_last_attacker(&target, attacker_name.clone()).await;
 			if target.send(&world_update).await.is_err() {
 				break; //disconnects are handled in the reading task
 			};
