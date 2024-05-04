@@ -133,7 +133,7 @@ impl Balancing {
 			.values
 			.damage
 			.get(source.combat_class().config_name())
-			.unwrap_or(&0.0);
+			.unwrap_or(&1.0);
 
 		let class_stun_bonus = *self
 			.values
