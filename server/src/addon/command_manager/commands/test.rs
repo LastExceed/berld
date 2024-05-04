@@ -28,7 +28,7 @@ impl Command for Test {
 		let character = caller.character.read().await;
 
 		match params.next() {
-			Some("check") => checkerboard(caller, &character).await,
+			Some("check") => checkerboard(server, &character).await,
 			Some("obj") => world_object(caller, &character).await,
 			Some("objs") => objs(caller, &character).await,
 			Some("block") => place_block(caller, &character).await,
@@ -109,7 +109,7 @@ async fn world_object(caller: &Player, character: &Creature) {
 	caller.send_ignoring(&WorldUpdate::from(object)).await;
 }
 
-async fn checkerboard(caller: &Player, character: &Creature) {
+async fn checkerboard(server: &Server, character: &Creature) {
 	let start = Point3::new(
 		character.position.x
 			.div(SIZE_ZONE)
@@ -174,7 +174,7 @@ async fn checkerboard(caller: &Player, character: &Creature) {
 		}
 	}
 
-	caller.send_ignoring(&WorldUpdate::from(blocks)).await;
+	server.broadcast(&WorldUpdate::from(blocks), None).await;
 }
 
 async fn objs(caller: &Player, character: &Creature) {
