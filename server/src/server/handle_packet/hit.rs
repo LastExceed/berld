@@ -19,22 +19,27 @@ impl HandlePacket<Hit> for Server {
 		let target_character_guard = target.character.read().await;
 		let source_character_guard = source.character.read().await;
 
+		let is_heal = packet.damage.is_sign_negative();
+		let sounds = impact_sounds(&packet, target_character_guard.race, is_heal);
+
 		self.addons.balancing.adjust_hit(&mut packet, &source_character_guard, &target_character_guard);
 		balancing::adjust_blocking(&mut packet, source, &source_character_guard, &target_character_guard).await;
 		packet.flash = true;//todo: (re-)move
 
-		let world_update = &WorldUpdate {
-			sounds: impact_sounds(&packet, target_character_guard.race),
-			hits: vec![packet],
-			..Default::default()
-		};
+		let mut wu_for_target = WorldUpdate::from(packet);
+
+		if is_heal {
+			self.broadcast(&WorldUpdate::from(sounds), Some(source)).await; //healing sounds are already audible to the source
+		} else {
+			wu_for_target.sounds = sounds; //damage sounds are already audible to everyone but the target
+		}
 
 		drop((source_character_guard, target_character_guard));
-		target.send_ignoring(world_update).await;
+		target.send_ignoring(&wu_for_target).await;
 	}
 }
 
-pub fn impact_sounds(hit: &Hit, target_race: Race) -> Vec<Sound> {
+pub fn impact_sounds(hit: &Hit, target_race: Race, is_heal: bool) -> Vec<Sound> {
 	match hit.kind {
 		Block |
 		Miss => vec![sound::Kind::Block],
@@ -44,6 +49,7 @@ pub fn impact_sounds(hit: &Hit, target_race: Race) -> Vec<Sound> {
 		Dodge |
 		Invisible => vec![],
 
+		Normal if is_heal => vec![Watersplash],
 		Normal => Vec::with_capacity(2)
 			.tap_mut(|vec| {
 				vec.push(Punch1);
