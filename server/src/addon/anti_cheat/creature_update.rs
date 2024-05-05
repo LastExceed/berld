@@ -499,16 +499,17 @@ pub(super) fn inspect_effect_time_dodge(previous_state: &Creature, updated_state
 }
 
 pub(super) fn inspect_effect_time_stun(previous_state: &Creature, updated_state: &Creature) -> anti_cheat::Result {
-	//todo: freeze at 0 would bypass this
-	if updated_state.effect_time_stun > previous_state.effect_time_stun {
-		if previous_state.health == 0.0 && updated_state.health > 0.0 {
-			updated_state.effect_time_stun
-				.ensure_at_most(-3000, "effect_time_stun")?; //value is set to -3000 on respawn
-		} else {
-			updated_state.effect_time_stun
-				.ensure_not_negative("effect_time_stun")?;
-		}
-	}
+	//todo: activating bulwalk while stunned + next packet send being delayed can cause something like 750 -> -17
+
+	// if updated_state.effect_time_stun > previous_state.effect_time_stun {
+	// 	if previous_state.health == 0.0 && updated_state.health > 0.0 {
+	// 		updated_state.effect_time_stun
+	// 			.ensure_at_most(-3000, "effect_time_stun")?; //value is set to -3000 on respawn
+	// 	} else {
+	// 		updated_state.effect_time_stun
+	// 			.ensure_not_negative("effect_time_stun")?;
+	// 	}
+	// }
 	Ok(())
 }
 
@@ -567,9 +568,8 @@ pub(super) fn inspect_health(previous_state: &Creature, updated_state: &Creature
 }
 
 pub(super) fn inspect_mana(previous_state: &Creature, updated_state: &Creature) -> anti_cheat::Result {
-	//todo: warrior blocking multiple hits can cause mana to go negative
-	// updated_state.mana
-	// 	.ensure_within(&(0.0..=1.0), "mana")
+	updated_state.mana
+		.ensure_at_most(1.0, "mana") //todo: warrior blocking multiple hits can cause mana to go negative
 
 	//todo: mana can only increase via:
 	//- m1
@@ -580,8 +580,6 @@ pub(super) fn inspect_mana(previous_state: &Creature, updated_state: &Creature) 
 	//- sniping
 	//- stealth (leaving stealth keeps generating mp for a while)
 	//- intercept (1 frame to 1.0, then back to 0.0)
-
-	Ok(())
 }
 
 pub(super) fn inspect_blocking_gauge(previous_state: &Creature, updated_state: &Creature) -> anti_cheat::Result {
