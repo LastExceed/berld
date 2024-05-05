@@ -567,8 +567,10 @@ pub(super) fn inspect_health(previous_state: &Creature, updated_state: &Creature
 }
 
 pub(super) fn inspect_mana(previous_state: &Creature, updated_state: &Creature) -> anti_cheat::Result {
-	updated_state.mana
-		.ensure_within(&(0.0..=1.0), "mana")
+	//todo: warrior blocking multiple hits can cause mana to go negative
+	// updated_state.mana
+	// 	.ensure_within(&(0.0..=1.0), "mana")
+
 	//todo: mana can only increase via:
 	//- m1
 	//- ninja dodge
@@ -578,6 +580,8 @@ pub(super) fn inspect_mana(previous_state: &Creature, updated_state: &Creature) 
 	//- sniping
 	//- stealth (leaving stealth keeps generating mp for a while)
 	//- intercept (1 frame to 1.0, then back to 0.0)
+
+	Ok(())
 }
 
 pub(super) fn inspect_blocking_gauge(previous_state: &Creature, updated_state: &Creature) -> anti_cheat::Result {
