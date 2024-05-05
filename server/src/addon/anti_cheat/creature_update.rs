@@ -197,9 +197,9 @@ pub(super) async fn inspect_combo_timeout(previous_state: &Creature, updated_sta
 	}
 
 	ac_data.shift_nanos += delta;
-	ac_data.shift_nanos -= ac_data.shift_nanos.signum() * 1_000_000; //decay for tolerance
+	ac_data.shift_nanos -= ac_data.shift_nanos.signum() * 2_000_000; //decay for tolerance
 
-	if Duration::from_nanos(ac_data.shift_nanos.unsigned_abs()) > Duration::from_millis(500) {
+	if Duration::from_nanos(ac_data.shift_nanos.unsigned_abs()) > Duration::from_millis(1000) {
 		return Err("timewarp".into());
 	}
 
