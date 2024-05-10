@@ -161,7 +161,9 @@ pub(super) async fn inspect_combo_timeout(previous_state: &Creature, updated_sta
 
 	if was_dead && is_dead {
 		//clock freezes while dead
-		return updated_state.combo_timeout.ensure_exact(&previous_state.combo_timeout, "combo_timeout");
+		return Ok(());
+		//todo: you can legitimately hit sb while dead by shooting projectiles right before death
+		//return updated_state.combo_timeout.ensure_exact(&previous_state.combo_timeout, "combo_timeout");
 	}
 
 	let init = ac_data.last_combo_update.is_none();//todo: move to ac data init?
