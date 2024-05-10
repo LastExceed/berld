@@ -564,7 +564,7 @@ pub(super) fn inspect_aim_offset(previous_state: &Creature, updated_state: &Crea
 }
 
 pub(super) fn inspect_health(previous_state: &Creature, updated_state: &Creature) -> anti_cheat::Result {
-	let maximum = updated_state.maximum_health() + 0.001; //add some tolerance for rounding errors
+	let maximum = updated_state.maximum_health() * 1.01; //add some tolerance for rounding errors
 	updated_state.health
 		.ensure_within(&(0.0..=maximum), "health")
 }
