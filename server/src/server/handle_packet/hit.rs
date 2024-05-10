@@ -1,5 +1,6 @@
 use tap::Tap;
 
+use protocol::utils::constants::combat_classes::WATER_MAGE;
 use protocol::packet::{Hit, WorldUpdate};
 use protocol::packet::common::Race;
 use protocol::packet::common::Race::*;
@@ -25,18 +26,23 @@ impl HandlePacket<Hit> for Server {
 		self.addons.balancing.adjust_hit(&mut packet, &source_character_guard, &target_character_guard);
 		balancing::adjust_blocking(&mut packet, source, &source_character_guard, &target_character_guard).await;
 		packet.flash = true;//todo: (re-)move
+		drop(target_character_guard);
 
 		kill_feed::set_last_attacker(&target, source_character_guard.name.clone()).await;
 
 		let mut wu_for_target = WorldUpdate::from(packet);
 
 		if is_heal {
-			self.broadcast(&WorldUpdate::from(sounds), Some(source)).await; //healing sounds are already audible to the source
+			if source_character_guard.combat_class() != WATER_MAGE {
+				//dont emit sound for heals from unholy spirits
+			} else {
+				self.broadcast(&WorldUpdate::from(sounds), Some(source)).await; //healing sounds are already audible to the source
+			}
 		} else {
 			wu_for_target.sounds = sounds; //damage sounds are already audible to everyone but the target
 		}
 
-		drop((source_character_guard, target_character_guard));
+		drop(source_character_guard);
 		target.send_ignoring(&wu_for_target).await;
 	}
 }
