@@ -72,7 +72,7 @@ impl CommandManager {
 	}
 
 	async fn handle_command(&self, server: &Server, caller: Option<&Player>, admin: bool, text: &str) -> CommandResult {
-		let lowercase = text.to_lowercase()text.to_lowercase();
+		let lowercase = text.to_lowercase();
 		let mut fragments = lowercase.split_whitespace();
 
 		let command_literal = fragments
