@@ -29,7 +29,8 @@ impl Validate<Item> for Validator {
 			Kind::Special(special)       => Self::validate_enum(&special),
 			_                            => Self::validate_enum(&item.kind)
 		}?;
-		Self::validate_enum(&item.material)
+		Self::validate_enum(&item.material)?;
+		Ok(())
 	}
 }
 
@@ -78,8 +79,8 @@ pub enum Material {
 	Unknown,
 	Bone,
 
-
-	Copper = 10,
+	_ShimmerMushroom = 9,
+	Copper,
 	Gold,
 	Silver,
 	Emerald,
