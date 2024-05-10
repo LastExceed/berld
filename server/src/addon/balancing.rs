@@ -1,4 +1,4 @@
-use std::collections::HashMap;
+use std::{collections::HashMap, ops::Sub};
 use std::ptr;
 use std::time::{Duration, Instant};
 
@@ -6,7 +6,7 @@ use config::{Config, ConfigError};
 use serde::Deserialize;
 use tokio::sync::RwLock;
 
-use protocol::packet::{CreatureUpdate, Hit, StatusEffect, WorldUpdate};
+use protocol::{packet::{CreatureUpdate, Hit, StatusEffect, WorldUpdate}, utils::constants::combat_classes::WATER_MAGE};
 use protocol::packet::common::CreatureId;
 use protocol::packet::common::item::Kind::*;
 use protocol::packet::common::item::kind::Weapon::*;
@@ -113,8 +113,14 @@ impl Balancing {
 			let self_inflicted = ptr::eq(source, target);
 
 			let heal_multiplier =
-				if self_inflicted { self.values.heal_self - 1.0 } //self-heals are applied client side as well (bug), so we need to subtract the vanilla amount
-				else              { self.values.heal_other };
+				if self_inflicted {
+					if source.combat_class() == WATER_MAGE { self.values.heal_self }
+					else                                   { *self.values.damage.get("unholy").unwrap_or(&1.0) }
+					.sub(1.0) //self-heals are applied client side as well (bug), so we need to subtract the vanilla amount
+				}
+				else {
+					self.values.heal_other
+				};
 			hit.damage *= heal_multiplier;
 			return;
 		}
