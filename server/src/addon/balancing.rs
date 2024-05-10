@@ -147,20 +147,10 @@ impl Balancing {
 			.get(source.combat_class().config_name())
 			.unwrap_or(&0);
 
-		let equipment_defense_multiplier = 1.0 -
-			target.equipment
-				.iter()
-				.map(|item| match item.kind {
-					Weapon(Shield) => self.values.shield_defense,
-					_              => 0.0
-				})
-				.sum::<f32>();
-
 		let effective_damage_multiplier =
 			self.values.damage["global"]
 				* weapon_offense_multiplier
-				* class_offense_multiplier
-				* equipment_defense_multiplier;
+				* class_offense_multiplier;
 
 		let effective_stun_bonus =
 			self.values.stun["global"]
@@ -170,6 +160,32 @@ impl Balancing {
 		hit.damage *= effective_damage_multiplier;
 		if hit.stuntime > 0 {
 			hit.stuntime += effective_stun_bonus;
+		}
+
+		if hit.damage.is_sign_negative() {//heal
+			let self_inflicted = ptr::eq(source, target);
+
+			let heal_multiplier =
+				if self_inflicted {
+					if source.combat_class() == WATER_MAGE { self.values.heal_self }
+					else                                   { *self.values.damage.get("unholy").unwrap_or(&1.0) }
+					.sub(1.0) //self-heals are applied client side as well (bug), so we need to subtract the vanilla amount
+				}
+				else {
+					self.values.heal_other
+				};
+			hit.damage *= heal_multiplier;
+		} else {//hurt
+			let equipment_defense_multiplier = 1.0 -
+			target.equipment
+				.iter()
+				.map(|item| match item.kind {
+					Weapon(Shield) => self.values.shield_defense,
+					_              => 0.0
+				})
+				.sum::<f32>();
+
+			hit.damage *= equipment_defense_multiplier;
 		}
 	}
 
