@@ -189,6 +189,10 @@ impl Balancing {
 			return;
 		}
 
+		if hit.damage.is_sign_negative() {
+			return;
+		}
+
 		let fire_spirit_count = [
 			Slot::LeftWeapon,
 			Slot::RightWeapon
@@ -211,19 +215,25 @@ impl Balancing {
 			return;
 		}
 
-		let particles = [
+		let n_particles = hit.damage as usize / 25;
+
+		let colors = [
 			RGBA::new(1.0, 0.0, 0.0, 1.0),
 			RGBA::new(1.0, 0.5, 0.0, 1.0),
 			RGBA::new(1.0, 1.0, 0.0, 1.0)
-		].map(|color| Particle {
-			position: hit.position,
-			velocity: [0.0, 0.0, 0.0].into(),
-			color,
-			size: 0.15,
-			count: 3,
-			kind: particle::Kind::NoGravity,
-			spread: 1.0,
-		}).into_iter().collect();
+		];
+
+		let particles = (0..n_particles)
+			.map(|i| Particle {
+				position: hit.position,
+				velocity: [0.0, 0.0, 0.0].into(),
+				color: colors[i % 3],
+				size: 0.1,
+				count: hit.damage as i32 / 80,
+				kind: particle::Kind::NoGravity,
+				spread: 1.0,
+			})
+			.collect();
 
 		let damage = hit.damage
 			* fire_spirit_count as f32
