@@ -54,7 +54,7 @@ pub fn hit_sounds(hit: &Hit, source_creature: &Creature, target_race: Race) -> V
 		Dodge |
 		Invisible => vec![],
 
-		Normal if heals && source_creature.combat_class() == WATER_MAGE => vec![], //unholy spirits should be silent
+		Normal if heals && source_creature.combat_class() != WATER_MAGE => vec![], //unholy spirits should be silent
 		Normal if heals => vec![Watersplash],
 		Normal => Vec::with_capacity(2)
 			.tap_mut(|vec| {
