@@ -217,19 +217,19 @@ impl Balancing {
 
 		let n_particles = hit.damage as usize / 25;
 
-		let colors = [
+		let particles = [
 			RGBA::new(1.0, 0.0, 0.0, 1.0),
 			RGBA::new(1.0, 0.5, 0.0, 1.0),
 			RGBA::new(1.0, 1.0, 0.0, 1.0)
-		];
-
-		let particles = (0..n_particles)
-			.map(|i| Particle {
+		]
+			.into_iter()
+			.enumerate()
+			.map(|(color_index, color)| Particle {
 				position: hit.position,
 				velocity: [0.0, 0.0, 0.0].into(),
-				color: colors[i % 3],
+				color: color,
 				size: 0.1,
-				count: hit.damage as i32 / 80,
+				count: (n_particles + color_index) as i32 / 3,
 				kind: particle::Kind::NoGravity,
 				spread: 1.0,
 			})
