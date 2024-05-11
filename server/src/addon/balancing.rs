@@ -44,6 +44,12 @@ impl Balancing {
 		})
 	}
 
+	pub async fn on_hit(&self, server: &Server, hit: &mut Hit, source: &Creature, target: &Arc<Player>) {
+		let target_creature = target.character.read().await;
+		self.ignite(server, hit, source, Arc::clone(target)).await;
+		self.adjust_hit(hit, source, &target_creature);
+	}
+
 	pub async fn track_airtime(&self, source: &Player) {
 		let character = source.character.read().await;
 
@@ -178,7 +184,7 @@ impl Balancing {
 		}
 	}
 
-	pub async fn ignite(&self, server: &Server, hit: &Hit, source: &Creature, target: Arc<Player>) {
+	async fn ignite(&self, server: &Server, hit: &Hit, source: &Creature, target: Arc<Player>) {
 		if source.combo % self.values.ignite_combo != 0 {
 			return;
 		}
