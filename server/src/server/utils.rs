@@ -1,4 +1,3 @@
-use std::ops::{Div, Mul};
 use std::fs;
 use std::error::Error;
 use std::mem::transmute;
@@ -9,9 +8,8 @@ use std::time::Duration;
 use colour::{white_ln, red_ln};
 use tokio::time::sleep;
 
-use protocol::utils::constants::{SIZE_BLOCK, SIZE_ZONE};
 use protocol::packet::Hit;
-use protocol::packet::world_update::{Block, Particle, Sound};
+use protocol::packet::world_update::{Particle, Sound};
 use protocol::packet::world_update::sound;
 use protocol::packet::hit::Kind::Normal;
 use protocol::nalgebra::{Point3, Vector3};
@@ -180,72 +178,4 @@ pub async fn give_xp(player: &Player, experience: i32) {
 	};
 
 	player.send_ignoring(&WorldUpdate::from(kill)).await;
-}
-
-pub async fn checkerboard(server: &Server, character: &Creature) {
-	let start = Point3::new(
-		character.position.x
-			.div(SIZE_ZONE)
-			.mul(SIZE_ZONE)
-			.div(SIZE_BLOCK) as i32 - 0x100,
-		character.position.y
-			.div(SIZE_ZONE)
-			.mul(SIZE_ZONE)
-			.div(SIZE_BLOCK) as i32 - 0x100,
-		character.position.z.div(SIZE_BLOCK) as i32,
-	);
-
-	let mut blocks = Vec::with_capacity(100);
-
-	for dx in 0..800 {
-		for dy in 0..800 {
-			let block_alt = (dx + dy) % 2 == 1;
-			let mapblock_alt = ((dx / 8) + (dy / 8)) % 2 == 1;
-			let chunk_alt = ((dx / 32) + (dy / 32)) % 2 == 1;
-			let zone_alt = ((dx / 256) + (dy / 256)) % 2 == 1;
-
-			#[expect(clippy::collapsible_else_if, reason = "TODO")]
-			let color =
-				if zone_alt {
-					if chunk_alt {
-						if mapblock_alt {
-							if block_alt { [0, 192, 192] } else { [0, 255, 255] }
-						} else {
-							if block_alt { [0, 192, 0] } else { [0, 255, 0] }
-						}
-					} else {
-						if mapblock_alt {
-							if block_alt { [0, 96, 192] } else { [0, 128, 255] }
-						} else {
-							if block_alt { [0, 0, 128] } else { [0, 0, 255] }
-						}
-					}
-				} else {
-					if chunk_alt {
-						if mapblock_alt {
-							if block_alt { [192, 0, 96] } else { [255, 0, 128] }
-						} else {
-							if block_alt { [96, 0, 96] } else { [255, 0, 255] }
-						}
-					} else {
-						if mapblock_alt {
-							if block_alt { [192, 96, 0] } else { [255, 128, 0] }
-						} else {
-							if block_alt { [128, 0, 0] } else { [255, 0, 0] }
-						}
-					}
-				}.into();
-
-			let block = Block {
-				position: start + Vector3::new(dx, dy, 0),
-				kind: protocol::packet::world_update::block::Kind::Solid,
-				color,
-				padding: 0
-			};
-
-			blocks.push(block);
-		}
-	}
-
-	server.broadcast(&WorldUpdate::from(blocks), None).await;
 }
