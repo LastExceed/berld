@@ -98,12 +98,14 @@ impl Server {
 		self.addons.balancing.adjust_hit(&mut hit, &source_character, &target_character_guard);
 		drop(target_character_guard);
 
-		let mut world_update = WorldUpdate {
+		let mut wu_fx = WorldUpdate {
 			sounds: vec![Sound::at(hit.position, sound_kind)],
 			particles: particles.unwrap_or(vec![]),
-			hits: vec![hit],
 			..Default::default()
 		};
+		let mut wu_hit = WorldUpdate::from(hit);
+
+		let server_static = extend_lifetime(self);
 
 		let attacker_name = source_character.name.clone();
 		tokio::spawn(async move {
@@ -112,8 +114,8 @@ impl Server {
 				nth += 1;
 
 				let character = target.character.read().await;
-				world_update.hits[0].position = character.position;
-				for particle in world_update.particles.iter_mut() {
+				wu_hit.hits[0].position = character.position;
+				for particle in wu_fx.particles.iter_mut() {
 					particle.position = character.position - Vector3::new(0,0,0x20000);
 					particle.velocity = character.velocity / 10.0 + Vector3::new(0.0,0.0, 2.0);
 				}
@@ -124,9 +126,11 @@ impl Server {
 				drop(character);
 
 				kill_feed::set_last_attacker(&target, attacker_name.clone()).await;
-				if target.send(&world_update).await.is_err() {
+				if target.send(&wu_hit).await.is_err() {
 					break; //disconnects are handled in the reading task
 				};
+				server_static.broadcast(&wu_fx, None).await;
+
 
 				if nth == ticks {
 					break;
