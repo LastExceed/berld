@@ -246,17 +246,15 @@ impl Creature {
 				_       => 1.0
 			};
 
-		let innate_health = [
-			level_scaling_factor(self.level as f32),
-			rarity_scaling_factor(if self.affiliation == Affiliation::Player { 4 } else { self.rarity }),
-			combat_class_multiplier
-		].iter().fold(
-			self.multipliers[Health],
-			|accumulator, multiplier| accumulator * multiplier
-		);
+		let innate_health = self.multipliers[Health]
+			* level_scaling_factor(self.level as f32)
+			* rarity_scaling_factor(if self.affiliation == Affiliation::Player { 4 } else { self.rarity })
+			* combat_class_multiplier;
 
-		let equipment_bonus = self.equipment.iter().map(|item| item.stats()[Stat::Health]).sum::<f32>();
-
-		innate_health + equipment_bonus
+		//add each item's hp stat onto the total 1 by 1 in order to match cubeworld in terms of float precision errors
+		self.equipment
+			.iter()
+			.map(|item| item.stats()[Stat::Health])
+			.fold(innate_health, |total, item_stat| total + item_stat)
 	}
 }
