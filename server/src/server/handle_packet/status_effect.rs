@@ -1,16 +1,8 @@
-use std::sync::Arc;
-use std::time::Duration;
-
-use tokio::time::sleep;
-
-use protocol::nalgebra::Vector3;
-use protocol::packet::{Hit, StatusEffect, WorldUpdate};
-use protocol::packet::hit::Kind::*;
+use protocol::packet::{StatusEffect, WorldUpdate};
 use protocol::packet::status_effect::Kind::*;
-use protocol::packet::world_update::Sound;
 use protocol::packet::world_update::sound::Kind::*;
 
-use crate::addon::{balancing, kill_feed};
+use crate::addon::balancing;
 use crate::server::handle_packet::HandlePacket;
 use crate::server::player::Player;
 use crate::server::Server;
@@ -22,7 +14,7 @@ impl HandlePacket<StatusEffect> for Server {
 				let Some(target) = self.find_player_by_id(packet.target).await
 					else { return; };//can happen when the target disconnected in this moment
 
-				apply_poison(self, source, target, &packet).await;
+				self.apply_dot(&*(source.character.read().await), target, packet.duration / 500, 500, packet.modifier, SlimeGroan, None).await;
 			}
 			WarFrenzy => {
 				balancing::buff_warfrenzy(&packet, self).await;
@@ -42,56 +34,4 @@ impl HandlePacket<StatusEffect> for Server {
 
 		self.broadcast(&WorldUpdate::from(packet), Some(source)).await;
 	}
-}
-
-async fn apply_poison(server: &Server, source: &Player, target: Arc<Player>, status_effect: &StatusEffect) {
-	let source_character_guard = source.character.read().await;
-	let target_character_guard = target.character.read().await;
-
-	let mut hit = Hit {
-		attacker: source.id,//todo: check if this matters
-		target: status_effect.target,
-		damage: status_effect.modifier,
-		critical: false,
-		stuntime: 0,
-		position: target_character_guard.position,
-		direction: Vector3::zeros(),
-		is_yellow: false,
-		kind: Normal,
-		flash: true,
-	};
-	let attacker_name = source_character_guard.name.clone();
-	server.addons.balancing.adjust_hit(&mut hit, &source_character_guard, &target_character_guard);
-	drop(source_character_guard);
-	drop(target_character_guard);
-
-	let world_update = WorldUpdate {
-		sounds: vec![Sound::at(hit.position, SlimeGroan)],
-		hits: vec![hit],
-		..Default::default()
-	};
-
-	let tick_count = status_effect.duration / 500;
-
-	tokio::spawn(async move {
-		let mut nth = 0;
-		loop {
-			nth += 1;
-
-			if target.character.read().await.health == 0.0 {
-				break;
-			}
-
-			kill_feed::set_last_attacker(&target, attacker_name.clone()).await;
-			if target.send(&world_update).await.is_err() {
-				break; //disconnects are handled in the reading task
-			};
-
-			if nth == tick_count {
-				break;
-			}
-
-			sleep(Duration::from_millis(500)).await;
-		}
-	});
 }
