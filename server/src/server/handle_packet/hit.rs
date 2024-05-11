@@ -1,7 +1,6 @@
-use std::sync::Arc;
-
 use tap::Tap;
 
+use protocol::utils::constants::CombatClass;
 use protocol::utils::constants::combat_classes::WATER_MAGE;
 use protocol::packet::{Hit, WorldUpdate};
 use protocol::packet::common::Race;
@@ -19,39 +18,28 @@ impl HandlePacket<Hit> for Server {
 	async fn handle_packet(&self, source: &Player, mut packet: Hit) {
 		let Some(target) = self.find_player_by_id(packet.target).await
 			else { return; };//can happen when the target disconnected in this moment
+
 		let target_character_guard = target.character.read().await;
 		let source_character_guard = source.character.read().await;
 
-		let is_heal = packet.damage.is_sign_negative();
-		let sounds = impact_sounds(&packet, target_character_guard.race, is_heal);
-
-		self.addons.balancing.ignite(self, &packet, &source_character_guard, Arc::clone(&target)).await;
-
-		self.addons.balancing.adjust_hit(&mut packet, &source_character_guard, &target_character_guard);
+		self.addons.balancing.on_hit(self, &mut packet, &source_character_guard, &target).await;
 		balancing::adjust_blocking(&mut packet, source, &source_character_guard, &target_character_guard).await;
 		packet.flash = true;//todo: (re-)move
-		drop(target_character_guard);
 
 		kill_feed::set_last_attacker(&target, source_character_guard.name.clone()).await;
 
-		let mut wu_for_target = WorldUpdate::from(packet);
-
-		if is_heal {
-			if source_character_guard.combat_class() != WATER_MAGE {
-				//dont emit sound for heals from unholy spirits
-			} else {
-				self.broadcast(&WorldUpdate::from(sounds), Some(source)).await; //healing sounds are already audible to the source
-			}
-		} else {
-			wu_for_target.sounds = sounds; //damage sounds are already audible to everyone but the target
-		}
-
+		let sounds = hit_sounds(&packet, source_character_guard.combat_class(), target_character_guard.race);
 		drop(source_character_guard);
-		target.send_ignoring(&wu_for_target).await;
+		self.broadcast(&WorldUpdate::from(sounds), Some(source)).await;
+		drop(target_character_guard);
+
+		target.send_ignoring(&WorldUpdate::from(packet)).await;
 	}
 }
 
-pub fn impact_sounds(hit: &Hit, target_race: Race, is_heal: bool) -> Vec<Sound> {
+pub fn hit_sounds(hit: &Hit, source_class: CombatClass, target_race: Race) -> Vec<Sound> {
+	let heals = hit.damage.is_sign_negative();
+
 	match hit.kind {
 		Block |
 		Miss => vec![sound::Kind::Block],
@@ -61,10 +49,11 @@ pub fn impact_sounds(hit: &Hit, target_race: Race, is_heal: bool) -> Vec<Sound> 
 		Dodge |
 		Invisible => vec![],
 
-		Normal if is_heal => vec![Watersplash],
+		Normal if heals && source_class == WATER_MAGE => vec![], //unholy spirits should be silent
+		Normal if heals => vec![Watersplash],
 		Normal => Vec::with_capacity(2)
 			.tap_mut(|vec| {
-				vec.push(Punch1);
+				vec.push(Punch1);//todo: weapon-specific sounds
 				if let Some(groan) = groan_of(target_race) {
 					vec.push(groan);
 				}
