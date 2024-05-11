@@ -1,4 +1,6 @@
-use std::{collections::HashMap, ops::Sub};
+use std::ops::Sub;
+use std::sync::Arc;
+use std::collections::HashMap;
 use std::ptr;
 use std::time::{Duration, Instant};
 
@@ -6,7 +8,12 @@ use config::{Config, ConfigError};
 use serde::Deserialize;
 use tokio::sync::RwLock;
 
-use protocol::{packet::{CreatureUpdate, Hit, StatusEffect, WorldUpdate}, utils::constants::combat_classes::WATER_MAGE};
+use protocol::packet::{CreatureUpdate, Hit, StatusEffect, WorldUpdate};
+use protocol::rgb::RGBA;
+use protocol::utils::constants::combat_classes::WATER_MAGE;
+use protocol::packet::world_update::{particle, sound, Particle};
+use protocol::packet::creature_update::equipment::Slot;
+use protocol::packet::common::item::{Kind, Material};
 use protocol::packet::common::CreatureId;
 use protocol::packet::common::item::Kind::*;
 use protocol::packet::common::item::kind::Weapon::*;
@@ -14,7 +21,7 @@ use protocol::packet::creature_update::CreatureFlag::{Climbing, Gliding};
 use protocol::packet::creature_update::equipment::Slot::RightWeapon;
 use protocol::packet::creature_update::Occupation::Rogue;
 use protocol::packet::creature_update::PhysicsFlag::{OnGround, Swimming};
-use protocol::packet::hit::Kind;
+use protocol::packet::hit;
 use protocol::packet::status_effect::Kind::{Anger, Swiftness};
 use protocol::packet::world_update::Sound;
 use protocol::packet::world_update::sound::Kind::{Magic01, SpikeTrap};
@@ -107,24 +114,6 @@ impl Balancing {
 	}
 
 	pub fn adjust_hit(&self, hit: &mut Hit, source: &Creature, target: &Creature) {
-		let heals = hit.damage.is_sign_negative();
-
-		if heals {
-			let self_inflicted = ptr::eq(source, target);
-
-			let heal_multiplier =
-				if self_inflicted {
-					if source.combat_class() == WATER_MAGE { self.values.heal_self }
-					else                                   { *self.values.damage.get("unholy").unwrap_or(&1.0) }
-					.sub(1.0) //self-heals are applied client side as well (bug), so we need to subtract the vanilla amount
-				}
-				else {
-					self.values.heal_other
-				};
-			hit.damage *= heal_multiplier;
-			return;
-		}
-
 		let weapon_offense_multiplier = match source.equipment[RightWeapon].kind {
 			Weapon(weapon)  => *self.values.damage.get(&weapon.to_string().to_lowercase()).unwrap_or(&1.0),
 			_               => 1.0
@@ -189,6 +178,50 @@ impl Balancing {
 		}
 	}
 
+	pub async fn ignite(&self, server: &Server, hit: &Hit, source: &Creature, target: Arc<Player>) {
+		if source.combo % self.values.ignite_combo != 0 {
+			return;
+		}
+
+		let fire_spirit_count = [
+			Slot::LeftWeapon,
+			Slot::RightWeapon
+		].map(|slot| {
+			let item = &source.equipment[slot];
+			if item.kind == Kind::Void {
+				return 0;
+			}
+
+			item.spirits
+				.iter()
+				.take(item.spirit_counter as _)
+				.filter(|spirit| spirit.material == Material::Fire)
+				.count()
+		})
+		.iter()
+		.sum::<usize>();
+
+		if fire_spirit_count == 0 {
+			return;
+		}
+
+		let particles = [
+			RGBA::new(1.0, 0.0, 0.0, 1.0),
+			RGBA::new(1.0, 0.5, 0.0, 1.0),
+			RGBA::new(1.0, 1.0, 0.0, 1.0)
+		].map(|color| Particle {
+			position: hit.position,
+			velocity: [0.0, 0.0, 0.0].into(),
+			color,
+			size: 0.15,
+			count: 3,
+			kind: particle::Kind::NoGravity,
+			spread: 1.0,
+		}).into_iter().collect();
+
+		server.apply_dot(source, target, 10, 200, hit.damage * fire_spirit_count as f32 / 10.0, sound::Kind::FireHit, Some(particles)).await;
+	}
+
 	pub fn adjust_manashield(&self, packet: &mut StatusEffect) {
 		packet.duration = self.values.manashield_duration;
 		if let Some(absolute_value) = self.values.manashield_capacity_absolute {
@@ -210,7 +243,7 @@ pub async fn buff_warfrenzy(warfrenzy: &StatusEffect, server: &Server) {
 }
 
 pub async fn adjust_blocking(hit: &mut Hit, attacker: &Player, attacker_creature: &Creature, target_creature: &Creature) {
-	if hit.kind != Kind::Block {
+	if hit.kind != hit::Kind::Block {
 		return
 	}
 
@@ -237,5 +270,6 @@ struct BalanceConfigValues {
 	stun: HashMap<String, i32>,
 	manashield_duration: i32,
 	manashield_capacity_relative: f32,
-	manashield_capacity_absolute: Option<f32>
+	manashield_capacity_absolute: Option<f32>,
+	ignite_combo: i32
 }

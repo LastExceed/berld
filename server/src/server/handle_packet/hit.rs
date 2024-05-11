@@ -1,3 +1,5 @@
+use std::sync::Arc;
+
 use tap::Tap;
 
 use protocol::utils::constants::combat_classes::WATER_MAGE;
@@ -22,6 +24,8 @@ impl HandlePacket<Hit> for Server {
 
 		let is_heal = packet.damage.is_sign_negative();
 		let sounds = impact_sounds(&packet, target_character_guard.race, is_heal);
+
+		self.addons.balancing.ignite(self, &packet, &source_character_guard, Arc::clone(&target)).await;
 
 		self.addons.balancing.adjust_hit(&mut packet, &source_character_guard, &target_character_guard);
 		balancing::adjust_blocking(&mut packet, source, &source_character_guard, &target_character_guard).await;
