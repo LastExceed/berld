@@ -219,7 +219,12 @@ impl Balancing {
 			spread: 1.0,
 		}).into_iter().collect();
 
-		server.apply_dot(source, target, 10, 200, hit.damage * fire_spirit_count as f32 / 10.0, sound::Kind::FireHit, Some(particles)).await;
+		let damage = hit.damage
+			* fire_spirit_count as f32
+			* self.values.damage["fire_spirit"]
+			/ 10.0;
+
+		server.apply_dot(source, target, 10, 200, damage, sound::Kind::FireHit, Some(particles)).await;
 	}
 
 	pub fn adjust_manashield(&self, packet: &mut StatusEffect) {
