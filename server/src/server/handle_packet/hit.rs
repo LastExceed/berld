@@ -65,7 +65,7 @@ pub fn hit_sounds(hit: &Hit, source_creature: &Creature, target_race: Race) -> V
 				};
 
 				vec.push(impact_of(source_creature.combat_class(), weapon_kind, hit.critical));
-				if let Some(groan) = groan_of(target_race) {
+				if hit.critical && let Some(groan) = groan_of(target_race) {
 					vec.push(groan);
 				}
 			}),
