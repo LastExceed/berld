@@ -50,7 +50,7 @@ pub(super) async fn check_for_timewarp(previous_state: &Creature, updated_state:
 
     ac_data.shift_epoch(delta as _);
 
-    ac_data.total_shift_nanos.abs()
+    (ac_data.total_shift_nanos.abs() / 1_000_000)
         .ensure_at_most(2000, "timewarp.clockdesync")?;
 
 	Ok(())
