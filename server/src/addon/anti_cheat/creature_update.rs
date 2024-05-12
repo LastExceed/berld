@@ -1,7 +1,6 @@
 #![expect(unused_variables, clippy::missing_const_for_fn, reason = "for consistency, should probably enforce this with a trait somehow")]
 
 use std::default::Default;
-use std::time::Duration;
 
 use boolinator::Boolinator;
 use strum::IntoEnumIterator;
@@ -30,8 +29,11 @@ use crate::addon::anti_cheat::creature_update::animation::animations_avilable_wi
 use crate::addon::anti_cheat::creature_update::equipment::allowed_materials;
 use crate::server::creature::Creature;
 
+use self::combo_timeout::check_for_timewarp;
+
 mod animation;
 mod equipment;
+mod combo_timeout;
 
 pub(super) fn inspect_position(previous_state: &Creature, updated_state: &Creature) -> anti_cheat::Result {
 	Ok(())
@@ -149,63 +151,11 @@ pub(super) fn inspect_combo(previous_state: &Creature, updated_state: &Creature)
 		.ensure_not_negative("combo")
 }
 
-#[expect(clippy::cast_sign_loss, reason = "checked at runtime")]
 pub(super) async fn inspect_combo_timeout(previous_state: &Creature, updated_state: &Creature, player: &Player) -> anti_cheat::Result {
 	updated_state.combo_timeout
 		.ensure_not_negative("combo_timeout")?;
 
-	let ac_data = &mut player.addon_data.write().await.anti_cheat_data;
-
-	let was_dead = previous_state.health == 0.0;
-	let is_dead = updated_state.health == 0.0;
-
-	if was_dead && is_dead {
-		//clock freezes while dead
-		return Ok(());
-		//todo: you can legitimately hit sb while dead by shooting projectiles right before death
-		//return updated_state.combo_timeout.ensure_exact(&previous_state.combo_timeout, "combo_timeout");
-	}
-
-	let init = ac_data.last_combo_update.is_none();//todo: move to ac data init?
-	let respawn = was_dead && !is_dead; //timeout resets to 0 on respawn
-	let hit = updated_state.combo_timeout <= previous_state.combo_timeout; //equal incase of seed change lag
-
-	if init || respawn || hit {
-		ac_data.last_combo_update = Some(Instant::now() - Duration::from_millis(updated_state.combo_timeout as _));
-		return Ok(());
-	}
-
-	let last_combo_change = ac_data.last_combo_update.as_mut().unwrap();
-
-	let elapsed_nanos = last_combo_change.elapsed().as_nanos() as i64;
-	let reported_nanos = updated_state.combo_timeout as i64 * 1_000_000;
-	let delta = reported_nanos - elapsed_nanos;
-
-	if delta.is_negative() {//necessary because [Duration] cannot be negative
-		*last_combo_change += Duration::from_nanos(-delta as _);
-	} else {
-		*last_combo_change -= Duration::from_nanos(delta as _);
-	}
-
-	let last_lag_spike = ac_data.last_lag_spike.get_or_insert(Instant::now());
-	if last_lag_spike.elapsed() < Duration::from_secs(1) {
-		return Ok(());
-	}
-
-	let new_spike = Duration::from_nanos(delta.unsigned_abs()) > Duration::from_millis(300);
-	if new_spike {
-		*last_lag_spike = Instant::now();
-		return Ok(());
-	}
-
-	ac_data.shift_nanos += delta;
-	ac_data.shift_nanos -= ac_data.shift_nanos.signum() * 2_000_000; //decay for tolerance
-
-	if Duration::from_nanos(ac_data.shift_nanos.unsigned_abs()) > Duration::from_millis(1000) {
-		return Err("timewarp".into());
-	}
-
-	Ok(())
+	check_for_timewarp(previous_state, updated_state, player).await
 }
 
 #[expect(clippy::too_many_lines, reason = "TODO")] //TODO: extract constants
