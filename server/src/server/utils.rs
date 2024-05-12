@@ -93,12 +93,12 @@ impl Server {
 			kind: Normal,
 			flash: true,
 		};
-		self.addons.balancing.adjust_hit(&mut hit, &source_character, &target_character_guard);
+		self.addons.balancing.adjust_hit(&mut hit, source_character, &target_character_guard);
 		drop(target_character_guard);
 
 		let mut wu_fx = WorldUpdate {
 			sounds: vec![Sound::at(hit.position, sound_kind)],
-			particles: particles.unwrap_or(vec![]),
+			particles: particles.unwrap_or_default(),
 			..Default::default()
 		};
 		let mut wu_hit = WorldUpdate::from(hit);
@@ -113,7 +113,7 @@ impl Server {
 
 				let character = target.character.read().await;
 				wu_hit.hits[0].position = character.position;
-				for particle in wu_fx.particles.iter_mut() {
+				for particle in &mut wu_fx.particles {
 					particle.position = character.position - Vector3::new(0,0,0x20000);
 					particle.velocity = character.velocity / 10.0 + Vector3::new(0.0,0.0, 2.0);
 				}
