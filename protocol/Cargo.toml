@@ -16,8 +16,8 @@ nalgebra = { version = "0.32.3", features = ["serde-serialize"] }
 async-compression = { version = "0.4.5", features = ["tokio", "zlib"] }
 rgb = "0.8.37"
 tokio = { version = "1.34.0", features = ["full"] }
-strum_macros = "0.25.3"
-strum = "0.25.0"
+strum_macros = "0.26.2"
+strum = "0.26.2"
 boolinator = "2.4.0"
 num-traits = "0.2.17"
 num_enum = "0.7.1"
