@@ -47,8 +47,7 @@ impl Models {
 		self.models
 			.iter()
 			.filter(|(zone, _blocks)| *zone == requested_zone)
-			.map(|(_zone, blocks)| blocks)
-			.flatten()
+			.flat_map(|(_zone, blocks)| blocks)
 			.cloned()
 			.collect()
 	}
@@ -63,7 +62,7 @@ pub fn parse_model(filename: &str) -> Vec<Block> {
     let vox = dot_vox::load(filename).expect("vox load failed");
 
 	let mut model_offsets = HashMap::new();
-	if vox.scenes.len() != 0 {
+	if !vox.scenes.is_empty() {
 		walk_scene_graph(&vox.scenes, 0, Vector3::zeros(), &mut model_offsets);
 	}
 
@@ -89,13 +88,14 @@ pub fn parse_model(filename: &str) -> Vec<Block> {
 
 fn walk_scene_graph(scene_graph: &Vec<SceneNode>, index: usize, mut current_offset: Vector3<i32>, model_offsets: &mut HashMap<u32, Vector3<i32>>) {
     match &scene_graph[index] {
-        SceneNode::Transform { attributes: _, frames, child, layer_id: _ } => {
+        SceneNode::Transform { frames, child, .. } => {
             current_offset += frames[0]
                 .attributes
                 .get("_t")
                 .unwrap_or(&"0 0 0".into())
                 .split(' ')
-                .map(|s| s.parse().unwrap())
+				.map(str::parse)
+				.map(Result::unwrap)
                 .collect::<Vec<i32>>()
                 .pipe(<[i32; 3]>::try_from)
                 .unwrap()
@@ -103,12 +103,12 @@ fn walk_scene_graph(scene_graph: &Vec<SceneNode>, index: usize, mut current_offs
 
             walk_scene_graph(scene_graph, *child as usize, current_offset, model_offsets);
         },
-        SceneNode::Group { attributes: _, children } => {
+        SceneNode::Group { children, .. } => {
             for child in children {
                 walk_scene_graph(scene_graph, *child as usize, current_offset, model_offsets);
             }
         },
-        SceneNode::Shape { attributes: _, models } => {
+        SceneNode::Shape { models, .. } => {
             for model in models {
                 model_offsets.insert(model.model_id, current_offset);
             }

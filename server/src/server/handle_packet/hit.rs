@@ -33,7 +33,7 @@ impl HandlePacket<Hit> for Server {
 		kill_feed::set_last_attacker(&target, source_character_guard.name.clone()).await;
 
 		//bystanders (but not victims) generate groans and weapon sounds locally when they receive a hit packet. but making use of that would be a mess
-		let sounds = hit_sounds(&packet, &source_character_guard, target_character_guard.race);
+		let sounds = sounds(&packet, &source_character_guard, target_character_guard.race);
 		drop(source_character_guard);
 		drop(target_character_guard);
 		self.broadcast(&WorldUpdate::from(sounds), Some(source)).await;
@@ -42,7 +42,7 @@ impl HandlePacket<Hit> for Server {
 	}
 }
 
-pub fn hit_sounds(hit: &Hit, source_creature: &Creature, target_race: Race) -> Vec<Sound> {
+pub fn sounds(hit: &Hit, source_creature: &Creature, target_race: Race) -> Vec<Sound> {
 	let heals = hit.damage.is_sign_negative();
 
 	match hit.kind {
@@ -111,14 +111,16 @@ fn impact_of(combat_class: CombatClass, weapon_kind: item::kind::Weapon, critica
 		WATER_MAGE => WatersplashHit,
 		FIRE_MAGE => FireHit,
 		_ => match weapon_kind {
-			Greatsword | Sword | Greataxe | Axe => if !critical { Blade1     } else { Blade2           },
-			Greatmace  | Mace  | Shield         => if !critical { Hit1       } else { Hit2             },
-			Dagger     | Fist                   => if !critical { Punch1     } else { Punch2           },
-			Longsword                           => if !critical { LongBlade1 } else { LongBlade2       },
-			Crossbow   | Bow   | Boomerang      => if !critical { HitArrow   } else { HitArrowCritical },
+			Greatsword | Sword | Greataxe | Axe => if critical { Blade2           } else { Blade1     },
+			Greatmace  | Mace  | Shield         => if critical { Hit2             } else { Hit1       },
+			Dagger     | Fist                   => if critical { Punch2           } else { Punch1     },
+			Longsword                           => if critical { LongBlade2       } else { LongBlade1 },
+			Crossbow   | Bow   | Boomerang      => if critical { HitArrowCritical } else { HitArrow   },
+
 			Bracelet   | Staff | Wand           => if combat_class.specialization == Specialization::Alternative { WatersplashHit } else { FireHit },
 			_ if mage                           => impact_of(combat_class, Bracelet, critical),
-			_                                   => if !critical { Hit1       } else { Hit2             },
+
+			_                                   => if critical { Hit2             } else { Hit1       },
 			//Arrow, quiver, pitchfork, pickaxe, torch
 		}
 	}

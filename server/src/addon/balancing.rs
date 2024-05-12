@@ -184,6 +184,7 @@ impl Balancing {
 		}
 	}
 
+	#[expect(clippy::cast_sign_loss, reason = "checked")]
 	async fn ignite(&self, server: &Server, hit: &Hit, source: &Creature, target: Arc<Player>) {
 		if source.combo % self.values.ignite_combo != 0 {
 			return;
@@ -227,7 +228,7 @@ impl Balancing {
 			.map(|(color_index, color)| Particle {
 				position: hit.position,
 				velocity: [0.0, 0.0, 0.0].into(),
-				color: color,
+				color,
 				size: 0.1,
 				count: (n_particles + color_index) as i32 / 3,
 				kind: particle::Kind::NoGravity,
