@@ -262,7 +262,7 @@ impl Server {
 			select! {
 				biased;
 				result = iteration => { result?; continue; },
-				() = sleep(Duration::from_secs(10)) => { self.kick(source, "connection timeout").await; }
+				() = sleep(Duration::from_secs(30)) => { self.kick(source, "connection timeout").await; }
 			}
 		}
 	}
