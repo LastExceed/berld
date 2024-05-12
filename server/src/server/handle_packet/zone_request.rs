@@ -12,6 +12,7 @@ impl HandlePacket<AreaRequest<Zone>> for Server {
 		let world_update = WorldUpdate {
 			//todo: filter to just this + adjacent zones
 			loot: self.loot.read().await.clone(),
+			blocks: self.addons.models.blocks_in(packet.0),
 			p48: [(packet.0, vec![p48sub])].into(),
 			..Default::default()
 		};

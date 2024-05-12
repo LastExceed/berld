@@ -20,6 +20,8 @@ use crate::server::Server;
 
 use listforge_api::ListforgeApi;
 
+use self::models::Models;
+
 pub mod anti_cheat;
 pub mod traffic_filter;
 pub mod balancing;
@@ -28,12 +30,14 @@ pub mod command_manager;
 pub mod pvp;
 pub mod listforge_api;
 pub mod kill_feed;
+pub mod models;
 
 pub struct Addons {
 	pub discord_integration: DiscordIntegration,
 	pub balancing: Balancing,
 	pub command_manager: CommandManager,
 	pub listforge_api: ListforgeApi,
+	pub models: Models
 }
 
 impl Addons {
@@ -42,7 +46,8 @@ impl Addons {
 			discord_integration: DiscordIntegration::new(config)?,
 			balancing: Balancing::new(config)?,
 			command_manager: CommandManager::new(config)?,
-			listforge_api: ListforgeApi::new(config)?
+			listforge_api: ListforgeApi::new(config)?,
+			models: Models::new(config)?
 		};
 
 		Ok(instance)
