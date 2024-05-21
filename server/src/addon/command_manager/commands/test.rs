@@ -29,6 +29,7 @@ impl Command for Test {
 
 		match params.next() {
 			Some("check") => checkerboard(server, &character).await,
+			Some("zg") => zone_grid(server, &character).await,
 			Some("obj") => world_object(caller, &character).await,
 			Some("objs") => objs(caller, &character).await,
 			Some("block") => place_block(caller, &character).await,
@@ -109,7 +110,43 @@ async fn world_object(caller: &Player, character: &Creature) {
 	caller.send_ignoring(&WorldUpdate::from(object)).await;
 }
 
-async fn checkerboard(server: &Server, character: &Creature) {
+pub async fn zone_grid(server: &Server, character: &Creature) {
+	let start = character
+		.position
+		.div(SIZE_ZONE)
+		.sub(Vector3::new(3,3,0))
+		.mul(SIZE_ZONE)
+		.div(SIZE_BLOCK)
+		.cast::<i32>();
+
+		let blocks: Vec<Block> =
+			(0..7).flat_map(|zone_x| {
+				(0..7).flat_map(move |zone_y| {
+					(0..128).flat_map(move |block_d| {
+						[
+							[block_d, 0, 0],
+							[block_d, 127, 0],
+							[block_d, block_d, 0],
+							[block_d, 127 - block_d, 0],
+							[0, block_d, 0],
+							[127, block_d, 0]
+						]
+							.map(Vector3::from)
+							.map(|block_offset| Block {
+								position: start + Vector3::new(zone_x, zone_y, 1) * 256 + block_offset * 2,
+								color: [0,0,0].into(),
+								kind: Kind::Solid,
+								padding: 0,
+							})
+					})
+				})
+			})
+			.collect();
+
+		server.broadcast(&WorldUpdate::from(blocks), None).await;
+}
+
+pub async fn checkerboard(server: &Server, character: &Creature) {
 	let start = Point3::new(
 		character.position.x
 			.div(SIZE_ZONE)
