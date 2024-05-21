@@ -1,7 +1,7 @@
-use std::ops::{Div, Mul};
+use std::ops::{Div, Mul, Sub};
 use std::str::SplitWhitespace;
 
-use protocol::{nalgebra::{Point3, Vector3}, packet::{status_effect, StatusEffect}};
+use protocol::{nalgebra::{Point3, Vector3}, packet::{common::CreatureId, creature_update::Affiliation, status_effect, world_update::block::Kind, CreatureUpdate, StatusEffect}};
 use protocol::packet::WorldUpdate;
 use protocol::packet::common::Hitbox;
 use protocol::packet::world_update::{Block, WorldObject};
@@ -9,10 +9,9 @@ use protocol::packet::world_update::block::Kind::*;
 use protocol::packet::world_update::world_object::Kind::{Crate, FireTrap};
 use protocol::utils::constants::{SIZE_BLOCK, SIZE_ZONE};
 use strum::IntoEnumIterator;
-use protocol::rgb::{RGBA8, RGB8};
 use protocol::packet::world_update::sound;
 
-use crate::addon::{command_manager::{Command, CommandResult}, play_sound_at_player};
+use crate::addon::{command_manager::{Command, CommandResult}, models, play_sound_at_player};
 use crate::addon::command_manager::commands::Test;
 use crate::addon::command_manager::utils::INGAME_ONLY;
 use crate::server::creature::Creature;
@@ -36,7 +35,7 @@ impl Command for Test {
 			Some("ba") => place_blocks::<true>(caller, &character).await,
 			Some("bs") => place_blocks::<false>(caller, &character).await,
 			Some("s") => play_sound(caller, params).await,
-			Some("model") => model(server, &character).await,
+			Some("model") => model(params, server, &character).await?,
 			Some("shield") => shield(caller).await,
 			Some(_) => { return Err("unknown sub-command") }
 			None => { return Err("too few arguments") },
@@ -239,27 +238,20 @@ async fn objs(caller: &Player, character: &Creature) {
 }
 
 //let player_block_position = character.position.map(|scalar| (scalar / SIZE_BLOCK) as i32) - Point3::default();
-async fn model(server: &Server, character: &Creature) {//fulcnix/FD_A_2B_minifed
-	let vox = dot_vox::load("arena2.vox").expect("vox load failed");
-
-	let mut blocks: Vec<_> = vox.models.iter().flat_map(|model| {
-		model.voxels.iter().map(|voxel| {
-			let color = RGBA8::from(<[u8; 4]>::from(vox.palette[voxel.i as usize])).rgb();
-
-			Block {
-				position: Point3::new(voxel.x, voxel.y, voxel.z).cast(),
-				color,
-				kind: if color == PURE_BLUE { Liquid } else { Solid },
-				padding: 0,
-			}
-		})
-	}).collect();
+async fn model(params: &mut SplitWhitespace<'_>, server: &Server, character: &Creature) -> Result<(), &'static str> {//fulcnix/FD_A_2B_minifed
+	let Some(file) = params.next()
+		else {
+			return Err("no file name specified");
+		};
+	let mut blocks = models::parse_model(file);
 
 	for block in &mut blocks {
 		block.position += (character.position / SIZE_BLOCK).cast().coords;
 	}
 
 	server.broadcast(&WorldUpdate::from(blocks), None).await;
+
+	Ok(())
 }
 
 async fn shield(caller: &Player) {
@@ -274,5 +266,3 @@ async fn shield(caller: &Player) {
 
 	caller.send_ignoring(&WorldUpdate::from(se)).await;
 }
-
-const PURE_BLUE: RGB8 = RGB8::new(0, 0, 255);
