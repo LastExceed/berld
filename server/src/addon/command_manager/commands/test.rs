@@ -1,7 +1,10 @@
 use std::ops::{Div, Mul, Sub};
 use std::str::SplitWhitespace;
 
-use protocol::{nalgebra::{Point3, Vector3}, packet::{common::CreatureId, creature_update::Affiliation, status_effect, world_update::block::Kind, CreatureUpdate, StatusEffect}};
+use protocol::packet::StatusEffect;
+use protocol::packet::world_update::block::Kind;
+use protocol::packet::status_effect;
+use protocol::nalgebra::{Point3, Vector3};
 use protocol::packet::WorldUpdate;
 use protocol::packet::common::Hitbox;
 use protocol::packet::world_update::{Block, WorldObject};
