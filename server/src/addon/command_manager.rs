@@ -29,7 +29,7 @@ impl CommandManager {
 		let mut manager = Self {
 			commands: HashMap::new(),
 			admin_password: config.get("admin_password")?,
-			ac_immune_password: config.get("admin_password")?
+			ac_immune_password: config.get("ac_immune_password")?
 		};
 
 		manager.register(Who);
