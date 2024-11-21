@@ -95,6 +95,7 @@ no_effect_underscore_binding = "allow" # broken (false positive in trait impls)
 or_fun_call = "allow" # unsure
 future_not_send = "allow" # don't currently need this, just adds noise
 suboptimal_flops = "allow" # cubeworld doesn't use these either, and we want to match its rounding behaviour
+too_long_first_doc_paragraph = "allow" # disagree
 
 # restrictions exceptions
 allow_attributes = "allow" # unusably buggy
@@ -123,6 +124,8 @@ pub_with_shorthand = "allow" # using `pub_without_shorthand` instead
 iter_over_hash_type = "allow" # disagree
 infinite_loop = "allow" # broken (complains even after suggestion was applied)
 integer_division_remainder_used = "allow"
+arbitrary_source_item_ordering = "allow" # needs to be configured at least
+renamed_function_params = "allow" # disagree
 
 pattern_type_mismatch = "allow" # unsure
 multiple_inherent_impl = "allow" # unsure
@@ -141,6 +144,7 @@ partial_pub_fields = "allow" # unsure
 modulo_arithmetic = "allow" # unsure
 indexing_slicing = "allow" # unsure
 as_conversions = "allow" # unsure
+unused_trait_names = "allow" # unsure
 
 # suspicious exceptions
 blanket_clippy_restriction_lints = "allow" # disagree
