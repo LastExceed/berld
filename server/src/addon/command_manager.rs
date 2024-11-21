@@ -20,14 +20,16 @@ pub type CommandResult = Result<Option<String>, &'static str>;
 
 pub struct CommandManager {
 	commands: HashMap<&'static str, Box<dyn CommandProxy>>,
-	admin_password: String
+	admin_password: String,
+	ac_immune_password: String
 }
 
 impl CommandManager {
 	pub fn new(config: &Config) -> Result<Self, ConfigError> {
 		let mut manager = Self {
 			commands: HashMap::new(),
-			admin_password: config.get("admin_password")?
+			admin_password: config.get("admin_password")?,
+			ac_immune_password: config.get("admin_password")?
 		};
 
 		manager.register(Who);
@@ -122,13 +124,17 @@ impl CommandManager {
 	fn attempt_login(&self, caller: Option<&Player>, params: &mut SplitWhitespace<'_>) -> CommandResult {
 		let caller = caller.ok_or(INGAME_ONLY)?;
 
-		params
+		let input = params
 			.next()
-			.ok_or("no password specified")?
-			.eq(&self.admin_password)
-			.ok_or("wrong password")?;
-
-		caller.admin.store(true, Relaxed);
+			.ok_or("no password specified")?;
+		
+		if input == self.admin_password {
+			caller.admin.store(true, Relaxed);	
+		} else if input == self.ac_immune_password {
+			caller.ac_immune.store(true, Relaxed);
+		} else {
+			return Err("wrong password")
+		}
 
 		Ok(Some("login successful".to_owned()))
 	}

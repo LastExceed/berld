@@ -23,6 +23,7 @@ pub struct Player {
 	pub character: RwLock<Creature>,
 	writer: RwLock<BufWriter<OwnedWriteHalf>>,
 	pub admin: AtomicBool, //todo: move to AddonData
+	pub ac_immune: AtomicBool,
 	pub kick_sender: RwLock<Option<oneshot::Sender<()>>>,
 	pub addon_data: RwLock<AddonData>
 }
@@ -37,6 +38,7 @@ impl Player {
 			character: RwLock::new(creature),
 			writer: RwLock::new(writer),
 			admin: AtomicBool::default(),
+			ac_immune: AtomicBool::default(),
 			kick_sender: RwLock::new(Some(kick_sender)),
 			addon_data: RwLock::default()
 		};
