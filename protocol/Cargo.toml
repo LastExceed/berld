@@ -7,20 +7,20 @@ readme = "README.md"
 # license = "TODO"
 keywords = ["cubeworld"]
 categories = ["games", "network-programming"]
-edition = "2021"
+edition = "2024"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-nalgebra = { version = "0.32.6", features = ["serde-serialize"] }
-async-compression = { version = "0.4.17", features = ["tokio", "zlib"] }
+nalgebra = { version = "0.33.2", features = ["serde-serialize"] }
+async-compression = { version = "0.4.25", features = ["tokio", "zlib"] }
 rgb = "0.8.50"
-tokio = { version = "1.41.1", features = ["full"] }
-strum_macros = "0.26.4"
-strum = "0.26.3"
+tokio = { version = "1.45.1", features = ["full"] }
+strum_macros = "0.27.1"
+strum = "0.27.1"
 boolinator = "2.4.0"
 num-traits = "0.2.19"
-num_enum = "0.7.3"
+num_enum = "0.7.4"
 array-init = "2.1.0"
 
 [lints]

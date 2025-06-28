@@ -7,7 +7,7 @@ readme = "README.md"
 # license = "TODO"
 keywords = ["cubeworld"]
 categories = ["games"]
-edition = "2021"
+edition = "2024"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
@@ -15,17 +15,17 @@ edition = "2021"
 protocol = { path = "../protocol" }
 boolinator = "2.4.0"
 colour = "2.1.0"
-tokio = { version = "1.41.1", features = ["full"] }
+tokio = { version = "1.45.1", features = ["full"] }
 futures = "0.3.31"
-strum = "0.26.3"
+strum = "0.27.1"
 twilight-http = "0.15.4"
 twilight-model = "0.15.4"
 twilight-gateway = { version = "0.15.4", default-features = false, features = ["rustls-webpki-roots"] } #todo: workaround for corrupt certificate cache
 tap = "1.0.1"
-config = "0.14.1"
+config = "0.15.11"
 dot_vox = "5.1.1"
-rand = "0.8.5"
-axum = "0.7.9"
+rand = "0.9.1"
+axum = "0.8.4"
 serde = { version = "1.0", features = ["derive"] }
 
 [lints]
