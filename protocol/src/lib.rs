@@ -1,7 +1,6 @@
 #![expect(incomplete_features, reason = "generic_const_exprs is incomplete, but works for our purposes")]
 #![feature(generic_const_exprs)]
 #![feature(associated_type_defaults)]
-#![feature(async_closure)]
 #![feature(min_specialization)]
 
 #![expect(async_fn_in_trait, reason = "TODO")] //TODO: investigate if AFIT desugaring could obsolete Unpin trait bounds
