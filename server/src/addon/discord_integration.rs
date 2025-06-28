@@ -86,7 +86,6 @@ impl DiscordIntegration {
 					Err(error) => {
 						dbg!(&error);//todo: proper error handling
 						assert!(!error.is_fatal(), "fatal error in event loop of discord integration");
-						continue;
 					}
 				}
 			}

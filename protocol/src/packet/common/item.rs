@@ -287,7 +287,6 @@ impl Item {
 
 		let spirit_bonus = self.spirit_counter as f32 * 0.1;
 
-		#[expect(clippy::shadow_unrelated, reason = "kinda false positive")]
 		[
 			(4.0        , can_have_stat.0, false         , class_multiplier     , 0.0                     , true ),//dmg
 			(0.5        , can_have_stat.1, false         , material_multiplier.0, 0.0                     , true ),//armor

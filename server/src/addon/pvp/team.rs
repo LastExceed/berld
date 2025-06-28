@@ -75,7 +75,7 @@ async fn update_creatures(server: &Server, player: &Player, team: i32, joined: b
 		.await
 		.iter()
 		.filter(|other_player| !ptr::eq(other_player.as_ref(), player))
-		.map(|other_player| async {
+		.map(async |other_player| {
 			if other_player.addon_data.read().await.team != Some(team) {
 				return;
 			}
@@ -102,7 +102,7 @@ pub async fn get_members(server: &Server, target_team: i32) -> Vec<Arc<Player>> 
 		.read()
 		.await
 		.iter()
-		.map(|player| async {
+		.map(async |player| {
 			let team = player.addon_data.read().await.team;
 
 			if team != Some(target_team) {

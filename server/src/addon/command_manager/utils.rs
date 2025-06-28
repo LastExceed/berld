@@ -5,7 +5,7 @@ use crate::server::Server;
 pub const INGAME_ONLY: &str = "this command can only be used ingame";
 
 impl Server {
-	#[expect(clippy::significant_drop_in_scrutinee, clippy::significant_drop_tightening, reason = "cannot drop any earlier")]
+	#[expect(clippy::significant_drop_tightening, reason = "cannot drop any earlier")]
 	pub async fn find_player(&self, query: &str) -> Option<Arc<Player>> {
 		let players = self.players.read().await;
 

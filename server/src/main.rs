@@ -5,7 +5,8 @@
 #![feature(iter_collect_into)]
 #![feature(iter_intersperse)]
 
-#![allow(unreachable_pub)] //this isn't a lib, so adding `(crate)` to every `pub` is just pointless noise
+#![allow(unreachable_pub, reason = "this isn't a lib, so adding `(crate)` to every `pub` is just pointless noise")]
+#![allow(clippy::partial_pub_fields, reason = "OOP...")]
 
 use colour::magenta_ln;
 use config::{Config, ConfigError, File, Environment};

@@ -1,6 +1,5 @@
 use std::collections::HashMap;
 use std::hash::Hash;
-use std::mem::size_of;
 use std::ops::{Index, IndexMut};
 use std::slice::Iter;
 

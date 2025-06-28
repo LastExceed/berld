@@ -50,7 +50,8 @@ impl Player {
 		where BufWriter<OwnedWriteHalf>: WriteCwData<Packet>//todo: specialization could obsolete this
 	{
 		let mut writer = self.writer.write().await;
-		(&mut writer as &mut BufWriter<OwnedWriteHalf>).write_packet(packet).await //todo: why is this cast necessary?
+		#[expect(trivial_casts, reason = "todo: why is this cast necessary?")]
+		(&mut writer as &mut BufWriter<OwnedWriteHalf>).write_packet(packet).await
 	}
 
 	///sends a packet to this player and ignores any io errors.

@@ -18,8 +18,10 @@ pub async fn on_creature_update(server: &Server, source: &Player, packet: &Creat
         .last_attacker
         .take()
         .filter(|(timestamp, _name)| timestamp.elapsed() < Duration::from_secs(1))
-        .map(|(_timestamp, name)| format!("{name} killed {victim}"))
-        .unwrap_or(format!("{victim} died"));
+        .map_or_else(
+            || format!("{victim} died"),
+            |(_timestamp, name)| format!("{name} killed {victim}")
+        );
 
     server.announce(message).await;
 }

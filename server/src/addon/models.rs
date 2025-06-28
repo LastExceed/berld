@@ -74,6 +74,7 @@ pub fn parse_model(filename: &str) -> Vec<Block> {
 			model.voxels.iter().map(|voxel| {
 				let color = RGBA8::from(<[u8; 4]>::from(vox.palette[voxel.i as usize])).rgb();
 
+				#[expect(clippy::or_fun_call, reason = "false positive")]
 				Block {
 					position: Point3::new(voxel.x, voxel.y, voxel.z).cast::<i32>() + model_offsets.get(&(model_id as _)).unwrap_or(&Vector3::zeros()),
 					color,
@@ -88,6 +89,7 @@ pub fn parse_model(filename: &str) -> Vec<Block> {
 
 fn walk_scene_graph(scene_graph: &Vec<SceneNode>, index: usize, mut current_offset: Vector3<i32>, model_offsets: &mut HashMap<u32, Vector3<i32>>) {
     match &scene_graph[index] {
+		#[expect(clippy::or_fun_call, reason = "false positive")]
         SceneNode::Transform { frames, child, .. } => {
             current_offset += frames[0]
                 .attributes

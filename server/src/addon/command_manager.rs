@@ -1,10 +1,8 @@
 use std::collections::HashMap;
-use std::future::Future;
 use std::pin::Pin;
 use std::str::SplitWhitespace;
 use std::sync::atomic::Ordering::Relaxed;
 
-use boolinator::Boolinator as _;
 use config::{Config, ConfigError};
 
 use crate::addon::command_manager::commands::*;
@@ -99,6 +97,7 @@ impl CommandManager {
 		}
 	}
 
+	#[expect(clippy::unnecessary_wraps, reason = "unsure")]
 	fn on_help(&self, admin: bool) -> CommandResult {
 		let mut message = String::new();
 		message.push_str("help");

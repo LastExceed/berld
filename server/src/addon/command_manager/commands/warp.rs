@@ -31,7 +31,7 @@ impl Command for Warp {
 				return self
 					.locations
 					.keys()
-					.map(|location_name| location_name as &str)
+					.map(String::as_str)
 					.intersperse(", ")
 					.collect::<String>()
 					.pipe(|names| format!("---\navailable locations:\n{names}\n---"))

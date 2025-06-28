@@ -1,6 +1,4 @@
-use std::ptr;
-use std::mem::size_of;
-use std::slice;
+use std::{ptr, slice};
 
 use tokio::io;
 use tokio::io::{AsyncRead, AsyncReadExt as _, AsyncWrite, AsyncWriteExt as _};

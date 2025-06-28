@@ -86,7 +86,7 @@ async fn get_all_player_names(server: &Server) -> Vec<String> {
 		.read()
 		.await
 		.iter()
-		.map(|player| async {
+		.map(async |player| {
 			player.character
 				.read()
 				.await

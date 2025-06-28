@@ -261,7 +261,7 @@ impl Server {
 
 			select! {
 				biased;
-				result = iteration => { result?; continue; },
+				result = iteration => { result?; },
 				() = sleep(Duration::from_secs(30)) => { self.kick(source, "connection timeout").await; }
 			}
 		}
@@ -279,7 +279,7 @@ async fn send_existing_creatures(server: &Server, player: &Player) {
 		.await
 		.iter()
 		.filter(|existing_player| !ptr::eq(existing_player.as_ref(), player))
-		.map(|existing_player| async {
+		.map(async |existing_player| {
 			let character = existing_player
 				.character
 				.read()

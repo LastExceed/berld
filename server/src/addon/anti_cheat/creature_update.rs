@@ -1,4 +1,5 @@
 #![expect(unused_variables, clippy::missing_const_for_fn, reason = "for consistency, should probably enforce this with a trait somehow")]
+#![expect(clippy::unnecessary_wraps, reason = "consistency")]
 
 use std::default::Default as _;
 

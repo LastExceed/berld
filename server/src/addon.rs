@@ -73,6 +73,7 @@ pub fn freeze_time(server: &Server) {
 	let server_static = extend_lifetime(server);
 
 	tokio::spawn(async move {
+		#[expect(clippy::infinite_loop, reason = "todo: is this even possible?")]
 		loop {
 			server_static.broadcast(&IngameDatetime { time: 12 * 60 * 60 * 1000, day: 0 }, None).await;
 			sleep(Duration::from_secs(6)).await;

@@ -11,6 +11,7 @@ use crate::server::player::Player;
 use crate::server::Server;
 
 pub async fn on_creature_update(server: &Server, source: &Player, packet: &CreatureUpdate) {
+	#[expect(clippy::significant_drop_in_scrutinee, reason = "false positive")]
 	let team_members =
 		if let Some(target_team) = source.addon_data.read().await.team {
 			team::get_members(server, target_team).await
@@ -44,7 +45,7 @@ pub async fn broadcast(server: &Server, source: &Player, packet: &CreatureUpdate
 		.await
 		.iter()
 		.filter(|target| !ptr::eq(target.as_ref(), source))
-		.map(|target| async {
+		.map(async |target| {
 			let other_team = target.addon_data.read().await.team;
 			let is_teammate = own_team.is_some() && own_team == other_team;
 

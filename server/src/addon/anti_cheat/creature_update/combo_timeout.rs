@@ -83,7 +83,7 @@ impl PlayerData {
     fn decay(&mut self) {
         let interval = self
             .last_checked
-            .get_or_insert(Instant::now())
+            .get_or_insert_with(Instant::now)
             .elapsed()
             .as_secs_f64();
 

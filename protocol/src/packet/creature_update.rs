@@ -2,7 +2,7 @@ use std::io::ErrorKind::InvalidData;
 
 use async_compression::tokio::bufread::ZlibDecoder;
 use async_compression::tokio::write::ZlibEncoder;
-use nalgebra::Point3;
+
 use rgb::RGB;
 use strum::EnumCount as _;
 use strum_macros::EnumIter;
@@ -11,7 +11,6 @@ use tokio::io::{AsyncRead, AsyncReadExt as _, AsyncWrite, AsyncWriteExt as _};
 
 use crate::{ReadCwData, Validate, Validator};
 use crate::packet::*;
-use crate::packet::common::EulerAngles;
 use crate::packet::creature_update::equipment::Slot;
 use crate::packet::creature_update::multipliers::Multiplier;
 use crate::packet::creature_update::skill_tree::Skill;
@@ -22,6 +21,7 @@ pub mod skill_tree;
 pub mod multipliers;
 
 impl<Readable: AsyncRead + Unpin> ReadCwData<CreatureUpdate> for Readable {
+	#[expect(clippy::cognitive_complexity, reason = "todo")]
 	async fn read_cw_data(&mut self) -> io::Result<CreatureUpdate> {
 		//todo: can't decode from network stream directly because ???
 		let size = self.read_u32_le().await? as usize;
@@ -130,7 +130,7 @@ impl<Readable: AsyncRead + Unpin> ReadCwData<CreatureUpdate> for Readable {
 
 impl<Writable: AsyncWrite + Unpin> WriteCwData<CreatureUpdate> for Writable {
 	#[expect(clippy::identity_op, reason = "<< 0 is an identity_op, but more visually consistent in this case")]
-	#[expect(clippy::too_many_lines, reason = "TODO")]
+	#[expect(clippy::too_many_lines, clippy::cognitive_complexity, reason = "TODO")]
 	async fn write_cw_data(&mut self, creature_update: &CreatureUpdate) -> io::Result<()> {
 		let mut bitfield = 0_u64;
 

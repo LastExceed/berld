@@ -15,7 +15,7 @@ impl Command for Who {
 		let message = join_all(
 			server.players
 				.read().await
-				.iter().map(|player| async {
+				.iter().map(async |player| {
 					format!(
 						"#{} {}",
 						player.id.0,
@@ -38,7 +38,7 @@ impl Command for WhoIp {
 		let message = join_all(
 			server.players
 				.read().await
-				.iter().map(|player| async {
+				.iter().map(async |player| {
 				format!(
 					"#{} {} {}",
 					player.id.0,

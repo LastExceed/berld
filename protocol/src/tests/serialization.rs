@@ -1,8 +1,7 @@
 use std::fmt::Debug;
-use std::mem::size_of;
 
 use crate::{Packet, ReadCwData, WriteCwData};
-use crate::utils::io_extensions::{ReadPacket, WritePacket};
+use crate::utils::io_extensions::{ReadPacket as _, WritePacket as _};
 
 mod creature_update;
 mod multi_creature_update;
@@ -25,7 +24,7 @@ mod connection_rejection;
 async fn test_deserialization<P : Packet + PartialEq + Debug, const SIZE: usize>(bytes: [u8; SIZE], packet: P)
 	where
 		[(); size_of::<P>()]:,
-		for<'a> &'a [u8] : ReadCwData<P> //todo: this bound shouldn't be necessary. further restrict Packet to imply this by default
+		for<'data> &'data [u8] : ReadCwData<P> //todo: this bound shouldn't be necessary. further restrict Packet to imply this by default
 {
 	assert_eq!(
 		bytes
@@ -40,7 +39,7 @@ async fn test_deserialization<P : Packet + PartialEq + Debug, const SIZE: usize>
 async fn test_serialization<P : Packet + PartialEq + Debug>(packet: P)
 	where Vec<u8> : WriteCwData<P>,
 	      [(); size_of::<P>()]:,
-	      for<'a> &'a [u8] : ReadCwData<P>
+	      for<'data> &'data [u8] : ReadCwData<P>
 {
 	let mut buffer = Vec::new();
 	buffer.write_packet(&packet).await.unwrap();
@@ -52,6 +51,7 @@ async fn test_serialization<P : Packet + PartialEq + Debug>(packet: P)
 ///////////////////
 
 ///macro is necessary for splitting tasks into separate tests
+#[expect(clippy::crate_in_macro_def, reason = "can't remember lol")]
 #[macro_export]
 macro_rules! generate_serialization_tests {
 	($packet:expr, $bytes:expr) => {

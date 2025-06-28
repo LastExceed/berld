@@ -23,6 +23,7 @@ pub struct PlayerData {
 }
 
 #[expect(clippy::significant_drop_tightening, reason = "cannot drop any earlier")]
+#[expect(clippy::cognitive_complexity, reason = "todo")]
 pub async fn inspect_creature_update(source: &Player, packet: &CreatureUpdate) -> Result {
 	let previous_state = source.character.read().await;
 	let updated_state = previous_state.clone().tap_mut(|state| state.update(packet));
