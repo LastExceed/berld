@@ -2,7 +2,7 @@ use std::{sync::Arc, ptr};
 
 use futures::future::join_all;
 use protocol::packet::{CreatureUpdate, creature_update::Affiliation, common::CreatureId};
-use tap::Pipe;
+use tap::Pipe as _;
 
 use crate::server::{Server, player::Player, creature::Creature};
 

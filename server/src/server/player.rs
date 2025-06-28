@@ -10,7 +10,7 @@ use tokio::sync::{oneshot, RwLock};
 
 use protocol::packet::{ChatMessageFromServer, FromServer};
 use protocol::packet::common::CreatureId;
-use protocol::utils::io_extensions::WritePacket;
+use protocol::utils::io_extensions::WritePacket as _;
 use protocol::WriteCwData;
 
 use crate::server::creature::Creature;

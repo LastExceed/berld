@@ -1,10 +1,10 @@
 #![expect(unused_variables, clippy::missing_const_for_fn, reason = "for consistency, should probably enforce this with a trait somehow")]
 
-use std::default::Default;
+use std::default::Default as _;
 
-use boolinator::Boolinator;
-use strum::IntoEnumIterator;
-use tap::Pipe;
+use boolinator::Boolinator as _;
+use strum::IntoEnumIterator as _;
+use tap::Pipe as _;
 
 use protocol::nalgebra::Point3;
 use protocol::packet::common::{CreatureId, EulerAngles, Hitbox, item};
@@ -137,7 +137,7 @@ pub(super) fn inspect_animation_time(previous_state: &Creature, updated_state: &
 
 	if !updated_state.animation.present_in(&TIMELESS_ANIMATIONS) {
 		updated_state.animation_time.ensure_at_most(10_000, "animation time")?;
-	};
+	}
 
 	// if updated_state.animation_time < former_state.animation_time && updated_state.animation == FireExplosionShort {
 	// 	//todo: detect fire spam

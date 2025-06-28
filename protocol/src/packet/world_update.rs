@@ -6,7 +6,7 @@ use async_compression::tokio::write::ZlibEncoder;
 use nalgebra::{Point2, Point3, Vector3};
 use rgb::{RGB, RGBA};
 use tokio::io;
-use tokio::io::{AsyncRead, AsyncReadExt, AsyncWrite, AsyncWriteExt};
+use tokio::io::{AsyncRead, AsyncReadExt as _, AsyncWrite, AsyncWriteExt as _};
 
 use crate::{ReadCwData, WriteCwData};
 use crate::packet::{Hit, Projectile, StatusEffect, WorldUpdate};

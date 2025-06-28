@@ -19,7 +19,7 @@ impl Command for Heal {
 		let mut amount: f32 = 9999.0;
 		if let Some(str) = params.next() {
 			amount = str.parse().map_err(|_| "invalid amount specified")?;
-		};
+		}
 
 		let heal = Hit {
 			attacker: caller.id,

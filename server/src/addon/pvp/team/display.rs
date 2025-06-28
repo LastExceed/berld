@@ -6,7 +6,7 @@ use protocol::packet::CreatureUpdate;
 use protocol::packet::creature_update::Occupation;
 use protocol::packet::creature_update::{Affiliation, Appearance};
 use protocol::packet::common::CreatureId;
-use tap::Pipe;
+use tap::Pipe as _;
 
 use crate::server::{Server, player::Player, creature_id_pool::CreatureIdPool};
 

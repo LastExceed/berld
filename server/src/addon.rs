@@ -2,7 +2,7 @@ use std::time::Duration;
 
 use config::{Config, ConfigError};
 use futures::future::join_all;
-use tap::Pipe;
+use tap::Pipe as _;
 use tokio::time::sleep;
 
 use protocol::packet::{CreatureUpdate, IngameDatetime, WorldUpdate};
@@ -63,7 +63,7 @@ pub async fn announce_join_leave(server: &Server, player: &Player, joined: bool)
 	play_sound_for_everyone(server, sound, 2.0, 1.0).await;
 }
 
-pub fn fix_cutoff_animations(creature_update: &mut CreatureUpdate, previous_state: &Creature) {
+pub const fn fix_cutoff_animations(creature_update: &mut CreatureUpdate, previous_state: &Creature) {
 	if let Some(ref mut animation_time) = creature_update.animation_time && *animation_time <= previous_state.animation_time {
 		*animation_time = 0; //starts all animations from the beginning to prevent cut-off animations, at the cost of some minimal delay
 	}

@@ -5,7 +5,7 @@ use crate::{bulk_impl, Packet, WriteCwData};
 use crate::packet::area_request::{Area, Region, Zone};
 use crate::packet::world_update::p48::P48sub;
 use crate::utils::flagset::FlagSet;
-use crate::utils::io_extensions::{ReadArbitrary, WriteArbitrary};
+use crate::utils::io_extensions::{ReadArbitrary as _, WriteArbitrary as _};
 
 use self::airship_traffic::*;
 use self::common::*;

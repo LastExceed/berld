@@ -1,7 +1,7 @@
 use std::str::SplitWhitespace;
 
 use config::{ConfigError, Config};
-use tap::Pipe;
+use tap::Pipe as _;
 
 use crate::addon::command_manager::{Command, CommandResult};
 use crate::addon::command_manager::commands::Warp;

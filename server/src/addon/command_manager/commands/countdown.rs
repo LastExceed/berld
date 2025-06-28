@@ -23,7 +23,7 @@ impl Command for Countdown {
 				sleep(Duration::from_secs(1)).await;
 
 				count -= 1;
-				if count == 0 { break };
+				if count == 0 { break }
 			}
 			server_static.announce("go!").await;
 		});

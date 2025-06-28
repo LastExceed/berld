@@ -1,4 +1,4 @@
-use std::ops::{Div, Mul, Sub};
+use std::ops::{Div as _, Mul as _, Sub as _};
 use std::str::SplitWhitespace;
 
 use protocol::packet::StatusEffect;
@@ -11,7 +11,7 @@ use protocol::packet::world_update::{Block, WorldObject};
 use protocol::packet::world_update::block::Kind::*;
 use protocol::packet::world_update::world_object::Kind::{Crate, FireTrap};
 use protocol::utils::constants::{SIZE_BLOCK, SIZE_ZONE};
-use strum::IntoEnumIterator;
+use strum::IntoEnumIterator as _;
 use protocol::packet::world_update::sound;
 
 use crate::addon::{command_manager::{Command, CommandResult}, models, play_sound_at_player};

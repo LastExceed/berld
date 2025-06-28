@@ -1,6 +1,6 @@
 use std::ptr;
 use futures::future::join_all;
-use tap::Pipe;
+use tap::Pipe as _;
 use protocol::packet::creature_update::Affiliation;
 use protocol::packet::CreatureUpdate;
 
@@ -24,7 +24,7 @@ pub async fn on_creature_update(server: &Server, source: &Player, packet: &Creat
 pub async fn broadcast(server: &Server, source: &Player, packet: &CreatureUpdate) -> bool {
 	if packet.affiliation.is_none() && packet.rarity.is_none() {//if packet.flags.is_none() {
 		return false;
-	};
+	}
 
 	let mut pvp_enabled_packet = packet.clone();
 

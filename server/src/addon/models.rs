@@ -1,4 +1,4 @@
-use std::ops::Div;
+use std::ops::Div as _;
 use std::collections::HashMap;
 
 use config::{Config, ConfigError};
@@ -8,7 +8,7 @@ use protocol::rgb::{RGB8, RGBA8};
 use protocol::packet::world_update::Block;
 use protocol::nalgebra::{Point2, Point3, Vector3};
 use protocol::packet::world_update::block::Kind::*;
-use tap::Pipe;
+use tap::Pipe as _;
 
 pub struct Models {
 	models: Vec<(Point2<i32>, Vec<Block>)>

@@ -4,7 +4,7 @@ use std::pin::Pin;
 use std::str::SplitWhitespace;
 use std::sync::atomic::Ordering::Relaxed;
 
-use boolinator::Boolinator;
+use boolinator::Boolinator as _;
 use config::{Config, ConfigError};
 
 use crate::addon::command_manager::commands::*;

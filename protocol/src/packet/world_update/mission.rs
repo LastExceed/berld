@@ -1,4 +1,4 @@
-#[allow(unused_imports)]//import is used in doc comments
+#[expect(unused_imports)]//import is used in doc comments
 use crate::common::Race;
 
 ///all names (including the enum itself) are data mined

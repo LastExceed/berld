@@ -3,9 +3,9 @@ use std::mem::size_of;
 use std::slice;
 
 use tokio::io;
-use tokio::io::{AsyncRead, AsyncReadExt, AsyncWrite, AsyncWriteExt};
+use tokio::io::{AsyncRead, AsyncReadExt as _, AsyncWrite, AsyncWriteExt as _};
 
-use crate::{Packet, packet, ReadCwData, Validate, Validator, WriteCwData};
+use crate::{Packet, packet, ReadCwData, Validate as _, Validator, WriteCwData};
 
 pub trait ReadArbitrary: AsyncRead + Unpin {
 	async fn read_arbitrary<T>(&mut self) -> io::Result<T>

@@ -1,4 +1,4 @@
-use tap::Tap;
+use tap::Tap as _;
 
 use protocol::{packet::creature_update::equipment::Slot, utils::constants::CombatClass};
 use protocol::packet::common::item;

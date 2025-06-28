@@ -88,7 +88,7 @@ impl DiscordIntegration {
 						assert!(!error.is_fatal(), "fatal error in event loop of discord integration");
 						continue;
 					}
-				};
+				}
 			}
 		});
 	}

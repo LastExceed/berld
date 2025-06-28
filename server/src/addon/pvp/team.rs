@@ -7,7 +7,7 @@ use protocol::packet::{CreatureUpdate, StatusEffect, WorldUpdate};
 use protocol::packet::creature_update::Affiliation;
 use protocol::packet::status_effect::Kind::Affection;
 use protocol::packet::common::CreatureId;
-use tap::{Pipe, Tap};
+use tap::{Pipe as _, Tap as _};
 
 use crate::server::Server;
 use crate::server::player::Player;

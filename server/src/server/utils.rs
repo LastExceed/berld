@@ -126,7 +126,7 @@ impl Server {
 				kill_feed::set_last_attacker(&target, attacker_name.clone()).await;
 				if target.send(&wu_hit).await.is_err() {
 					break; //disconnects are handled in the reading task
-				};
+				}
 				server_static.broadcast(&wu_fx, None).await;
 
 

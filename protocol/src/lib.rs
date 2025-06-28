@@ -8,7 +8,7 @@
 use std::io::ErrorKind::InvalidData;
 use std::mem::size_of;
 
-use boolinator::Boolinator;
+use boolinator::Boolinator as _;
 pub use nalgebra;
 pub use rgb;
 use strum::IntoEnumIterator;
@@ -17,7 +17,7 @@ use tokio::io::{AsyncRead, AsyncWrite};
 
 use crate::packet::*;
 use crate::packet::area_request::{Region, Zone};
-use crate::utils::io_extensions::{ReadArbitrary, WriteArbitrary};
+use crate::utils::io_extensions::{ReadArbitrary as _, WriteArbitrary as _};
 
 pub mod packet;
 pub mod utils;

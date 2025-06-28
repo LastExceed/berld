@@ -4,10 +4,10 @@ use async_compression::tokio::bufread::ZlibDecoder;
 use async_compression::tokio::write::ZlibEncoder;
 use nalgebra::Point3;
 use rgb::RGB;
-use strum::EnumCount;
+use strum::EnumCount as _;
 use strum_macros::EnumIter;
 use tokio::io;
-use tokio::io::{AsyncRead, AsyncReadExt, AsyncWrite, AsyncWriteExt};
+use tokio::io::{AsyncRead, AsyncReadExt as _, AsyncWrite, AsyncWriteExt as _};
 
 use crate::{ReadCwData, Validate, Validator};
 use crate::packet::*;

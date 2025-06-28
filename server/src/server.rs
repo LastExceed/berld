@@ -9,16 +9,16 @@ use std::time::Duration;
 use colour::dark_grey_ln;
 use config::{Config, ConfigError};
 use futures::future::join_all;
-use tap::{Pipe, Tap};
+use tap::{Pipe as _, Tap as _};
 use tokio::{io, select};
-use tokio::io::{AsyncWrite, AsyncWriteExt};
+use tokio::io::{AsyncWrite, AsyncWriteExt as _};
 use tokio::io::{BufReader, BufWriter};
 use tokio::net::{TcpListener, TcpStream};
 use tokio::net::tcp::{OwnedReadHalf, OwnedWriteHalf};
 use tokio::sync::RwLock;
 use tokio::time::sleep;
 
-use protocol::{Packet, WriteCwData};
+use protocol::{Packet as _, WriteCwData};
 use protocol::nalgebra::{Point2, Point3, Vector3};
 use protocol::packet::{*, Hit};
 use protocol::packet::area_request::{Region, Zone};
@@ -28,14 +28,14 @@ use protocol::packet::world_update::loot::GroundItem;
 use protocol::packet::world_update::Sound;
 use protocol::packet::world_update::sound::Kind::*;
 use protocol::utils::constants::{SIZE_BLOCK, SIZE_ZONE};
-use protocol::utils::io_extensions::{ReadPacket, WriteArbitrary, WritePacket};
+use protocol::utils::io_extensions::{ReadPacket, WriteArbitrary as _, WritePacket};
 
 use crate::addon::{Addons, freeze_time, announce_join_leave};
 use crate::addon::pvp::map_head;
 use crate::addon::pvp;
 use crate::server::creature::Creature;
 use crate::server::creature_id_pool::CreatureIdPool;
-use crate::server::handle_packet::HandlePacket;
+use crate::server::handle_packet::HandlePacket as _;
 use crate::server::player::Player;
 
 use self::utils::{extend_lifetime, log_error};
@@ -254,7 +254,7 @@ impl Server {
 					AreaRequest::<Zone>  ::ID => self.handle_packet(source, reader.read_packet::<AreaRequest<Zone>    >().await?).await,
 					AreaRequest::<Region>::ID => self.handle_packet(source, reader.read_packet::<AreaRequest<Region>  >().await?).await,
 					unexpected_packet_id => panic!("unexpected packet id {unexpected_packet_id:?}")
-				};
+				}
 
 				io::Result::<_>::Ok(()) //todo: why do we need explicit type annotation here?
 			};

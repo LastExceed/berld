@@ -4,7 +4,7 @@ use tokio::io::{AsyncRead, AsyncWrite};
 use crate::{ReadCwData, WriteCwData};
 use crate::packet::common::Item;
 use crate::packet::world_update::Pickup;
-use crate::utils::io_extensions::{ReadArbitrary, WriteArbitrary};
+use crate::utils::io_extensions::{ReadArbitrary as _, WriteArbitrary as _};
 
 //custom read/write impl is necessary solely because of formula weirdness :(
 impl<Readable: AsyncRead + Unpin> ReadCwData<Pickup> for Readable {

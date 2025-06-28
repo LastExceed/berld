@@ -1,4 +1,4 @@
-use std::ops::Sub;
+use std::ops::Sub as _;
 use std::sync::Arc;
 use std::collections::HashMap;
 use std::ptr;

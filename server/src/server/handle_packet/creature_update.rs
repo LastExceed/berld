@@ -35,7 +35,7 @@ impl HandlePacket<CreatureUpdate> for Server {
 
 		if pvp::broadcast(self, source, &packet).await {
 			return;
-		};
+		}
 
 		self.broadcast(&packet, Some(source)).await;
 	}

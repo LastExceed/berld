@@ -1,11 +1,11 @@
 use std::mem::size_of;
 
 use tokio::io;
-use tokio::io::{AsyncRead, AsyncReadExt, AsyncWrite, AsyncWriteExt};
+use tokio::io::{AsyncRead, AsyncReadExt as _, AsyncWrite, AsyncWriteExt as _};
 
 use crate::packet::*;
 use crate::ReadCwData;
-use crate::utils::io_extensions::{ReadArbitrary, WriteArbitrary};
+use crate::utils::io_extensions::{ReadArbitrary as _, WriteArbitrary as _};
 
 async fn read_text<Readable: AsyncRead + Unpin>(readable: &mut Readable) -> io::Result<String> {
 	const U16_SIZE: usize = size_of::<u16>();

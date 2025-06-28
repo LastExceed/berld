@@ -8,11 +8,11 @@ use array_init::array_init;
 use nalgebra::Point3;
 use strum::EnumCount;
 use tokio::io;
-use tokio::io::{AsyncRead, AsyncReadExt, AsyncWriteExt};
+use tokio::io::{AsyncRead, AsyncReadExt as _, AsyncWriteExt as _};
 
 use crate::{ReadCwData, WriteCwData};
 use crate::utils::constants::SIZE_BLOCK;
-use crate::utils::io_extensions::{ReadArbitrary, WriteArbitrary};
+use crate::utils::io_extensions::{ReadArbitrary as _, WriteArbitrary as _};
 
 pub mod io_extensions;
 pub mod flagset;
