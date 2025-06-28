@@ -24,6 +24,4 @@ async fn main() -> Result<(), ConfigError> {
 		.build()?;
 
 	Server::new(&config)?.run().await;
-
-	Ok(())
 }
