@@ -1,7 +1,9 @@
 use std::str::SplitWhitespace;
+use std::collections::HashMap;
 
 use config::{ConfigError, Config};
 use tap::Pipe as _;
+use protocol::nalgebra::Point3;
 
 use crate::addon::command_manager::{Command, CommandResult};
 use crate::addon::command_manager::commands::Warp;
@@ -12,7 +14,11 @@ use crate::server::Server;
 impl Warp {
 	pub fn new(config: &Config) -> Result<Self, ConfigError> {
 		let instance = Self {
-			locations: config.get("warps")?
+			locations: config
+				.get::<HashMap<String, Point3<i64>>>("warps")?
+				.into_iter()
+				.map(|(name, coords)| (name.to_lowercase(), coords))
+				.collect()
 		};
 
 		Ok(instance)
