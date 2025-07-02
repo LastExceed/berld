@@ -16,7 +16,7 @@ use tokio::io::{BufReader, BufWriter};
 use tokio::net::{TcpListener, TcpStream};
 use tokio::net::tcp::{OwnedReadHalf, OwnedWriteHalf};
 use tokio::sync::RwLock;
-use tokio::time::sleep;
+use tokio::time::{sleep, timeout};
 
 use protocol::{Packet as _, WriteCwData};
 use protocol::nalgebra::{Point2, Point3, Vector3};
@@ -30,7 +30,7 @@ use protocol::packet::world_update::sound::Kind::*;
 use protocol::utils::constants::{SIZE_BLOCK, SIZE_ZONE};
 use protocol::utils::io_extensions::{ReadPacket, WriteArbitrary as _, WritePacket};
 
-use crate::addon::{Addons, freeze_time, announce_join_leave};
+use crate::addon::{Addons, announce_join_leave};
 use crate::addon::pvp::map_head;
 use crate::addon::pvp;
 use crate::server::creature::Creature;
@@ -45,6 +45,8 @@ pub mod player;
 mod handle_packet;
 pub mod creature;
 pub mod utils;
+
+const TIMEOUT: Duration = Duration::from_secs(30);
 
 pub struct Server {
 	id_pool: RwLock<CreatureIdPool>,
@@ -68,86 +70,123 @@ impl Server {
 	}
 
 	pub async fn run(self) -> ! {
-		let mut id_pool = self.id_pool.write().await;
-		let _ = id_pool.claim(); //reserve 0 for the server itself
-		pvp::team::display::reserve_dummy_ids(&mut id_pool);
-		drop(id_pool);
-
+		self.initialize_id_pool().await;
+		self.addons.start(&self).await;
+		
 		//cubeworld is incapable of ipv6 networking
-		let listener = TcpListener::bind((Ipv4Addr::UNSPECIFIED, 12345)).await.expect("unable to bind listening socket");
-
-		self.addons.listforge_api.run(&self).await;
-		self.addons.discord_integration.run(&self);
-		freeze_time(&self);
-
-		loop {
-			let Ok((stream, address)) = listener
-				.accept()
-				.await
-				.inspect_err(|err| log_error("tcp-accept", err))
-				else { continue };
-			dark_grey_ln!("new connection from {}", address);
-
-			let self_static = extend_lifetime(&self);
-			tokio::spawn(async move {
-				let result = self_static.handle_new_connection(stream, address).await;
-				if let Err(err) = result {
-					log_error("handle-new-connection", err);
-				}
-			});
+		let listener = TcpListener
+			::bind((Ipv4Addr::UNSPECIFIED, 12345))
+			.await
+			.expect("unable to bind listening socket");
+		
+		loop { // infinite
+			_ = self.spawn_session(&listener).await;
 		}
 	}
 
-	async fn handle_new_connection(&self, stream: TcpStream, address: SocketAddr) -> io::Result<()> {
-		stream.set_nodelay(true)?;
-		let (mut reader, mut writer) = split_and_buffer(stream);
+	async fn initialize_id_pool(&self) {
+		let mut id_pool = self.id_pool.write().await;
+		let _ = id_pool.claim(); //reserve 0 for the server itself
+		pvp::team::display::reserve_dummy_ids(&mut id_pool);
+	}
+	
+	async fn spawn_session(&self, listener: &TcpListener) -> io::Result<()> {
+		let (stream, address) = listener
+			.accept()
+			.await
+			.inspect_err(|err| log_error("tcp-accept", err))
+			?;
 
-		let check_version_result = check_version(&mut reader, &mut writer).await;
-		if let Err(ref error) = check_version_result && error.kind() == UnexpectedEof {
-			//prevent listforge's preiodic connections from flooding the logs
-			return Ok(());
+		dark_grey_ln!("new connection from {}", address);
+
+		let self_static = extend_lifetime(self);
+		tokio::spawn(async move {
+			_ = self_static
+				.initialize_session(stream, address)
+				.await
+				.inspect_err(|err| log_error("handle-new-connection", err));
+		});
+		
+		Ok(())
+	}
+
+	async fn initialize_session(&self, stream: TcpStream, address: SocketAddr) -> io::Result<()> {
+		let (mut reader, mut writer) = configure_stream(stream)?;
+
+		match check_version(&mut reader, &mut writer).await {
+			Ok(())                              => writer.write_packet(&ConnectionAcceptance).await?,
+			Err(e) if e.kind() == UnexpectedEof => return Ok(()), // prevent listforge's preiodic connections from flooding the logs,
+			Err(e)                              => return Err(e)
 		}
-		check_version_result?;
 
-		writer.write_packet(&ConnectionAcceptance).await?;
-
-		let assigned_id = self.id_pool.write().await.claim();
-		write_abnormal_creature_update(&mut writer, assigned_id).await?;
-
+		let assigned_id = self.assign_id(&mut writer).await?;
 		let (initial_creature_update, character) = read_character_data(&mut reader).await?;
 
-		let (new_player, kick_receiver) = Player::new(
+		let (player, kick_receiver) = Player::new(
 			address,
 			assigned_id,
 			character,
 			writer,
 		);
-		let player = Arc::new(new_player);
+		let player = Arc::new(player);
+
 		self.players.write().await.push(Arc::clone(&player));
-		announce_join_leave(self, &player, true).await;
 
 		self.handle_packet(&player, initial_creature_update).await;
-
+		self.initialize_player(&player).await;
+		
 		select! {
 			biased;
-			_ = kick_receiver => (),
-			() = self.handle_new_player(reader, &player) => ()
-		}
+			_ = kick_receiver => {},
+			_ = self.read_packets_forever(&player, reader) => {}
+		};
 
 		self.remove_player(&player).await;
 		self.id_pool.write().await.free(assigned_id);
 
 		Ok(())
 	}
+	
+	async fn assign_id<Writable: AsyncWrite + Unpin + Send>(&self, writable: &mut Writable) -> io::Result<CreatureId> {
+		let assigned_id = self
+			.id_pool
+			.write()
+			.await
+			.claim();
 
-	async fn handle_new_player(&self, reader: BufReader<OwnedReadHalf>, player: &Player) {
+		// at this point the server needs to send an abnormal `CreatureUpdate` which:
+		// * is not compressed (and lacks the size prefix used for compressed packets)
+		// * has no bitfield indicating the presence of its properties
+		// * falls 8 bytes short of representing a full creature
+		//
+		// unfortunately it is impossible to determine which bytes are missing exactly,
+		// as the only reference is pixxie from the vanilla server, which is almost completely zeroed.
+		// the last non-zero bytes in pixxie are the equipped weapons, which are positioned correctly.
+		// from that it can be deduced that the missing bytes belong to the last 3 properties.
+		// it's probably a cut-off at the end resulting from an incorrectly sized buffer
+		writable.write_arbitrary(&CreatureUpdate::ID).await?;
+		writable.write_arbitrary(&assigned_id).await?; //luckily the only thing the alpha client does with this data is acquiring its assigned CreatureId
+		writable.write_all(&[0_u8; 4456]).await?; //so we can simply zero out everything else and not worry about the missing bytes
+		writable.flush().await?;
+		//TODO: move this to protocol crate and construct this from an actual [CreatureUpdate]
+		
+		Ok(assigned_id)
+	}
+
+	async fn initialize_player(&self, player: &Player) {
 		player.send_ignoring(&MapSeed(self.mapseed)).await;
-		let player_count = self.players.read().await.len();
-		player.notify(format!("welcome to berld\n{player_count} player(s) connected")).await;
+		announce_join_leave(self, &player, true).await;
 		send_existing_creatures(self, player).await;
+		self.send_motd(player).await;
+	}
 
-		self.read_packets_forever(player, reader).await
-			.expect_err("impossible");
+	async fn send_motd(&self, player: &Player) {
+		let message = format!(
+			"welcome to berld\n{} player(s) connected",
+			self.players.read().await.len()
+		);
+		
+		player.notify(message).await;
 	}
 
 	pub async fn broadcast<Packet: FromServer>(&self, packet: &Packet, player_to_skip: Option<&Player>)
@@ -240,31 +279,36 @@ impl Server {
 		}, None).await;
 	}
 
-	async fn read_packets_forever(&self, source: &Player, mut reader: BufReader<OwnedReadHalf>) -> io::Result<()> {
+	async fn read_packets_forever(&self, source: &Player, mut reader: BufReader<OwnedReadHalf>) {
 		loop {
-			let iteration = async {
-				//todo: copypasta
-				match reader.read_id().await? {
-					CreatureUpdate       ::ID => self.handle_packet(source, reader.read_packet::<CreatureUpdate       >().await?).await,
-					CreatureAction       ::ID => self.handle_packet(source, reader.read_packet::<CreatureAction       >().await?).await,
-					Hit                  ::ID => self.handle_packet(source, reader.read_packet::<Hit                  >().await?).await,
-					StatusEffect         ::ID => self.handle_packet(source, reader.read_packet::<StatusEffect         >().await?).await,
-					Projectile           ::ID => self.handle_packet(source, reader.read_packet::<Projectile           >().await?).await,
-					ChatMessageFromClient::ID => self.handle_packet(source, reader.read_packet::<ChatMessageFromClient>().await?).await,
-					AreaRequest::<Zone>  ::ID => self.handle_packet(source, reader.read_packet::<AreaRequest<Zone>    >().await?).await,
-					AreaRequest::<Region>::ID => self.handle_packet(source, reader.read_packet::<AreaRequest<Region>  >().await?).await,
-					unexpected_packet_id => panic!("unexpected packet id {unexpected_packet_id:?}")
-				}
+			let future = self.process1packet(source, &mut reader);
 
-				io::Result::<_>::Ok(()) //todo: why do we need explicit type annotation here?
+			let Ok(io_result) = timeout(TIMEOUT, future).await
+			else {
+				self.kick(source, "connection timeout").await;
+				break
 			};
-
-			select! {
-				biased;
-				result = iteration => { result?; },
-				() = sleep(Duration::from_secs(30)) => { self.kick(source, "connection timeout").await; }
-			}
+			
+			if io_result.is_err() { // player disconnected
+				break // todo: distinguish error kinds?
+			};
 		}
+	}
+	
+	async fn process1packet(&self, source: &Player, reader: &mut BufReader<OwnedReadHalf>) -> io::Result<()> {
+		match reader.read_id().await? {
+			CreatureUpdate       ::ID => self.handle_packet(source, reader.read_packet::<CreatureUpdate       >().await?).await,
+			CreatureAction       ::ID => self.handle_packet(source, reader.read_packet::<CreatureAction       >().await?).await,
+			Hit                  ::ID => self.handle_packet(source, reader.read_packet::<Hit                  >().await?).await,
+			StatusEffect         ::ID => self.handle_packet(source, reader.read_packet::<StatusEffect         >().await?).await,
+			Projectile           ::ID => self.handle_packet(source, reader.read_packet::<Projectile           >().await?).await,
+			ChatMessageFromClient::ID => self.handle_packet(source, reader.read_packet::<ChatMessageFromClient>().await?).await,
+			AreaRequest::<Zone>  ::ID => self.handle_packet(source, reader.read_packet::<AreaRequest<Zone>    >().await?).await,
+			AreaRequest::<Region>::ID => self.handle_packet(source, reader.read_packet::<AreaRequest<Region>  >().await?).await,
+			_unexpected_packet_id => return Err(InvalidData.into())
+		}
+		
+		return Ok(())
 	}
 }
 
@@ -304,13 +348,15 @@ async fn send_existing_creatures(server: &Server, player: &Player) {
 		.await;
 }
 
-fn split_and_buffer(stream: TcpStream) -> (BufReader<OwnedReadHalf>, BufWriter<OwnedWriteHalf>) {
+fn configure_stream(stream: TcpStream) -> io::Result<(BufReader<OwnedReadHalf>, BufWriter<OwnedWriteHalf>)>{
+	stream.set_nodelay(true)?;
+
 	let (read_half, write_half) = stream.into_split();
 
 	let reader = BufReader::new(read_half);
 	let writer = BufWriter::new(write_half);
 
-	(reader, writer)
+	Ok((reader, writer))
 }
 
 async fn check_version(reader: &mut impl ReadPacket, writer: &mut impl WritePacket<ProtocolVersion>) -> io::Result<()> {
@@ -326,24 +372,6 @@ async fn check_version(reader: &mut impl ReadPacket, writer: &mut impl WritePack
 	Ok(())
 }
 
-/// during new player setup the server needs to send an abnormal `CreatureUpdate` which:
-/// * is not compressed (and lacks the size prefix used for compressed packets)
-/// * has no bitfield indicating the presence of its properties
-/// * falls 8 bytes short of representing a full creature
-///
-/// unfortunately it is impossible to determine which bytes are missing exactly,
-/// as the only reference is pixxie from the vanilla server, which is almost completely zeroed.
-/// the last non-zero bytes in pixxie are the equipped weapons, which are positioned correctly.
-/// from that it can be deduced that the missing bytes belong to the last 3 properties.
-/// it's probably a cut-off at the end resulting from an incorrectly sized buffer
-async fn write_abnormal_creature_update<Writable: AsyncWrite + Unpin + Send>(writable: &mut Writable, assigned_id: CreatureId) -> io::Result<()> {
-	writable.write_arbitrary(&CreatureUpdate::ID).await?;
-	writable.write_arbitrary(&assigned_id).await?; //luckily the only thing the alpha client does with this data is acquiring its assigned CreatureId
-	writable.write_all(&[0_u8; 4456]).await?; //so we can simply zero out everything else and not worry about the missing bytes
-	writable.flush().await
-	//TODO: move this to protocol crate and construct this from an actual [CreatureUpdate]
-}
-
 async fn read_character_data(reader: &mut impl ReadPacket) -> io::Result<(CreatureUpdate, Creature)> {
 	if reader.read_id().await? != CreatureUpdate::ID {
 		return Err(InvalidData.into());
@@ -351,9 +379,8 @@ async fn read_character_data(reader: &mut impl ReadPacket) -> io::Result<(Creatu
 
 	let creature_update = reader.read_packet::<CreatureUpdate>().await?;
 
-	let Some(character) = Creature::maybe_from(&creature_update) else {
-		return Err(InvalidInput.into());
-	};
+	let character = Creature::maybe_from(&creature_update)
+		.ok_or::<io::Error>(InvalidInput.into())?;
 
 	Ok((creature_update, character))
 }

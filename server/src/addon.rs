@@ -52,6 +52,12 @@ impl Addons {
 
 		Ok(instance)
 	}
+	
+	pub async fn start(&self, server: &Server) {
+		self.listforge_api.run(&server).await;
+		self.discord_integration.run(&server);
+		freeze_time(&server);
+	}
 }
 
 pub async fn announce_join_leave(server: &Server, player: &Player, joined: bool) {
@@ -69,7 +75,7 @@ pub const fn fix_cutoff_animations(creature_update: &mut CreatureUpdate, previou
 	}
 }
 
-pub fn freeze_time(server: &Server) {
+fn freeze_time(server: &Server) {
 	let server_static = extend_lifetime(server);
 
 	tokio::spawn(async move {
