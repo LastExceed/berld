@@ -1,5 +1,6 @@
 use config::{Config, ConfigError};
-use twilight_gateway::Shard;
+use tap::Pipe;
+use twilight_gateway::{EventTypeFlags, Shard, StreamExt};
 use twilight_http::Client;
 use twilight_model::gateway::{Intents, ShardId};
 use twilight_model::gateway::event::Event::MessageCreate;
@@ -48,9 +49,12 @@ impl DiscordIntegration {
 
 		tokio::spawn(async move {
 			loop {
-				match shard.next_event().await {
-					Ok(MessageCreate(message)) if !message.author.bot => {
+				match shard.next_event(EventTypeFlags::MESSAGE_CREATE).await.expect("shard stream ended") {
+					Ok(MessageCreate(message)) if message.author.bot => {} // ignore
+
+					Ok(MessageCreate(message)) => {
 						let channel_id = message.channel_id.get();
+
 						let admin = if channel_id == self_static.admin_channel {
 							true
 						} else if channel_id == self_static.public_channel {
@@ -80,29 +84,26 @@ impl DiscordIntegration {
 						}, None).await;
 					},
 
-					Ok(_) => (),
+					Ok(event) => { dbg!("unexpected discord event", event); },
 
 					#[expect(clippy::dbg_macro, reason = "keeping this until i figure out the errors")]
-					Err(error) => {
-						dbg!(&error);//todo: proper error handling
-						assert!(!error.is_fatal(), "fatal error in event loop of discord integration");
-					}
+					Err(error) => { dbg!(&error); } // todo: proper error handling
 				}
 			}
 		});
 	}
 
 	pub async fn post(&self, message: &str, admin: bool) {
-		let channel_id = Id::new(if admin { self.admin_channel } else { self.public_channel });
-		let Ok(create_message) = self.http
+		let channel_id =
+			if admin { self.admin_channel }
+			else     { self.public_channel }
+			.pipe(Id::new);
+
+		_ = self.http
 			.create_message(channel_id)
 			.content(message)
-			.inspect_err(|err| log_error("discord-set-message-content", err))
-			else { return };
-
-		if let Err(err) = create_message.await {
-			log_error("discord-create-message", err);
-		}
+			.await
+			.inspect_err(|err| log_error("discord-create-message", err));
 	}
 
 	async fn command_callback(server: &Server, result: CommandResult, admin: bool) {

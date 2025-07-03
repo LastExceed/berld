@@ -15,7 +15,7 @@ edition = "2024"
 nalgebra = { version = "0.33.2", features = ["serde-serialize"] }
 async-compression = { version = "0.4.25", features = ["tokio", "zlib"] }
 rgb = "0.8.50"
-tokio = { version = "1.45.1", features = ["full"] }
+tokio = { version = "1.46.0", features = ["full"] }
 strum_macros = "0.27.1"
 strum = "0.27.1"
 boolinator = "2.4.0"
