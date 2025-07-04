@@ -11,10 +11,10 @@ use config::{Config, ConfigError};
 use futures::future::join_all;
 use tap::{Pipe as _, Tap as _};
 use tokio::{io, select};
-use tokio::io::{AsyncWrite, AsyncWriteExt as _};
-use tokio::io::{BufReader, BufWriter};
+use tokio::io::{copy, simplex, AsyncWrite, AsyncWriteExt as _, SimplexStream, WriteHalf};
+use tokio::io::BufReader;
 use tokio::net::{TcpListener, TcpStream};
-use tokio::net::tcp::{OwnedReadHalf, OwnedWriteHalf};
+use tokio::net::tcp::OwnedReadHalf;
 use tokio::sync::RwLock;
 use tokio::time::{sleep, timeout};
 
@@ -359,15 +359,18 @@ async fn send_existing_creatures(server: &Server, player: &Player) {
 		.await;
 }
 
-fn configure_stream(stream: TcpStream) -> io::Result<(BufReader<OwnedReadHalf>, BufWriter<OwnedWriteHalf>)>{
+fn configure_stream(stream: TcpStream) -> io::Result<(BufReader<OwnedReadHalf>, WriteHalf<SimplexStream>)>{
 	stream.set_nodelay(true)?;
 
-	let (read_half, write_half) = stream.into_split();
+	let (tcp_read, mut tcp_write) = stream.into_split();
+	let (mut sim_read, sim_write) = simplex(1_000_000);
+	let buf_read = BufReader::new(tcp_read);
+	tokio::spawn(async move {
+		copy(&mut sim_read, &mut tcp_write).await
+	});
+	
 
-	let reader = BufReader::new(read_half);
-	let writer = BufWriter::new(write_half);
-
-	Ok((reader, writer))
+	Ok((buf_read, sim_write))
 }
 
 async fn check_version(reader: &mut impl ReadPacket, writer: &mut impl WritePacket<ProtocolVersion>) -> io::Result<()> {
