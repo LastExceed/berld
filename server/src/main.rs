@@ -7,21 +7,29 @@
 #![allow(unreachable_pub, reason = "this isn't a lib, so adding `(crate)` to every `pub` is just pointless noise")]
 #![allow(clippy::partial_pub_fields, reason = "OOP...")]
 
+use std::sync::LazyLock;
+
 use colour::magenta_ln;
-use config::{Config, ConfigError, File, Environment};
+use config::{Config, File, Environment};
 use server::Server;
+use tap::Pipe;
 
 mod server;
 mod addon;
 
-#[tokio::main]
-async fn main() -> Result<(), ConfigError> {
-	magenta_ln!("===== Berld =====");
-
-	let config = Config::builder()
+static SERVER: LazyLock<Server> = LazyLock::new(||
+	Config::builder()
 		.add_source(File::with_name("config"))
 		.add_source(Environment::with_prefix("BERLD"))
-		.build()?;
+		.build()
+		.unwrap()
+		.pipe_ref(Server::new)
+		.unwrap()
+);
 
-	Server::new(&config)?.run().await;
+#[tokio::main]
+async fn main() {
+	magenta_ln!("===== Berld =====");
+
+	SERVER.run().await;
 }

@@ -8,6 +8,7 @@ use twilight_model::id::Id;
 
 use protocol::packet::ChatMessageFromServer;
 use protocol::packet::common::CreatureId;
+use crate::SERVER;
 use crate::{addon::command_manager::CommandResult, server::utils::log_error};
 use crate::server::utils::extend_lifetime;
 
@@ -37,14 +38,13 @@ impl DiscordIntegration {
 }
 
 impl DiscordIntegration {
-	pub fn run(&self, server: &Server) {
+	pub fn run(&self) {
 		let mut shard = Shard::new(
 			ShardId::ONE,
 			self.token.clone(),
 			Intents::GUILD_MESSAGES | Intents::MESSAGE_CONTENT
 		);
 
-		let server_static = extend_lifetime(server);
 		let self_static = extend_lifetime(self);
 
 		tokio::spawn(async move {
@@ -63,10 +63,10 @@ impl DiscordIntegration {
 							continue
 						};
 
-						let callback = |response| { Self::command_callback(server_static, response, admin) };
+						let callback = |response| { Self::command_callback(&SERVER, response, admin) };
 
-						let is_command = server_static.addons.command_manager.on_message(
-							server_static,
+						let is_command = SERVER.addons.command_manager.on_message(
+							&SERVER,
 							None,
 							admin,
 							&message.content,
@@ -78,7 +78,7 @@ impl DiscordIntegration {
 							continue;
 						}
 
-						server_static.broadcast(&ChatMessageFromServer {//dont use server.announce() as that would cause an echo
+						SERVER.broadcast(&ChatMessageFromServer {//dont use server.announce() as that would cause an echo
 							source: CreatureId(0),
 							text: format!("<{}> {}", message.author.name, message.content)
 						}, None).await;

@@ -11,12 +11,12 @@ use protocol::utils::sound_position_of;
 use protocol::packet::world_update::sound::Kind::{MenuOpen2, MenuClose2};
 
 use crate::addon::balancing::Balancing;
-use crate::server::utils::extend_lifetime;
 use crate::addon::command_manager::CommandManager;
 use crate::addon::discord_integration::DiscordIntegration;
 use crate::server::creature::Creature;
 use crate::server::player::Player;
 use crate::server::Server;
+use crate::SERVER;
 
 use listforge_api::ListforgeApi;
 
@@ -53,10 +53,10 @@ impl Addons {
 		Ok(instance)
 	}
 	
-	pub async fn start(&self, server: &Server) {
-		self.listforge_api.run(&server).await;
-		self.discord_integration.run(&server);
-		freeze_time(&server);
+	pub async fn start(&self) {
+		self.listforge_api.run().await;
+		self.discord_integration.run();
+		freeze_time();
 	}
 }
 
@@ -75,13 +75,13 @@ pub const fn fix_cutoff_animations(creature_update: &mut CreatureUpdate, previou
 	}
 }
 
-fn freeze_time(server: &Server) {
-	let server_static = extend_lifetime(server);
-
+fn freeze_time() {
 	tokio::spawn(async move {
+		let packet = IngameDatetime { time: 12 * 60 * 60 * 1000, day: 0 };
+
 		#[expect(clippy::infinite_loop, reason = "todo: is this even possible?")]
 		loop {
-			server_static.broadcast(&IngameDatetime { time: 12 * 60 * 60 * 1000, day: 0 }, None).await;
+			SERVER.broadcast(&packet, None).await;
 			sleep(Duration::from_secs(6)).await;
 		}
 	});

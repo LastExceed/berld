@@ -37,8 +37,9 @@ use crate::server::creature::Creature;
 use crate::server::creature_id_pool::CreatureIdPool;
 use crate::server::handle_packet::HandlePacket as _;
 use crate::server::player::Player;
+use crate::SERVER;
 
-use self::utils::{extend_lifetime, log_error};
+use self::utils::log_error;
 
 pub mod creature_id_pool;
 pub mod player;
@@ -69,16 +70,16 @@ impl Server {
 		Ok(instance)
 	}
 
-	pub async fn run(self) -> ! {
+	pub async fn run(&self) -> ! {
 		self.initialize_id_pool().await;
-		self.addons.start(&self).await;
-		
+		self.addons.start().await;
+
 		//cubeworld is incapable of ipv6 networking
 		let listener = TcpListener
 			::bind((Ipv4Addr::UNSPECIFIED, 12345))
 			.await
 			.expect("unable to bind listening socket");
-		
+
 		loop { // infinite
 			_ = self.spawn_session(&listener).await;
 		}
@@ -99,9 +100,8 @@ impl Server {
 
 		dark_grey_ln!("new connection from {}", address);
 
-		let self_static = extend_lifetime(self);
 		tokio::spawn(async move {
-			_ = self_static
+			_ = SERVER
 				.initialize_session(stream, address)
 				.await
 				.inspect_err(|err| log_error("handle-new-connection", err));
@@ -226,10 +226,9 @@ impl Server {
 			..Default::default()
 		}, None).await;
 
-		let server_static = extend_lifetime(self);
 		tokio::spawn(async move {
 			sleep(Duration::from_millis(500)).await;
-			server_static.broadcast(&WorldUpdate::from(Sound::at(position, DropItem)), None).await;
+			SERVER.broadcast(&WorldUpdate::from(Sound::at(position, DropItem)), None).await;
 		});
 	}
 

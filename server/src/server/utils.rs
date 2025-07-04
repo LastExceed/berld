@@ -23,6 +23,7 @@ use protocol::packet::world_update::Kill;
 use crate::server::player::Player;
 use crate::addon::kill_feed;
 use crate::server::Server;
+use crate::SERVER;
 
 use super::send_existing_creatures;
 use super::creature::Creature;
@@ -103,8 +104,6 @@ impl Server {
 		};
 		let mut wu_hit = WorldUpdate::from(hit);
 
-		let server_static = extend_lifetime(self);
-
 		let attacker_name = source_character.name.clone();
 		tokio::spawn(async move {
 			let mut nth = 0;
@@ -127,7 +126,7 @@ impl Server {
 				if target.send(&wu_hit).await.is_err() {
 					break; //disconnects are handled in the reading task
 				}
-				server_static.broadcast(&wu_fx, None).await;
+				SERVER.broadcast(&wu_fx, None).await;
 
 
 				if nth == ticks {

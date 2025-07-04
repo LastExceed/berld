@@ -12,8 +12,7 @@ use serde::Serialize;
 use tap::Pipe as _;
 use tokio::net::TcpListener;
 
-use crate::server::Server;
-use crate::server::utils::extend_lifetime;
+use crate::SERVER;
 
 pub struct ListforgeApi {
 	slots: i32,
@@ -32,9 +31,8 @@ impl ListforgeApi {
 		}.pipe(Ok)
 	}
 
-	pub async fn run(&self, server: &Server) {
+	pub async fn run(&self) {
 		let state = (
-			extend_lifetime(server),
 			Instant::now(),
 			self.slots,
 			self.name.clone(),
@@ -57,11 +55,11 @@ impl ListforgeApi {
 	}
 }
 
-async fn info(State((server, startup_time, slots, name, discord)): State<(&Server, Instant, i32, String, String)>) -> impl IntoResponse {
+async fn info(State((startup_time, slots, name, discord)): State<(Instant, i32, String, String)>) -> impl IntoResponse {
 	Info {
-		players: get_all_player_names(server).await,
+		players: get_all_player_names().await,
 		platform: OS.into(),
-		mapseed: server.mapseed,
+		mapseed: SERVER.mapseed,
 		uptime: startup_time.elapsed(),
 		slots,
 		name,
@@ -80,8 +78,8 @@ struct Info {
 	discord: String
 }
 
-async fn get_all_player_names(server: &Server) -> Vec<String> {
-	server
+async fn get_all_player_names() -> Vec<String> {
+	SERVER
 		.players
 		.read()
 		.await
