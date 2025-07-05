@@ -278,7 +278,7 @@ impl Server {
 		}, None).await;
 	}
 
-	async fn read_packets_forever(&self, source: &Player, mut reader: BufReader<OwnedReadHalf>) {
+	async fn read_packets_forever(&self, source: &Arc<Player>, mut reader: BufReader<OwnedReadHalf>) {
 		loop {
 			let future = self.process1packet(source, &mut reader);
 
@@ -294,18 +294,20 @@ impl Server {
 		}
 	}
 	
-	async fn process1packet(&self, source: &Player, reader: &mut BufReader<OwnedReadHalf>) -> io::Result<()> {
+	async fn process1packet(&self, source: &Arc<Player>, reader: &mut BufReader<OwnedReadHalf>) -> io::Result<()> {
+		let source = Arc::clone(&source);
+		
 		match reader.read_id().await? {
-			CreatureUpdate       ::ID => self.handle_packet(source, reader.read_packet::<CreatureUpdate       >().await?).await,
-			CreatureAction       ::ID => self.handle_packet(source, reader.read_packet::<CreatureAction       >().await?).await,
-			Hit                  ::ID => self.handle_packet(source, reader.read_packet::<Hit                  >().await?).await,
-			StatusEffect         ::ID => self.handle_packet(source, reader.read_packet::<StatusEffect         >().await?).await,
-			Projectile           ::ID => self.handle_packet(source, reader.read_packet::<Projectile           >().await?).await,
-			ChatMessageFromClient::ID => self.handle_packet(source, reader.read_packet::<ChatMessageFromClient>().await?).await,
-			AreaRequest::<Zone>  ::ID => self.handle_packet(source, reader.read_packet::<AreaRequest<Zone>    >().await?).await,
-			AreaRequest::<Region>::ID => self.handle_packet(source, reader.read_packet::<AreaRequest<Region>  >().await?).await,
+			CreatureUpdate       ::ID => reader.read_packet::<CreatureUpdate       >().await?.pipe(|packet| async move { SERVER.handle_packet(&source, packet).await }).pipe(tokio::spawn),
+			CreatureAction       ::ID => reader.read_packet::<CreatureAction       >().await?.pipe(|packet| async move { SERVER.handle_packet(&source, packet).await }).pipe(tokio::spawn),
+			Hit                  ::ID => reader.read_packet::<Hit                  >().await?.pipe(|packet| async move { SERVER.handle_packet(&source, packet).await }).pipe(tokio::spawn),
+			StatusEffect         ::ID => reader.read_packet::<StatusEffect         >().await?.pipe(|packet| async move { SERVER.handle_packet(&source, packet).await }).pipe(tokio::spawn),
+			Projectile           ::ID => reader.read_packet::<Projectile           >().await?.pipe(|packet| async move { SERVER.handle_packet(&source, packet).await }).pipe(tokio::spawn),
+			ChatMessageFromClient::ID => reader.read_packet::<ChatMessageFromClient>().await?.pipe(|packet| async move { SERVER.handle_packet(&source, packet).await }).pipe(tokio::spawn),
+			AreaRequest::<Zone>  ::ID => reader.read_packet::<AreaRequest<Zone>    >().await?.pipe(|packet| async move { SERVER.handle_packet(&source, packet).await }).pipe(tokio::spawn),
+			AreaRequest::<Region>::ID => reader.read_packet::<AreaRequest<Region>  >().await?.pipe(|packet| async move { SERVER.handle_packet(&source, packet).await }).pipe(tokio::spawn),
 			_unexpected_packet_id => return Err(InvalidData.into())
-		}
+		};
 		
 		return Ok(())
 	}
