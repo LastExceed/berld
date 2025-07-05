@@ -17,7 +17,6 @@ use protocol::packet::world_update::sound;
 use crate::addon::{command_manager::{Command, CommandResult}, models, play_sound_at_player};
 use crate::addon::command_manager::commands::Test;
 use crate::addon::command_manager::utils::INGAME_ONLY;
-use crate::server::creature::Creature;
 use crate::server::player::Player;
 use crate::server::Server;
 
@@ -27,18 +26,17 @@ impl Command for Test {
 
 	async fn execute<'fut>(&'fut self, server: &'fut Server, caller: Option<&'fut Player>, params: &'fut mut SplitWhitespace<'fut>) -> CommandResult {
 		let caller = caller.ok_or(INGAME_ONLY)?;
-		let character = caller.character.read().await;
 
 		match params.next() {
-			Some("check") => checkerboard(server, &character).await,
-			Some("zg") => zone_grid(server, &character).await,
-			Some("obj") => world_object(caller, &character).await,
-			Some("objs") => objs(caller, &character).await,
-			Some("block") => place_block(caller, &character).await,
-			Some("ba") => place_blocks::<true>(caller, &character).await,
-			Some("bs") => place_blocks::<false>(caller, &character).await,
+			Some("check") => checkerboard(server, caller).await,
+			Some("zg") => zone_grid(server, caller).await,
+			Some("obj") => world_object(caller).await,
+			Some("objs") => objs(caller).await,
+			Some("block") => place_block(caller).await,
+			Some("ba") => place_blocks::<true>(caller).await,
+			Some("bs") => place_blocks::<false>(caller).await,
 			Some("s") => play_sound(caller, params).await,
-			Some("model") => model(params, server, &character).await?,
+			Some("model") => model(params, server, caller).await?,
 			Some("shield") => shield(caller).await,
 			Some(_) => { return Err("unknown sub-command") }
 			None => { return Err("too few arguments") },
@@ -56,9 +54,14 @@ async fn play_sound(caller: &Player, params: &mut SplitWhitespace<'_>) {
 
 }
 
-async fn place_block(caller: &Player, character: &Creature) {
+async fn place_block(caller: &Player) {
 	let block = Block {
-		position: character.position.map(|scalar| (scalar / SIZE_BLOCK) as _),
+		position: caller
+			.character
+			.read()
+			.await
+			.position
+			.map(|scalar| (scalar / SIZE_BLOCK) as _),
 		color: [0,0,0].into(),
 		kind: Solid,
 		padding: 0,
@@ -67,8 +70,13 @@ async fn place_block(caller: &Player, character: &Creature) {
 	caller.send_ignoring(&WorldUpdate::from(block)).await;
 }
 
-async fn place_blocks<const B: bool>(caller: &Player, character: &Creature) {
-	let pos = character.position.map(|scalar| (scalar / SIZE_BLOCK) as _);
+async fn place_blocks<const B: bool>(caller: &Player) {
+	let pos = caller
+		.character
+		.read()
+		.await
+		.position
+		.map(|scalar| (scalar / SIZE_BLOCK) as _);
 
 	let mut blocks = vec![];
 	for dx in 0..8 {
@@ -89,11 +97,17 @@ async fn place_blocks<const B: bool>(caller: &Player, character: &Creature) {
 	caller.send_ignoring(&WorldUpdate::from(blocks)).await;
 }
 
-async fn world_object(caller: &Player, character: &Creature) {
+async fn world_object(caller: &Player) {
+	let char_pos = caller
+		.character
+		.read()
+		.await
+		.position;
+
 	let object = WorldObject {
-		zone: character.position.xy().map(|scalar| (scalar / SIZE_ZONE) as _),
+		zone: char_pos.xy().map(|scalar| (scalar / SIZE_ZONE) as _),
 		id: 0,
-		position: character.position,
+		position: char_pos,
 		orientation: 0,
 		size: Hitbox {
 			width: 5.0,
@@ -112,8 +126,11 @@ async fn world_object(caller: &Player, character: &Creature) {
 	caller.send_ignoring(&WorldUpdate::from(object)).await;
 }
 
-pub async fn zone_grid(server: &Server, character: &Creature) {
-	let start = character
+pub async fn zone_grid(server: &Server, caller: &Player) {
+	let start = caller
+		.character
+		.read()
+		.await
 		.position
 		.div(SIZE_ZONE)
 		.sub(Vector3::new(3,3,0))
@@ -148,17 +165,23 @@ pub async fn zone_grid(server: &Server, character: &Creature) {
 		server.broadcast(&WorldUpdate::from(blocks), None).await;
 }
 
-pub async fn checkerboard(server: &Server, character: &Creature) {
+pub async fn checkerboard(server: &Server, caller: &Player) {
+	let char_pos = caller
+		.character
+		.read()
+		.await
+		.position;
+
 	let start = Point3::new(
-		character.position.x
+		char_pos.x
 			.div(SIZE_ZONE)
 			.mul(SIZE_ZONE)
 			.div(SIZE_BLOCK) as i32,
-		character.position.y
+		char_pos.y
 			.div(SIZE_ZONE)
 			.mul(SIZE_ZONE)
 			.div(SIZE_BLOCK) as i32,
-		character.position.z.div(SIZE_BLOCK) as i32,
+		char_pos.z.div(SIZE_BLOCK) as i32,
 	);
 
 	let mut blocks = Vec::with_capacity(100);
@@ -216,14 +239,20 @@ pub async fn checkerboard(server: &Server, character: &Creature) {
 	server.broadcast(&WorldUpdate::from(blocks), None).await;
 }
 
-async fn objs(caller: &Player, character: &Creature) {
+async fn objs(caller: &Player) {
+	let char_pos = caller
+		.character
+		.read()
+		.await
+		.position;
+
 	let world_objects: Vec<_> = (0_i64..100)
 		.map(|i| WorldObject {
-			zone: character.position.xy().map(|scalar| (scalar / SIZE_ZONE) as _),
+			zone: char_pos.xy().map(|scalar| (scalar / SIZE_ZONE) as _),
 			id: i as _,
 			unknown_a: i as _,
 			kind: FireTrap,
-			position: character.position + Vector3::new((i % 10) * 4 * SIZE_BLOCK, (i / 10) * 4 * SIZE_BLOCK, -SIZE_BLOCK),
+			position: char_pos + Vector3::new((i % 10) * 4 * SIZE_BLOCK, (i / 10) * 4 * SIZE_BLOCK, -SIZE_BLOCK),
 			orientation: i as _,
 			size: Hitbox {
 				width: 2.0,
@@ -241,15 +270,24 @@ async fn objs(caller: &Player, character: &Creature) {
 }
 
 //let player_block_position = character.position.map(|scalar| (scalar / SIZE_BLOCK) as i32) - Point3::default();
-async fn model(params: &mut SplitWhitespace<'_>, server: &Server, character: &Creature) -> Result<(), &'static str> {//fulcnix/FD_A_2B_minifed
+async fn model(params: &mut SplitWhitespace<'_>, server: &Server, caller: &Player) -> Result<(), &'static str> {//fulcnix/FD_A_2B_minifed
 	let Some(file) = params.next()
 		else {
 			return Err("no file name specified");
 		};
 	let mut blocks = models::parse_model(file);
 
+	let offset = caller
+		.character
+		.read()
+		.await
+		.position
+		.div(SIZE_BLOCK)
+		.cast()
+		.coords;
+
 	for block in &mut blocks {
-		block.position += (character.position / SIZE_BLOCK).cast().coords;
+		block.position += offset;
 	}
 
 	server.broadcast(&WorldUpdate::from(blocks), None).await;
