@@ -21,7 +21,7 @@ pub struct Player {
 	pub address: SocketAddr,
 	pub id: CreatureId,
 	pub character: RwLock<Creature>,
-	writer: RwLock<BufWriter<OwnedWriteHalf>>,
+	pub writer: RwLock<BufWriter<OwnedWriteHalf>>,
 	pub admin: AtomicBool, //todo: move to AddonData
 	pub ac_immune: AtomicBool,
 	pub kick_sender: RwLock<Option<oneshot::Sender<()>>>,
