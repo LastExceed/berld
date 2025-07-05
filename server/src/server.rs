@@ -10,6 +10,7 @@ use colour::dark_grey_ln;
 use config::{Config, ConfigError};
 use futures::future::join_all;
 use tap::{Pipe as _, Tap as _};
+use tokio::task::JoinHandle;
 use tokio::{io, select};
 use tokio::io::{copy, simplex, AsyncWrite, AsyncWriteExt as _, SimplexStream, WriteHalf};
 use tokio::io::BufReader;
@@ -111,7 +112,7 @@ impl Server {
 	}
 
 	async fn initialize_session(&self, stream: TcpStream, address: SocketAddr) -> io::Result<()> {
-		let (mut reader, mut writer) = configure_stream(stream)?;
+		let (mut reader, mut writer, join_handle) = configure_stream(stream)?;
 
 		match check_version(&mut reader, &mut writer).await {
 			Ok(())                                      => writer.write_packet(&ConnectionAcceptance).await?,
@@ -140,7 +141,7 @@ impl Server {
 			_ = kick_receiver => {},
 			() = self.read_packets_forever(&player, reader) => {}
 		};
-
+		join_handle.abort();
 		self.remove_player(&player).await;
 		self.id_pool.write().await.free(assigned_id);
 
@@ -359,18 +360,18 @@ async fn send_existing_creatures(server: &Server, player: &Player) {
 		.await;
 }
 
-fn configure_stream(stream: TcpStream) -> io::Result<(BufReader<OwnedReadHalf>, WriteHalf<SimplexStream>)>{
+fn configure_stream(stream: TcpStream) -> io::Result<(BufReader<OwnedReadHalf>, WriteHalf<SimplexStream>, JoinHandle<()>)>{
 	stream.set_nodelay(true)?;
 
 	let (tcp_read, mut tcp_write) = stream.into_split();
 	let (mut sim_read, sim_write) = simplex(1_000_000);
 	let buf_read = BufReader::new(tcp_read);
-	tokio::spawn(async move {
-		copy(&mut sim_read, &mut tcp_write).await
+	let join_handle = tokio::spawn(async move {
+		_ = copy(&mut sim_read, &mut tcp_write).await;
 	});
 	
 
-	Ok((buf_read, sim_write))
+	Ok((buf_read, sim_write, join_handle))
 }
 
 async fn check_version(reader: &mut impl ReadPacket, writer: &mut impl WritePacket<ProtocolVersion>) -> io::Result<()> {
