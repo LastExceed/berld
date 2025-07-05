@@ -114,9 +114,9 @@ impl Server {
 		let (mut reader, mut writer) = configure_stream(stream)?;
 
 		match check_version(&mut reader, &mut writer).await {
-			Ok(())                              => writer.write_packet(&ConnectionAcceptance).await?,
-			Err(e) if e.kind() == UnexpectedEof => return Ok(()), // prevent listforge's preiodic connections from flooding the logs,
-			Err(e)                              => return Err(e)
+			Ok(())                                      => writer.write_packet(&ConnectionAcceptance).await?,
+			Err(error) if error.kind() == UnexpectedEof => return Ok(()), // prevent listforge's preiodic connections from flooding the logs,
+			Err(error)                                  => return Err(error)
 		}
 
 		let assigned_id = self.assign_id(&mut writer).await?;
@@ -138,7 +138,7 @@ impl Server {
 		select! {
 			biased;
 			_ = kick_receiver => {},
-			_ = self.read_packets_forever(&player, reader) => {}
+			() = self.read_packets_forever(&player, reader) => {}
 		};
 
 		self.remove_player(&player).await;
@@ -175,7 +175,7 @@ impl Server {
 
 	async fn initialize_player(&self, player: &Player) {
 		player.send_ignoring(&MapSeed(self.mapseed)).await;
-		announce_join_leave(self, &player, true).await;
+		announce_join_leave(self, player, true).await;
 		send_existing_creatures(self, player).await;
 		self.send_motd(player).await;
 	}
@@ -302,26 +302,26 @@ impl Server {
 			
 			if io_result.is_err() { // player disconnected
 				break // todo: distinguish error kinds?
-			};
+			}
 		}
 	}
 	
 	async fn process1packet(&self, source: &Arc<Player>, reader: &mut BufReader<OwnedReadHalf>) -> io::Result<()> {
-		let source = Arc::clone(&source);
+		let source = Arc::clone(source);
 		
 		match reader.read_id().await? {
-			CreatureUpdate       ::ID => reader.read_packet::<CreatureUpdate       >().await?.pipe(|packet| async move { SERVER.handle_packet(&source, packet).await }).pipe(tokio::spawn),
-			CreatureAction       ::ID => reader.read_packet::<CreatureAction       >().await?.pipe(|packet| async move { SERVER.handle_packet(&source, packet).await }).pipe(tokio::spawn),
-			Hit                  ::ID => reader.read_packet::<Hit                  >().await?.pipe(|packet| async move { SERVER.handle_packet(&source, packet).await }).pipe(tokio::spawn),
-			StatusEffect         ::ID => reader.read_packet::<StatusEffect         >().await?.pipe(|packet| async move { SERVER.handle_packet(&source, packet).await }).pipe(tokio::spawn),
-			Projectile           ::ID => reader.read_packet::<Projectile           >().await?.pipe(|packet| async move { SERVER.handle_packet(&source, packet).await }).pipe(tokio::spawn),
-			ChatMessageFromClient::ID => reader.read_packet::<ChatMessageFromClient>().await?.pipe(|packet| async move { SERVER.handle_packet(&source, packet).await }).pipe(tokio::spawn),
-			AreaRequest::<Zone>  ::ID => reader.read_packet::<AreaRequest<Zone>    >().await?.pipe(|packet| async move { SERVER.handle_packet(&source, packet).await }).pipe(tokio::spawn),
-			AreaRequest::<Region>::ID => reader.read_packet::<AreaRequest<Region>  >().await?.pipe(|packet| async move { SERVER.handle_packet(&source, packet).await }).pipe(tokio::spawn),
+			CreatureUpdate       ::ID => reader.read_packet::<CreatureUpdate       >().await?.pipe(async move |packet| { SERVER.handle_packet(&source, packet).await }).pipe(tokio::spawn),
+			CreatureAction       ::ID => reader.read_packet::<CreatureAction       >().await?.pipe(async move |packet| { SERVER.handle_packet(&source, packet).await }).pipe(tokio::spawn),
+			Hit                  ::ID => reader.read_packet::<Hit                  >().await?.pipe(async move |packet| { SERVER.handle_packet(&source, packet).await }).pipe(tokio::spawn),
+			StatusEffect         ::ID => reader.read_packet::<StatusEffect         >().await?.pipe(async move |packet| { SERVER.handle_packet(&source, packet).await }).pipe(tokio::spawn),
+			Projectile           ::ID => reader.read_packet::<Projectile           >().await?.pipe(async move |packet| { SERVER.handle_packet(&source, packet).await }).pipe(tokio::spawn),
+			ChatMessageFromClient::ID => reader.read_packet::<ChatMessageFromClient>().await?.pipe(async move |packet| { SERVER.handle_packet(&source, packet).await }).pipe(tokio::spawn),
+			AreaRequest::<Zone>  ::ID => reader.read_packet::<AreaRequest<Zone>    >().await?.pipe(async move |packet| { SERVER.handle_packet(&source, packet).await }).pipe(tokio::spawn),
+			AreaRequest::<Region>::ID => reader.read_packet::<AreaRequest<Region>  >().await?.pipe(async move |packet| { SERVER.handle_packet(&source, packet).await }).pipe(tokio::spawn),
 			_unexpected_packet_id => return Err(InvalidData.into())
 		};
 		
-		return Ok(())
+		Ok(())
 	}
 }
 
@@ -396,7 +396,7 @@ async fn read_character_data(reader: &mut impl ReadPacket) -> io::Result<(Creatu
 	let creature_update = reader.read_packet::<CreatureUpdate>().await?;
 
 	let character = Creature::maybe_from(&creature_update)
-		.ok_or::<io::Error>(InvalidInput.into())?;
+		.ok_or_else::<io::Error, _>(||InvalidInput.into())?;
 
 	Ok((creature_update, character))
 }
