@@ -190,14 +190,26 @@ impl Server {
 	}
 
 	pub async fn broadcast<Packet: FromServer>(&self, packet: &Packet, player_to_skip: Option<&Player>)
-		where BufWriter<OwnedWriteHalf>: WriteCwData<Packet>//todo: specialization could obsolete this
+		where Vec<u8>: WriteCwData<Packet>//todo: specialization could obsolete this
 	{
-		self.players
+		let mut data = vec![];
+		
+		data.write_packet(packet).await.expect("failed to serialize a packet in-memory");
+		
+		_ = self.players
 			.read()
 			.await
 			.iter()
 			.filter(|player| !player_to_skip.is_some_and(|pts| ptr::eq(player.as_ref(), pts)))
-			.map(|player| player.send_ignoring(packet))
+			.map(async |player| {
+				let mut writer = player
+					.writer
+					.write()
+					.await;
+
+				writer.write_all(&data).await?;
+				writer.flush().await
+			})
 			.pipe(join_all)
 			.await;
 	}
