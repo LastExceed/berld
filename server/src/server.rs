@@ -308,14 +308,14 @@ impl Server {
 	
 	async fn process1packet(&self, source: &Player, reader: &mut BufReader<OwnedReadHalf>) -> io::Result<()> {
 		match reader.read_id().await? {
-			CreatureUpdate       ::ID => self.handle_packet(source, reader.read_packet::<CreatureUpdate       >().await?).await,
-			CreatureAction       ::ID => self.handle_packet(source, reader.read_packet::<CreatureAction       >().await?).await,
-			Hit                  ::ID => self.handle_packet(source, reader.read_packet::<Hit                  >().await?).await,
-			StatusEffect         ::ID => self.handle_packet(source, reader.read_packet::<StatusEffect         >().await?).await,
-			Projectile           ::ID => self.handle_packet(source, reader.read_packet::<Projectile           >().await?).await,
-			ChatMessageFromClient::ID => self.handle_packet(source, reader.read_packet::<ChatMessageFromClient>().await?).await,
-			AreaRequest::<Zone>  ::ID => self.handle_packet(source, reader.read_packet::<AreaRequest<Zone>    >().await?).await,
-			AreaRequest::<Region>::ID => self.handle_packet(source, reader.read_packet::<AreaRequest<Region>  >().await?).await,
+			CreatureUpdate       ::ID => reader.read_packet::<CreatureUpdate       >().await?.pipe(|packet| self.handle_packet(source, packet)).await,
+			CreatureAction       ::ID => reader.read_packet::<CreatureAction       >().await?.pipe(|packet| self.handle_packet(source, packet)).await,
+			Hit                  ::ID => reader.read_packet::<Hit                  >().await?.pipe(|packet| self.handle_packet(source, packet)).await,
+			StatusEffect         ::ID => reader.read_packet::<StatusEffect         >().await?.pipe(|packet| self.handle_packet(source, packet)).await,
+			Projectile           ::ID => reader.read_packet::<Projectile           >().await?.pipe(|packet| self.handle_packet(source, packet)).await,
+			ChatMessageFromClient::ID => reader.read_packet::<ChatMessageFromClient>().await?.pipe(|packet| self.handle_packet(source, packet)).await,
+			AreaRequest::<Zone>  ::ID => reader.read_packet::<AreaRequest<Zone>    >().await?.pipe(|packet| self.handle_packet(source, packet)).await,
+			AreaRequest::<Region>::ID => reader.read_packet::<AreaRequest<Region>  >().await?.pipe(|packet| self.handle_packet(source, packet)).await,
 			_unexpected_packet_id => return Err(InvalidData.into())
 		}
 		
