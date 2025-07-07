@@ -7,6 +7,7 @@ use protocol::rgb::{RGB8, RGBA8};
 use serde::Deserialize;
 use tap::{Conv as _, Pipe as _};
 
+#[expect(clippy::big_endian_bytes, reason ="file format")]
 pub fn parse(path: &Path) -> Vec<(Point3<i32>, RGB8)> {
     let zox = File::open(path)
         .unwrap()

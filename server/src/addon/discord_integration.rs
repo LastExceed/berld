@@ -1,6 +1,6 @@
 use config::{Config, ConfigError};
-use tap::Pipe;
-use twilight_gateway::{EventTypeFlags, Shard, StreamExt};
+use tap::Pipe as _;
+use twilight_gateway::{EventTypeFlags, Shard, StreamExt as _};
 use twilight_http::Client;
 use twilight_model::gateway::{Intents, ShardId};
 use twilight_model::gateway::event::Event::MessageCreate;
@@ -48,6 +48,7 @@ impl DiscordIntegration {
 		let self_static = extend_lifetime(self);
 
 		tokio::spawn(async move {
+			#[expect(clippy::infinite_loop, reason = "way too verbose to fix")]
 			loop {
 				match shard.next_event(EventTypeFlags::MESSAGE_CREATE).await.expect("shard stream ended") {
 					Ok(MessageCreate(message)) if message.author.bot => {} // ignore

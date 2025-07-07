@@ -12,7 +12,7 @@ use std::sync::LazyLock;
 use colour::magenta_ln;
 use config::{Config, File, Environment};
 use server::Server;
-use tap::Pipe;
+use tap::Pipe as _;
 
 mod server;
 mod addon;
