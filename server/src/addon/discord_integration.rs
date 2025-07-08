@@ -1,9 +1,15 @@
+use std::time::Duration;
+
 use config::{Config, ConfigError};
+use itertools::Itertools as _;
 use tap::Pipe as _;
+use tokio::sync::mpsc;
+use tokio::time::sleep;
 use twilight_gateway::{EventTypeFlags, Shard, StreamExt as _};
 use twilight_http::Client;
 use twilight_model::gateway::{Intents, ShardId};
 use twilight_model::gateway::event::Event::MessageCreate;
+use twilight_model::id::marker::ChannelMarker;
 use twilight_model::id::Id;
 
 use protocol::packet::ChatMessageFromServer;
@@ -16,25 +22,58 @@ use crate::server::Server;
 
 #[derive(Debug)]
 pub struct DiscordIntegration {
-	http: Client,
 	token: String,
-	public_channel: u64,
-	admin_channel: u64
+	public_channel: Id<ChannelMarker>,
+	admin_channel: Id<ChannelMarker>,
+	queue: mpsc::Sender<(String, bool)>
 }
 
 impl DiscordIntegration {
 	pub fn new(config: &Config) -> Result<Self, ConfigError> {
 		let token = config.get_string("discord_bot_token")?;
 
+		let (tx, mut rx) = mpsc::channel(1000);
+		let http = Client::new(token.clone());
+		let public_channel = config.get::<u64>("discord_public_channel_id")?.pipe(Id::new);
+		let  admin_channel = config.get::<u64>( "discord_admin_channel_id")?.pipe(Id::new);
+		
 		let instance = Self {
-			http: Client::new(token.clone()),
 			token,
-			public_channel: config.get("discord_public_channel_id")?,
-			admin_channel: config.get("discord_admin_channel_id")?,
+			public_channel,
+			admin_channel,
+			queue: tx
 		};
+		
+		tokio::spawn(async move {
+			#[expect(clippy::infinite_loop, reason = "fix is very verbose")]
+			loop {
+				let mut buffer = vec![];
+				let _n = rx
+					.recv_many(&mut buffer, 1000)
+					.await;
+				
+				bulk_post(&http, &buffer, true ,  admin_channel).await;
+				bulk_post(&http, &buffer, false, public_channel).await;
+				
+				sleep(Duration::from_secs(1)).await;
+			}
+		});
 
 		Ok(instance)
 	}
+}
+
+async fn bulk_post(http: &Client, messages: &[(String, bool)], admin: bool, channel: Id<ChannelMarker>) {
+	let message = messages
+    	.iter()
+    	.filter(|(_msg, is_admin)| *is_admin == admin)
+    	.map(|(msg, _)| msg)
+    	.join("\n");
+	
+	_ = http.create_message(channel)
+		.content(&message)
+		.await
+		.inspect_err(|err| log_error("discord-create-message", err));
 }
 
 impl DiscordIntegration {
@@ -95,16 +134,10 @@ impl DiscordIntegration {
 	}
 
 	pub async fn post(&self, message: &str, admin: bool) {
-		let channel_id =
-			if admin { self.admin_channel }
-			else     { self.public_channel }
-			.pipe(Id::new);
-
-		_ = self.http
-			.create_message(channel_id)
-			.content(message)
+		self.queue
+			.send((message.into(), admin))
 			.await
-			.inspect_err(|err| log_error("discord-create-message", err));
+			.unwrap();
 	}
 
 	async fn command_callback(server: &Server, result: CommandResult, admin: bool) {
