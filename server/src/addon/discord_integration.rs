@@ -70,6 +70,8 @@ async fn bulk_post(http: &Client, messages: &[(String, bool)], admin: bool, chan
     	.map(|(msg, _)| msg)
     	.join("\n");
 	
+	if message.trim().is_empty() { return; }
+	
 	_ = http.create_message(channel)
 		.content(&message)
 		.await
