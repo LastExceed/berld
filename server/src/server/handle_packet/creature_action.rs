@@ -1,6 +1,8 @@
 use protocol::nalgebra::Vector3;
+use protocol::packet::common::item::Material::Obsidian;
+use protocol::packet::common::Item;
 use protocol::packet::{CreatureAction, WorldUpdate};
-use protocol::packet::common::item::Kind::Void;
+use protocol::packet::common::item::Kind::*;
 use protocol::packet::creature_action::Kind::*;
 use protocol::packet::world_update::{Pickup, sound, Sound};
 use protocol::utils::constants::SIZE_BLOCK;
@@ -40,10 +42,11 @@ impl HandlePacket<CreatureAction> for Server {
 				}).await;
 			}
 			Drop => {
-				if packet.item.kind == Void {
-					self.kick(source, "void item dropped").await;
+				if is_crash_item(&packet.item) {
+					self.kick(source, "crash item dropped").await;
 					return;
 				}
+				
 				let character = source.character.read().await;
 				let position = character.position - Vector3::new(0, 0, SIZE_BLOCK);
 				let rotation = character.rotation.yaw;
@@ -56,4 +59,12 @@ impl HandlePacket<CreatureAction> for Server {
 			}
 		}
 	}
+}
+
+const fn is_crash_item(item: &Item) -> bool {
+	matches!(
+		item,
+		Item { kind: Void, .. } |
+		Item { kind: Block, material: Obsidian, .. }
+	)
 }
