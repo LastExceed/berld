@@ -55,6 +55,7 @@ pub struct Server {
 	pub players: RwLock<Vec<Arc<Player>>>,
 	loot: RwLock<HashMap<Point2<i32>, Vec<GroundItem>>>,
 	pub mapseed: i32,
+	pub motd: String,
 	pub addons: Addons
 }
 
@@ -65,6 +66,7 @@ impl Server {
 			players: Default::default(),
 			loot: Default::default(),
 			mapseed: config.get("seed")?,
+			motd: config.get("motd")?,
 			addons: Addons::new(config)?,
 		};
 
@@ -183,7 +185,8 @@ impl Server {
 
 	async fn send_motd(&self, player: &Player) {
 		let message = format!(
-			"welcome to berld\n{} player(s) connected",
+			"{}\n{} player(s) online",
+			self.motd,
 			self.players.read().await.len()
 		);
 		
