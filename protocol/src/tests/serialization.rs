@@ -1,7 +1,7 @@
 use std::fmt::Debug;
 
 use crate::{Packet, ReadCwData, WriteCwData};
-use crate::utils::io_extensions::{ReadPacket as _, WritePacket as _};
+use crate::utils::io_extensions::{ReadPacket, WritePacket};
 
 mod creature_update;
 mod multi_creature_update;

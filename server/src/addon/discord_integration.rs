@@ -1,11 +1,11 @@
 use std::time::Duration;
 
 use config::{Config, ConfigError};
-use itertools::Itertools as _;
-use tap::Pipe as _;
+use itertools::Itertools;
+use tap::Pipe;
 use tokio::sync::mpsc;
 use tokio::time::sleep;
-use twilight_gateway::{EventTypeFlags, Shard, StreamExt as _};
+use twilight_gateway::{EventTypeFlags, Shard, StreamExt};
 use twilight_http::Client;
 use twilight_model::gateway::{Intents, ShardId};
 use twilight_model::gateway::event::Event::MessageCreate;

@@ -7,7 +7,7 @@
 
 use std::io::ErrorKind::InvalidData;
 
-use boolinator::Boolinator as _;
+use boolinator::Boolinator;
 pub use nalgebra;
 pub use rgb;
 use strum::IntoEnumIterator;
@@ -16,7 +16,7 @@ use tokio::io::{AsyncRead, AsyncWrite};
 
 use crate::packet::*;
 use crate::packet::area_request::{Region, Zone};
-use crate::utils::io_extensions::{ReadArbitrary as _, WriteArbitrary as _};
+use crate::utils::io_extensions::{ReadArbitrary, WriteArbitrary};
 
 pub mod packet;
 pub mod utils;

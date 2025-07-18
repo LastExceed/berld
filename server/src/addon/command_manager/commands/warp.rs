@@ -2,7 +2,7 @@ use std::str::SplitWhitespace;
 use std::collections::HashMap;
 
 use config::{ConfigError, Config};
-use tap::Pipe as _;
+use tap::Pipe;
 use protocol::nalgebra::Point3;
 
 use crate::addon::command_manager::{Command, CommandResult};

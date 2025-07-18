@@ -4,14 +4,14 @@ use nalgebra::Point3;
 use num_enum::IntoPrimitive;
 use strum_macros::{EnumCount, EnumDiscriminants, EnumIter};
 use tokio::io;
-use tokio::io::{AsyncRead, AsyncReadExt as _, AsyncWrite, AsyncWriteExt as _};
+use tokio::io::{AsyncRead, AsyncReadExt, AsyncWrite, AsyncWriteExt};
 
 use kind::*;
 
 use crate::{ReadCwData, Validate, Validator, WriteCwData, utils::ArrayWrapperIndex};
 use crate::packet::common::{Item, Race};
 use crate::utils::{ArrayWrapper, level_scaling_factor, rarity_scaling_factor};
-use crate::utils::io_extensions::{ReadArbitrary as _, WriteArbitrary as _};
+use crate::utils::io_extensions::{ReadArbitrary, WriteArbitrary};
 
 pub mod kind;
 

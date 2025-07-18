@@ -9,7 +9,7 @@ use axum::extract::State;
 use config::{Config, ConfigError};
 use futures::future::join_all;
 use serde::Serialize;
-use tap::Pipe as _;
+use tap::Pipe;
 use tokio::net::TcpListener;
 
 use crate::SERVER;

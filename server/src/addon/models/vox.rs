@@ -3,7 +3,7 @@ use std::collections::HashMap;
 use dot_vox::SceneNode;
 use protocol::rgb::{RGB8, RGBA8};
 use protocol::nalgebra::{Point3, Vector3};
-use tap::{Conv as _, Pipe as _};
+use tap::{Conv, Pipe};
 
 pub fn parse(filename: &str) -> Vec<(Point3<i32>, RGB8)> {
     let vox = dot_vox::load(filename).expect("vox load failed");

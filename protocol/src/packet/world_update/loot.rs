@@ -1,10 +1,10 @@
 use nalgebra::Point3;
 use tokio::io;
-use tokio::io::{AsyncRead, AsyncReadExt as _, AsyncWrite, AsyncWriteExt as _};
+use tokio::io::{AsyncRead, AsyncReadExt, AsyncWrite, AsyncWriteExt};
 
 use crate::{ReadCwData, WriteCwData};
 use crate::packet::Item;
-use crate::utils::io_extensions::{ReadArbitrary as _, WriteArbitrary as _};
+use crate::utils::io_extensions::{ReadArbitrary, WriteArbitrary};
 
 #[repr(C)]
 #[derive(Debug, PartialEq, Clone)]

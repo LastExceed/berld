@@ -5,7 +5,7 @@ use std::path::Path;
 use protocol::nalgebra::{Point3, Point4};
 use protocol::rgb::{RGB8, RGBA8};
 use serde::Deserialize;
-use tap::{Conv as _, Pipe as _};
+use tap::{Conv, Pipe};
 
 #[expect(clippy::big_endian_bytes, reason ="file format")]
 pub fn parse(path: &Path) -> Vec<(Point3<i32>, RGB8)> {

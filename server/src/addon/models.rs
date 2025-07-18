@@ -8,7 +8,7 @@ use protocol::rgb::RGB8;
 use protocol::packet::world_update::Block;
 use protocol::nalgebra::{Point2, Vector3};
 use protocol::packet::world_update::block::Kind::*;
-use tap::Pipe as _;
+use tap::Pipe;
 
 mod vox;
 mod zox;

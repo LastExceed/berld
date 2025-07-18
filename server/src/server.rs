@@ -9,17 +9,17 @@ use std::time::Duration;
 use colour::dark_grey_ln;
 use config::{Config, ConfigError};
 use futures::future::join_all;
-use tap::{Pipe as _, Tap as _};
+use tap::{Pipe, Tap};
 use tokio::task::JoinHandle;
 use tokio::{io, select};
-use tokio::io::{copy, simplex, AsyncWrite, AsyncWriteExt as _, SimplexStream, WriteHalf};
+use tokio::io::{copy, simplex, AsyncWrite, AsyncWriteExt, SimplexStream, WriteHalf};
 use tokio::io::BufReader;
 use tokio::net::{TcpListener, TcpStream};
 use tokio::net::tcp::OwnedReadHalf;
 use tokio::sync::RwLock;
 use tokio::time::{sleep, timeout};
 
-use protocol::{Packet as _, WriteCwData};
+use protocol::{Packet, WriteCwData};
 use protocol::nalgebra::{Point2, Point3, Vector3};
 use protocol::packet::{*, Hit};
 use protocol::packet::area_request::{Region, Zone};
@@ -29,14 +29,14 @@ use protocol::packet::world_update::loot::GroundItem;
 use protocol::packet::world_update::Sound;
 use protocol::packet::world_update::sound::Kind::*;
 use protocol::utils::constants::{SIZE_BLOCK, SIZE_ZONE};
-use protocol::utils::io_extensions::{ReadPacket, WriteArbitrary as _, WritePacket};
+use protocol::utils::io_extensions::{ReadPacket, WriteArbitrary, WritePacket};
 
 use crate::addon::{Addons, announce_join_leave};
 use crate::addon::pvp::map_head;
 use crate::addon::pvp;
 use crate::server::creature::Creature;
 use crate::server::creature_id_pool::CreatureIdPool;
-use crate::server::handle_packet::HandlePacket as _;
+use crate::server::handle_packet::HandlePacket;
 use crate::server::player::Player;
 use crate::SERVER;
 

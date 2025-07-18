@@ -2,7 +2,7 @@ use std::time::{Duration, Instant};
 
 use crate::{addon::anti_cheat, server::creature::Creature};
 
-use super::{EnsureAtMost as _, Player, PlayerData};
+use super::{EnsureAtMost, Player, PlayerData};
 
 #[expect(clippy::cast_sign_loss, reason = "checked at runtime")]
 pub(super) async fn check_for_timewarp(previous_state: &Creature, updated_state: &Creature, player: &Player) -> anti_cheat::Result {

@@ -1,6 +1,6 @@
 use std::ptr;
 use futures::future::join_all;
-use tap::Pipe as _;
+use tap::Pipe;
 use protocol::packet::creature_update::Affiliation;
 use protocol::packet::CreatureUpdate;
 

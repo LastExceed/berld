@@ -11,7 +11,7 @@ use protocol::packet::world_update::{Block, WorldObject};
 use protocol::packet::world_update::block::Kind::*;
 use protocol::packet::world_update::world_object::Kind::{Crate, FireTrap};
 use protocol::utils::constants::{SIZE_BLOCK, SIZE_ZONE};
-use strum::IntoEnumIterator as _;
+use strum::IntoEnumIterator;
 use protocol::packet::world_update::sound;
 
 use crate::addon::{command_manager::{Command, CommandResult}, models, play_sound_at_player};
