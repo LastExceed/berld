@@ -18,7 +18,6 @@ rgb = "0.8.50"
 tokio = { version = "1.46.0", features = ["full"] }
 strum_macros = "0.27.1"
 strum = "0.27.1"
-boolinator = "2.4.0"
 num-traits = "0.2.19"
 num_enum = "0.7.4"
 array-init = "2.1.0"

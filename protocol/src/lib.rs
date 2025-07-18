@@ -2,12 +2,12 @@
 #![feature(generic_const_exprs)]
 #![feature(associated_type_defaults)]
 #![feature(min_specialization)]
+#![feature(bool_to_result)]
 
 #![expect(async_fn_in_trait, reason = "TODO")] //TODO: investigate if AFIT desugaring could obsolete Unpin trait bounds
 
 use std::io::ErrorKind::InvalidData;
 
-use boolinator::Boolinator;
 pub use nalgebra;
 pub use rgb;
 use strum::IntoEnumIterator;

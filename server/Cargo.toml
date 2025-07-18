@@ -13,7 +13,6 @@ edition = "2024"
 
 [dependencies]
 protocol = { path = "../protocol" }
-boolinator = "2.4.0"
 colour = "2.1.0"
 tokio = { version = "1.46.0", features = ["full"] }
 futures = "0.3.31"

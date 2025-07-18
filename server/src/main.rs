@@ -3,6 +3,7 @@
 #![feature(future_join)]
 #![feature(iter_collect_into)]
 #![feature(iter_intersperse)]
+#![feature(bool_to_result)]
 
 #![allow(unreachable_pub, reason = "this isn't a lib, so adding `(crate)` to every `pub` is just pointless noise")]
 #![allow(clippy::partial_pub_fields, reason = "OOP...")]

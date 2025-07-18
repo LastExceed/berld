@@ -3,7 +3,6 @@ use std::ops::RangeBounds;
 use std::result;
 use std::time::Instant;
 
-use boolinator::Boolinator;
 use tap::Tap;
 
 use protocol::packet::CreatureUpdate;

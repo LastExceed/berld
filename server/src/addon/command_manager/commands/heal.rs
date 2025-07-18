@@ -16,10 +16,14 @@ impl Command for Heal {
 		let caller = caller.ok_or(INGAME_ONLY)?;
 		let character = caller.character.read().await;
 
-		let mut amount: f32 = 9999.0;
-		if let Some(str) = params.next() {
-			amount = str.parse().map_err(|_| "invalid amount specified")?;
-		}
+		let amount: f32 = params
+			.next()
+			.map_or(
+				Ok(9999.0),
+				|str| str
+					.parse()
+					.map_err(|_| "invalid amount")
+			)?;
 
 		let heal = Hit {
 			attacker: caller.id,
