@@ -1,6 +1,7 @@
 use std::str::SplitWhitespace;
 
 use futures::future::join_all;
+use tap::Pipe;
 
 use crate::addon::command_manager::{Command, CommandResult};
 use crate::addon::command_manager::commands::{Who, WhoIp};
@@ -12,21 +13,27 @@ impl Command for Who {
 	const ADMIN_ONLY: bool = false;
 
 	async fn execute<'fut>(&'fut self, server: &'fut Server, _caller: Option<&'fut Player>, _params: &'fut mut SplitWhitespace<'fut>) -> CommandResult {
-		let message = join_all(
-			server.players
-				.read().await
-				.iter().map(async |player| {
-					format!(
-						"#{} {}",
-						player.id.0,
-						&player.character
-							.read().await
-							.name
-					)
-				})
-		).await.join(", ");
-
-		Ok(Some(message))
+		server
+			.players
+			.read()
+			.await
+			.iter()
+			.map(async |player| format!(
+				"#{} {}",
+				player.id.0,
+				&player.character.read().await.name
+			))
+			.pipe(join_all)
+			.await
+			.pipe(|names|
+				if names.is_empty() {
+					"(nobody here)".to_owned()
+				} else {
+					names.join(", ")
+				}
+			)
+			.pipe(Some)
+			.pipe(Ok)
 	}
 }
 
@@ -35,21 +42,27 @@ impl Command for WhoIp {
 	const ADMIN_ONLY: bool = true;
 
 	async fn execute<'fut>(&'fut self, server: &'fut Server, _caller: Option<&'fut Player>, _params: &'fut mut SplitWhitespace<'fut>) -> CommandResult {
-		let message = join_all(
-			server.players
-				.read().await
-				.iter().map(async |player| {
-				format!(
-					"#{} {} {}",
-					player.id.0,
-					&player.character
-						.read().await
-						.name,
-					player.address
-				)
-			})
-		).await.join(", ");
-
-		Ok(Some(message))
+		server
+			.players
+			.read()
+			.await
+			.iter()
+			.map(async |player| format!(
+				"#{} {} {}",
+				player.id.0,
+				&player.character.read().await.name,
+				player.address
+			))
+			.pipe(join_all)
+			.await
+			.pipe(|names|
+				if names.is_empty() {
+					"(nobody here)".to_owned()
+				} else {
+					names.join(", ")
+				}
+			)
+			.pipe(Some)
+			.pipe(Ok)
 	}
 }
