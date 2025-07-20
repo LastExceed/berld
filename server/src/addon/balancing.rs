@@ -190,7 +190,7 @@ impl Balancing {
 			return;
 		}
 
-		if hit.damage.is_sign_negative() {
+		if hit.damage.is_sign_negative() || hit.kind != hit::Kind::Normal {
 			return;
 		}
 
