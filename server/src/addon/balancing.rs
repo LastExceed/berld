@@ -8,7 +8,7 @@ use config::{Config, ConfigError};
 use serde::Deserialize;
 use tokio::sync::RwLock;
 
-use protocol::packet::{CreatureUpdate, Hit, StatusEffect, WorldUpdate};
+use protocol::packet::{Hit, StatusEffect, WorldUpdate};
 use protocol::rgb::RGBA;
 use protocol::utils::constants::combat_classes::WATER_MAGE;
 use protocol::packet::world_update::{particle, sound, Particle};
@@ -264,7 +264,7 @@ pub async fn buff_warfrenzy(warfrenzy: &StatusEffect, server: &Server) {
 	server.broadcast(&WorldUpdate::from(swiftness), None).await;
 }
 
-pub async fn adjust_blocking(hit: &mut Hit, attacker: &Player, attacker_creature: &Creature, target_creature: &Creature) {
+pub fn adjust_blocking(hit: &mut Hit, attacker_creature: &Creature) {
 	if hit.kind != hit::Kind::Block {
 		return
 	}
@@ -274,13 +274,6 @@ pub async fn adjust_blocking(hit: &mut Hit, attacker: &Player, attacker_creature
 		.iter()
 		.any(|item| item.kind == Weapon(Shield));
 	hit.damage *= if has_shield { 0.5 } else { 0.0 };
-
-	let creature_update = &CreatureUpdate { // Avoid the depletion of the target blocking gauge
-		id: hit.target,
-		blocking_gauge: Some(target_creature.blocking_gauge),
-		..Default::default()
-	};
-	attacker.send_ignoring(creature_update).await;
 }
 
 #[derive(Debug, Deserialize)]

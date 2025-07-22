@@ -27,7 +27,7 @@ impl HandlePacket<Hit> for Server {
 		let source_character_guard = source.character.read().await;
 
 		self.addons.balancing.on_hit(self, &mut packet, &source_character_guard, &target).await;
-		balancing::adjust_blocking(&mut packet, source, &source_character_guard, &target_character_guard).await;
+		balancing::adjust_blocking(&mut packet, &source_character_guard);
 		packet.flash = true;//todo: (re-)move
 
 		kill_feed::set_last_attacker(&target, source_character_guard.name.clone()).await;

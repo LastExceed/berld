@@ -9,7 +9,6 @@ pub fn filter(packet: &mut CreatureUpdate, former_state: &Creature, updated_stat
 	packet.flags_physics  = None;
 	packet.combo_timeout  = None;
 	packet.mana           = None;
-	packet.blocking_gauge = None;
 	packet.experience     = None;
 	packet.home_zone      = None;
 	packet.home           = None;
@@ -24,6 +23,7 @@ pub fn filter(packet: &mut CreatureUpdate, former_state: &Creature, updated_stat
 	//- classMajor
 	//- classMinor
 	//- health
+	//- packet.blocking_gauge // attacker doesnt know we're zeroing blocked damage, and sending reactively takes too long
 	//- multipliers
 	//- level
 	//- consumable
