@@ -22,6 +22,7 @@ use crate::addon::command_manager::commands::Test;
 use crate::addon::command_manager::utils::INGAME_ONLY;
 use crate::server::player::Player;
 use crate::server::Server;
+use crate::SERVER;
 
 impl Command for Test {
 	const LITERAL: &'static str = "t";
@@ -343,7 +344,7 @@ async fn gallery(caller: &Player) {
 			name: Some(id.to_string()),
 			..Default::default()
 		}
-			.pipe_ref(|cu| caller.send_ignoring(cu))
+			.pipe_ref(|cu| SERVER.broadcast(cu, None))
 			.await;
 	}
 }
