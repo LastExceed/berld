@@ -7,11 +7,11 @@ use tap::Tap;
 
 use crate::server::player::Player;
 
-pub struct NpcStuff {
+pub struct Npcs {
     static_npcs: Vec<CreatureUpdate>
 }
 
-impl NpcStuff {
+impl Npcs {
     pub fn new() -> Self {
         Self {
             static_npcs: static_npcs()

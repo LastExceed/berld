@@ -21,7 +21,7 @@ use crate::SERVER;
 use listforge_api::ListforgeApi;
 
 use self::models::Models;
-use self::npc_stuff::NpcStuff;
+use self::npcs::Npcs as Npcs;
 
 pub mod anti_cheat;
 pub mod traffic_filter;
@@ -32,7 +32,7 @@ pub mod pvp;
 pub mod listforge_api;
 pub mod kill_feed;
 pub mod models;
-pub mod npc_stuff;
+pub mod npcs;
 
 pub struct Addons {
 	pub discord_integration: DiscordIntegration,
@@ -40,7 +40,7 @@ pub struct Addons {
 	pub command_manager: CommandManager,
 	pub listforge_api: ListforgeApi,
 	pub models: Models,
-	pub npc_stuff: NpcStuff
+	pub npcs: Npcs
 }
 
 impl Addons {
@@ -51,7 +51,7 @@ impl Addons {
 			command_manager: CommandManager::new(config)?,
 			listforge_api: ListforgeApi::new(config)?,
 			models: Models::new(config)?,
-			npc_stuff: NpcStuff::new()
+			npcs: Npcs::new()
 		};
 
 		Ok(instance)

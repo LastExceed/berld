@@ -51,7 +51,7 @@ pub mod utils;
 const TIMEOUT: Duration = Duration::from_secs(30);
 
 pub struct Server {
-	id_pool: RwLock<CreatureIdPool>,
+	pub id_pool: RwLock<CreatureIdPool>,
 	pub players: RwLock<Vec<Arc<Player>>>,
 	loot: RwLock<HashMap<Point2<i32>, Vec<GroundItem>>>,
 	pub mapseed: i32,
@@ -362,7 +362,7 @@ async fn send_existing_creatures(server: &Server, player: &Player) {
 		.pipe(join_all)
 		.await;
 	
-	server.addons.npc_stuff.load_npcs(player).await;
+	server.addons.npcs.load_npcs(player).await;
 }
 
 fn configure_stream(stream: TcpStream) -> io::Result<(BufReader<OwnedReadHalf>, WriteHalf<SimplexStream>, JoinHandle<()>)>{
