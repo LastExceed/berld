@@ -17,7 +17,8 @@ use strum::IntoEnumIterator;
 use protocol::packet::world_update::sound;
 use tap::{Pipe, Tap};
 
-use crate::addon::{command_manager::{Command, CommandResult}, models, play_sound_at_player};
+use crate::addon::models::model::Model;
+use crate::addon::{command_manager::{Command, CommandResult}, play_sound_at_player};
 use crate::addon::command_manager::commands::Test;
 use crate::addon::command_manager::utils::INGAME_ONLY;
 use crate::server::player::Player;
@@ -280,7 +281,7 @@ async fn model(params: &mut SplitWhitespace<'_>, server: &Server, caller: &Playe
 		else {
 			return Err("no file name specified");
 		};
-	let mut blocks = models::parse_model(file);
+	let mut blocks = Model::try_parse(file).map_err(|_| "failed to parse model")?.blocks;
 
 	let offset = caller
 		.character

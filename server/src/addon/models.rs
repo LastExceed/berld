@@ -1,76 +1,73 @@
-use std::ops::Div as _;
 use std::collections::HashMap;
-use std::path;
 
-use config::{Config, ConfigError};
-use protocol::utils::constants::{SIZE_BLOCK, SIZE_ZONE};
-use protocol::rgb::RGB8;
-use protocol::packet::world_update::Block;
-use protocol::nalgebra::{Point2, Vector3};
-use protocol::packet::world_update::block::Kind::*;
+use config::Config;
+use itertools::Itertools;
+use protocol::packet::world_update::{Block, WorldObject};
+use protocol::nalgebra::Point2;
+use protocol::utils::constants::SIZE_BLOCK;
 use tap::Pipe;
 
-mod vox;
-mod zox;
+use self::model::Model;
+use self::instance::Instance;
+
+pub mod model;
+mod instance;
 
 pub struct Models {
-	models: Vec<(Point2<i32>, Vec<Block>)>
+	block_cache: HashMap<Point2<i32>, Vec<Block>>,
+	object_cache: Vec<WorldObject>
 }
 
 impl Models {
-	pub fn new(config: &Config) -> Result<Self, ConfigError> {
-		Self {
-			models: config
-				.get::<HashMap<String, [i64; 3]>>("models")?
-				.into_iter()
-				.map(|(filename, pos)| {
-					let pos: Vector3<i64> = pos.into();
-					let zone = pos
-						.xy()
-						.div(SIZE_ZONE)
-						.cast::<i32>()
-						.into();
+	pub fn new(config: &Config) -> anyhow::Result<Self> {
+		let instances: Vec<Instance> = config.get("models")?;
+		let models: HashMap<&String, Model> = instances
+			.iter()
+			.map(|instance| &instance.filename)
+			.unique()
+			.map(|filename|
+				Model::try_parse(filename)
+					.map(|model| (filename, model))
+			)
+			.collect::<anyhow::Result<_>>()?;
 
-					let mut blocks = parse_model(&filename);
-					let model_origin = pos
-						.div(SIZE_BLOCK)
-						.cast::<i32>();
+		instances
+			.iter()
+			.map(|Instance { filename, position }| {
+				let offset = position
+					.map(|scalar| scalar / SIZE_BLOCK)
+					.cast::<i32>()
+					.coords;
 
-					for block in &mut blocks {
-						block.position += model_origin;
-					}
+				let Model {
+					ref blocks,
+					ref world_objects
+				} = models[&filename];
 
-					(zone, blocks)
-				})
-				.collect()
-		}.pipe(Ok)
+    			let positioned_blocks = blocks
+					.iter()
+					.cloned()
+					.update(move |block| block.position += offset);
+				
+				let positioned_objects = world_objects
+					.iter()
+					.cloned()
+					.update(|world_object| world_object.position += position.coords);
+
+				(positioned_blocks, positioned_objects)
+			})
+			.unzip::<_, _, Vec<_>, Vec<_>>() // avoiding this prolly requires going full imperative
+			.pipe(|(blocks, objects)| Self {
+				block_cache: blocks .into_iter().flatten().into_group_map_by(|block | block.position.xy() / 256),
+				object_cache: objects.into_iter().flatten().collect(), // todo: assign zone and id
+			})
+			.pipe(Ok)
 	}
 
 	pub fn blocks_in(&self, requested_zone: Point2<i32>) -> Vec<Block> {
-		self.models
-			.iter()
-			.filter(|(zone, _blocks)| *zone == requested_zone)
-			.flat_map(|(_zone, blocks)| blocks)
-			.cloned()
-			.collect()
+		self.block_cache
+			[&requested_zone]
+			.clone()
 	}
 }
 
-const PURE_BLUE: RGB8 = RGB8::new(0, 0, 255);
-
-pub fn parse_model(filename: &str) -> Vec<Block> {
-	let path = path::Path::new(filename);
-	if path.extension().unwrap() == "vox" {
-		vox::parse(filename)
-	} else {
-		zox::parse(path)
-	}
-		.into_iter()
-		.map(|(position, color)| Block {
-			position,
-			color,
-			kind: if color == PURE_BLUE { Liquid } else { Solid },
-			padding: 0,
-		})
-		.collect()
-}

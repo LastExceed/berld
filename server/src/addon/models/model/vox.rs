@@ -1,11 +1,14 @@
 use std::collections::HashMap;
 
 use dot_vox::SceneNode;
-use protocol::rgb::{RGB8, RGBA8};
+use itertools::Itertools;
+use protocol::rgb::RGBA8;
 use protocol::nalgebra::{Point3, Vector3};
 use tap::{Conv, Pipe};
 
-pub fn parse(filename: &str) -> Vec<(Point3<i32>, RGB8)> {
+use super::ParsedVoxel;
+
+pub fn parse(filename: &str) -> anyhow::Result<Vec<ParsedVoxel>> {
     let vox = dot_vox::load(filename).expect("vox load failed");
 
 	let mut model_offsets = HashMap::new();
@@ -39,10 +42,11 @@ pub fn parse(filename: &str) -> Vec<(Point3<i32>, RGB8)> {
                         .conv::<RGBA8>()
                         .rgb();
                     
-                    (pos, color)
+                    ParsedVoxel(pos, color)
                 })
 		})
-		.collect()
+		.collect_vec()
+        .pipe(Ok)
 }
 
 fn walk_scene_graph(scene_graph: &Vec<SceneNode>, index: usize, mut current_offset: Vector3<i32>, model_offsets: &mut HashMap<u32, Vector3<i32>>) {

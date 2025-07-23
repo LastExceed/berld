@@ -7,7 +7,7 @@ use std::sync::Arc;
 use std::time::Duration;
 
 use colour::dark_grey_ln;
-use config::{Config, ConfigError};
+use config::Config;
 use futures::future::join_all;
 use tap::{Pipe, Tap};
 use tokio::task::JoinHandle;
@@ -60,7 +60,7 @@ pub struct Server {
 }
 
 impl Server {
-	pub fn new(config: &Config) -> Result<Self, ConfigError> {
+	pub fn new(config: &Config) -> anyhow::Result<Self> {
 		let instance = Self {
 			id_pool: Default::default(),
 			players: Default::default(),

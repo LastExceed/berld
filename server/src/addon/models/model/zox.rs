@@ -2,32 +2,36 @@ use std::fs::File;
 use std::io::BufReader;
 use std::path::Path;
 
-use protocol::nalgebra::{Point3, Point4};
-use protocol::rgb::{RGB8, RGBA8};
+use itertools::Itertools;
+use protocol::nalgebra::Point4;
+use protocol::rgb::RGBA8;
 use serde::Deserialize;
 use tap::{Conv, Pipe};
 
+use super::ParsedVoxel;
+
 #[expect(clippy::big_endian_bytes, reason ="file format")]
-pub fn parse(path: &Path) -> Vec<(Point3<i32>, RGB8)> {
-    let zox = File::open(path)
-        .unwrap()
+pub fn parse(path: &Path) -> anyhow::Result<Vec<ParsedVoxel>> {
+    File::open(path)?
         .pipe(BufReader::new)
-        .pipe(serde_json::from_reader::<_, Zox>)
-        .unwrap();
-    zox
+        .pipe(serde_json::from_reader::<_, Zox>)?
         .frame1
         .into_iter()
         .map(Point4::from)
         .map(|raw| {
-            let pos = raw.xzy().cast();
-            let color = raw.w
+            let pos = raw
+                .xzy()
+                .cast::<i32>();
+            let color = raw
+                .w
                 .to_be_bytes()
                 .conv::<RGBA8>()
                 .rgb();
     
-            (pos, color)
+            ParsedVoxel(pos, color)
         })
-        .collect()
+        .collect_vec()
+        .pipe(Ok)
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Deserialize)]

@@ -1,6 +1,6 @@
 use std::time::Duration;
 
-use config::{Config, ConfigError};
+use config::Config;
 use futures::future::join_all;
 use tap::Pipe;
 use tokio::time::sleep;
@@ -44,7 +44,7 @@ pub struct Addons {
 }
 
 impl Addons {
-	pub fn new(config: &Config) -> Result<Self, ConfigError> {
+	pub fn new(config: &Config) -> anyhow::Result<Self> {
 		let instance = Self {
 			discord_integration: DiscordIntegration::new(config)?,
 			balancing: Balancing::new(config)?,
