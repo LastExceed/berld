@@ -58,7 +58,7 @@ impl<Writable: AsyncWrite + Unpin> WriteCwData<WorldUpdate> for Writable {
 	async fn write_cw_data(&mut self, world_update: &WorldUpdate) -> io::Result<()> {
 		let mut buffer = vec![];
 
-		let mut encoder = ZlibEncoder::with_quality(&mut buffer, Level::Best);
+		let mut encoder = ZlibEncoder::with_quality(&mut buffer, Level::Fastest);
 
 		//todo: copypasta
 		encoder.write_cw_data(&world_update.blocks        ).await?;
