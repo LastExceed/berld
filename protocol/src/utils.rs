@@ -16,6 +16,7 @@ use crate::utils::io_extensions::{ReadArbitrary, WriteArbitrary};
 pub mod io_extensions;
 pub mod flagset;
 pub mod constants;
+pub mod coordinates;
 
 #[must_use]
 fn something(level: f32) -> f32 {
