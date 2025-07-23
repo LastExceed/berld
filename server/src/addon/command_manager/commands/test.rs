@@ -1,18 +1,21 @@
 use std::ops::{Div as _, Mul as _, Sub as _};
 use std::str::SplitWhitespace;
 
-use protocol::packet::StatusEffect;
+use protocol::packet::creature_update::{Affiliation, Appearance, AppearanceFlag};
+use protocol::packet::{CreatureUpdate, StatusEffect};
 use protocol::packet::world_update::block::Kind;
 use protocol::packet::status_effect;
 use protocol::nalgebra::{Point3, Vector3};
 use protocol::packet::WorldUpdate;
-use protocol::packet::common::Hitbox;
+use protocol::packet::common::{CreatureId, Hitbox, Race};
 use protocol::packet::world_update::{Block, WorldObject};
 use protocol::packet::world_update::block::Kind::*;
 use protocol::packet::world_update::world_object::Kind::{Crate, FireTrap};
 use protocol::utils::constants::{SIZE_BLOCK, SIZE_ZONE};
+use protocol::utils::flagset::FlagSet;
 use strum::IntoEnumIterator;
 use protocol::packet::world_update::sound;
+use tap::{Pipe, Tap};
 
 use crate::addon::{command_manager::{Command, CommandResult}, models, play_sound_at_player};
 use crate::addon::command_manager::commands::Test;
@@ -38,6 +41,7 @@ impl Command for Test {
 			Some("s") => play_sound(caller, params).await,
 			Some("model") => model(params, server, caller).await?,
 			Some("shield") => shield(caller).await,
+			Some("gallery") => gallery(caller).await,
 			Some(_) => { return Err("unknown sub-command") }
 			None => { return Err("too few arguments") },
 		}
@@ -83,7 +87,7 @@ async fn place_blocks<const B: bool>(caller: &Player) {
 		for dy in 0..8 {
 			for dz in 0..1000 {
 				let block = Block {
-					position: pos + Vector3::new(dx, dy, -dz),
+					position: pos + Vector3::new(dx, dy, dz),
 					color: [0,0,0].into(),
 					kind: if B { Air } else { Solid },
 					padding: 0,
@@ -306,4 +310,40 @@ async fn shield(caller: &Player) {
 	};
 
 	caller.send_ignoring(&WorldUpdate::from(se)).await;
+}
+
+async fn gallery(caller: &Player) {
+	let pos = caller.character.read().await.position;
+	let spacing = SIZE_BLOCK * 3;
+	
+	for id in 0..=2568 {
+		CreatureUpdate {
+			id: CreatureId(100000 + id),
+			position: Some(pos + Vector3::new((id % 50) * spacing, (id/50) * spacing, 0)),
+			affiliation: Some(Affiliation::Neutral),
+			race: Some(Race::Bandit),
+			appearance: Some(Appearance {
+				flags: FlagSet::default().tap_mut(|x| x.set(AppearanceFlag::Immovable, true)),
+				creature_size: Hitbox {
+					width: 1.0,
+					depth: 0.0,
+					height: 0.0,
+				},
+				head_model: id as _,
+				body_model: -1,
+				foot_model: -1,
+				hair_model: -1,
+				hand_model: -1,
+				tail_model: -1,
+				wing_model: -1,
+				head_size: 1.0,
+				
+				..Default::default()
+			}),
+			name: Some(id.to_string()),
+			..Default::default()
+		}
+			.pipe_ref(|cu| caller.send_ignoring(cu))
+			.await;
+	}
 }
