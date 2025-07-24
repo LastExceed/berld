@@ -19,27 +19,32 @@ pub mod constants;
 
 #[must_use]
 fn something(level: f32) -> f32 {
-	1.0 / (0.05 * (level - 1.0) + 1.0)
+	// order of operations matches cubeworld's rounding behaviour
+	1.0 - (1.0 / (0.05 * (level - 1.0) + 1.0))
 }
 
 #[must_use]
 pub fn level_scaling_factor(level: f32) -> f32 {
-	2.0_f32.powf((1.0 - something(level)) * 3.0)
+	// order of operations matches cubeworld's rounding behaviour
+	2.0_f32.powf(something(level) * 3.0)
 }
 
 #[must_use]
 pub fn rarity_scaling_factor(rarity: u8) -> f32 {
+	// order of operations matches cubeworld's rounding behaviour
 	2.0_f32.powf(rarity as f32 * 0.25)
 }
 
 #[must_use]
 pub fn power_of(level: i32) -> i32 {
-	(101.0 - 100.0 * something(level as f32)) as i32
+	// order of operations matches cubeworld's rounding behaviour
+	(1.0 + something(level as f32) * 100.0) as i32
 }
 
 #[must_use]
 pub fn maximum_experience_of(level: i32) -> i32 {
-	(1050.0 - 1000.0 * something(level as f32)) as i32
+	// order of operations matches cubeworld's rounding behaviour
+	(50.0 + something(level as f32) * 1000.0) as i32
 }
 
 #[must_use]
