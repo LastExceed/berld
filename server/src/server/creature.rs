@@ -246,9 +246,10 @@ impl Creature {
 				_       => 1.0
 			};
 
-		let innate_health = self.multipliers[Health]
-			* level_scaling_factor(self.level as f32)
+		// order of operations matches cubeworld's rounding behaviour
+		let innate_health = level_scaling_factor(self.level as f32)
 			* rarity_scaling_factor(if self.affiliation == Affiliation::Player { 4 } else { self.rarity })
+			* self.multipliers[Health]
 			* combat_class_multiplier;
 
 		//add each item's hp stat onto the total 1 by 1 in order to match cubeworld in terms of float precision errors
