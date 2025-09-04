@@ -118,7 +118,7 @@ impl Creature {
 			unknown36            : creature_update.unknown36?,
 			rarity               : creature_update.rarity?,
 			unknown38            : creature_update.unknown38?,
-			home_zone            : creature_update.home_zone?,
+			home_zone            : creature_update.zone_data_index?,
 			home                 : creature_update.home?,
 			zone_to_reveal       : creature_update.zone_to_reveal?,
 			unknown42            : creature_update.unknown42?,
@@ -172,7 +172,7 @@ impl Creature {
 		if let Some(it) = packet.unknown36             { self.unknown36             = it }
 		if let Some(it) = packet.rarity                { self.rarity                = it }
 		if let Some(it) = packet.unknown38             { self.unknown38             = it }
-		if let Some(it) = packet.home_zone             { self.home_zone             = it }
+		if let Some(it) = packet.zone_data_index       { self.home_zone             = it }
 		if let Some(it) = packet.home                  { self.home                  = it }
 		if let Some(it) = packet.zone_to_reveal        { self.zone_to_reveal        = it }
 		if let Some(it) = packet.unknown42             { self.unknown42             = it }
@@ -225,7 +225,7 @@ impl Creature {
 			unknown36         : Some(self.unknown36),
 			rarity            : Some(self.rarity),
 			unknown38         : Some(self.unknown38),
-			home_zone         : Some(self.home_zone),
+			zone_data_index   : Some(self.home_zone),
 			home              : Some(self.home),
 			zone_to_reveal    : Some(self.zone_to_reveal),
 			unknown42         : Some(self.unknown42),

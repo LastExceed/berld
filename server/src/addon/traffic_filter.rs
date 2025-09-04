@@ -10,7 +10,7 @@ pub fn filter(packet: &mut CreatureUpdate, former_state: &Creature, updated_stat
 	packet.combo_timeout  = None;
 	packet.mana           = None;
 	packet.experience     = None;
-	packet.home_zone      = None;
+	packet.zone_data_index= None;
 	packet.home           = None;
 	packet.zone_to_reveal = None;
 	packet.mana_cubes     = None;
@@ -144,7 +144,7 @@ pub fn filter(packet: &mut CreatureUpdate, former_state: &Creature, updated_stat
 	packet.unknown36         .is_some() ||
 	packet.rarity            .is_some() ||
 	packet.unknown38         .is_some() ||
-	packet.home_zone         .is_some() ||
+	packet.zone_data_index   .is_some() ||
 	packet.home              .is_some() ||
 	packet.zone_to_reveal    .is_some() ||
 	packet.unknown42         .is_some() ||

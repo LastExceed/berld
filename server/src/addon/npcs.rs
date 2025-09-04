@@ -115,21 +115,21 @@ fn static_npcs() -> Vec<CreatureUpdate> {
         CreatureUpdate {
             appearance: Some(appearance_template.clone()),
             occupation: Some(Occupation::ArmorShopkeep),
-            home_zone: Some([32804, 32803, 7].into()),
+            zone_data_index: Some([32804, 32803, 7].into()),
             name: Some("Armor\nShop".into()),
             ..Default::default()
         },
         CreatureUpdate {
             appearance: Some(appearance_template.clone()),
             occupation: Some(Occupation::GeneralShopkeep),
-            home_zone: Some([32804, 32803, 8].into()),
+            zone_data_index: Some([32804, 32803, 8].into()),
             name: Some("General\nShop".into()),
             ..Default::default()
         },
         CreatureUpdate {
             appearance: Some(appearance_template),
             occupation: Some(Occupation::WeaponShopkeep),
-            home_zone: Some([32804, 32803, 9].into()),
+            zone_data_index: Some([32804, 32803, 9].into()),
             name: Some("Weapon\nShop".into()),
             ..Default::default()
         }

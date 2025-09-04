@@ -24,8 +24,7 @@ impl<Readable: AsyncRead + Unpin> ReadCwData<CreatureAction> for Readable {
 	async fn read_cw_data(&mut self) -> io::Result<CreatureAction> {
 		let creature_action = CreatureAction {
 			item: <Readable as ReadCwData<Item>>::read_cw_data(self).await?,//explicit type annotation as a workaround for https://github.com/rust-lang/rust/issues/108362
-			zone: self.read_arbitrary().await?,
-			item_index: self.read_i32_le().await?,
+			zone_data_index: self.read_arbitrary().await?,
 			unknown_a: self.read_i32_le().await?,
 			kind: self.read_arbitrary().await?,
 		};
@@ -38,8 +37,7 @@ impl<Readable: AsyncRead + Unpin> ReadCwData<CreatureAction> for Readable {
 impl<Writable: AsyncWrite + Unpin> WriteCwData<CreatureAction> for Writable {
 	async fn write_cw_data(&mut self, creature_action: &CreatureAction) -> io::Result<()> {
 		self.write_cw_data(&creature_action.item).await?;
-		self.write_arbitrary(&creature_action.zone).await?;
-		self.write_i32_le(creature_action.item_index).await?;
+		self.write_arbitrary(&creature_action.zone_data_index).await?;
 		self.write_i32_le(creature_action.unknown_a).await?;
 		self.write_u8(creature_action.kind as u8).await?;
 		self.write_all(&[0_u8; 3]).await

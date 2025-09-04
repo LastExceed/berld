@@ -4,11 +4,11 @@ use crate::packet::creature_action::Kind::CallPet;
 generate_serialization_tests!(
 	CreatureAction {
 		item: Default::default(),//todo
-		zone: [
+		zone_data_index: [
 			0x11121314,
-			0x21222324
+			0x21222324,
+			0x31323334
 		].into(),
-		item_index: 0x31323334,
 		unknown_a: 0x41424344,
 		kind: CallPet,//8
 	},

@@ -86,7 +86,7 @@ impl<Readable: AsyncRead + Unpin> ReadCwData<CreatureUpdate> for Readable {
 			unknown36         : if bitfield & (1 << 36) > 0 { Some(decoder.read_arbitrary().await?) } else { None },
 			rarity            : if bitfield & (1 << 37) > 0 { Some(decoder.read_arbitrary().await?) } else { None },
 			unknown38         : if bitfield & (1 << 38) > 0 { Some(decoder.read_arbitrary().await?) } else { None },
-			home_zone         : if bitfield & (1 << 39) > 0 { Some(decoder.read_arbitrary().await?) } else { None },
+			zone_data_index   : if bitfield & (1 << 39) > 0 { Some(decoder.read_arbitrary().await?) } else { None },
 			home              : if bitfield & (1 << 40) > 0 { Some(decoder.read_arbitrary().await?) } else { None },
 			zone_to_reveal    : if bitfield & (1 << 41) > 0 { Some(decoder.read_arbitrary().await?) } else { None },
 			unknown42         : if bitfield & (1 << 42) > 0 { Some(decoder.read_arbitrary().await?) } else { None },
@@ -174,7 +174,7 @@ impl<Writable: AsyncWrite + Unpin> WriteCwData<CreatureUpdate> for Writable {
 		bitfield |= (creature_update.unknown36        .is_some() as u64) << 36;
 		bitfield |= (creature_update.rarity           .is_some() as u64) << 37;
 		bitfield |= (creature_update.unknown38        .is_some() as u64) << 38;
-		bitfield |= (creature_update.home_zone        .is_some() as u64) << 39;
+		bitfield |= (creature_update.zone_data_index  .is_some() as u64) << 39;
 		bitfield |= (creature_update.home             .is_some() as u64) << 40;
 		bitfield |= (creature_update.zone_to_reveal   .is_some() as u64) << 41;
 		bitfield |= (creature_update.unknown42        .is_some() as u64) << 42;
@@ -231,7 +231,7 @@ impl<Writable: AsyncWrite + Unpin> WriteCwData<CreatureUpdate> for Writable {
 			if let Some(it) = &creature_update.unknown36         { encoder.write_arbitrary(it).await?; }
 			if let Some(it) = &creature_update.rarity            { encoder.write_arbitrary(it).await?; }
 			if let Some(it) = &creature_update.unknown38         { encoder.write_arbitrary(it).await?; }
-			if let Some(it) = &creature_update.home_zone         { encoder.write_arbitrary(it).await?; }
+			if let Some(it) = &creature_update.zone_data_index   { encoder.write_arbitrary(it).await?; }
 			if let Some(it) = &creature_update.home              { encoder.write_arbitrary(it).await?; }
 			if let Some(it) = &creature_update.zone_to_reveal    { encoder.write_arbitrary(it).await?; }
 			if let Some(it) = &creature_update.unknown42         { encoder.write_arbitrary(it).await?; }

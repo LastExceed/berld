@@ -31,8 +31,7 @@ impl HandlePacket<CreatureAction> for Server {
 				source.notify("object interactions are disabled").await;
 			}
 			PickUp => {
-				#[expect(clippy::cast_sign_loss, reason = "TODO")] //todo: make item_index unsigned?
-				let Some(item) = self.remove_drop(packet.zone, packet.item_index as usize).await
+				let Some(item) = self.remove_drop(packet.zone_data_index).await
 					else { return; };
 
 				source.send_ignoring(&WorldUpdate {

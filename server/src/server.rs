@@ -251,7 +251,10 @@ impl Server {
 	//returns none if a player picks up an item that doesn't exist
 	//this can happen when the item was dropped in single player
 	//or when spamming pickup really fast
-	pub async fn remove_drop(&self, zone: Point2<i32>, item_index: usize) -> Option<Item> {
+	pub async fn remove_drop(&self, zone_data_index: Point3<i32>) -> Option<Item> {
+		let zone = zone_data_index.xy();
+		let item_index = zone_data_index.z as usize;
+		
 		let mut drops_guard = self.loot.write().await;
 		let zone_drops = drops_guard.get_mut(&zone)?;
 		if !(0..zone_drops.len()).contains(&item_index) {

@@ -69,7 +69,7 @@ pub async fn inspect_creature_update(source: &Player, packet: &CreatureUpdate) -
 	if packet.unknown36        .is_some() { inspect_unknown36        (&previous_state, &updated_state)? }
 	if packet.rarity           .is_some() { inspect_rarity           (&previous_state, &updated_state)? }
 	if packet.unknown38        .is_some() { inspect_unknown38        (&previous_state, &updated_state)? }
-	if packet.home_zone        .is_some() { inspect_home_zone        (&previous_state, &updated_state)? }
+	if packet.zone_data_index  .is_some() { inspect_home_zone        (&previous_state, &updated_state)? }
 	if packet.home             .is_some() { inspect_home             (&previous_state, &updated_state)? }
 	if packet.zone_to_reveal   .is_some() { inspect_zone_to_reveal   (&previous_state, &updated_state)? }
 	if packet.unknown42        .is_some() { inspect_unknown42        (&previous_state, &updated_state)? }
