@@ -45,7 +45,6 @@ impl DiscordIntegration {
 		};
 		
 		tokio::spawn(async move {
-			#[expect(clippy::infinite_loop, reason = "fix is very verbose")]
 			loop {
 				let mut buffer = vec![];
 				let _n = rx
@@ -89,7 +88,6 @@ impl DiscordIntegration {
 		let self_static = extend_lifetime(self);
 
 		tokio::spawn(async move {
-			#[expect(clippy::infinite_loop, reason = "way too verbose to fix")]
 			loop {
 				match shard.next_event(EventTypeFlags::MESSAGE_CREATE).await.expect("shard stream ended") {
 					Ok(MessageCreate(message)) if message.author.bot => {} // ignore

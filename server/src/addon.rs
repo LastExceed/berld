@@ -83,7 +83,6 @@ fn freeze_time() {
 	tokio::spawn(async move {
 		let packet = IngameDatetime { time: 12 * 60 * 60 * 1000, day: 0 };
 
-		#[expect(clippy::infinite_loop, reason = "todo: is this even possible?")]
 		loop {
 			SERVER.broadcast(&packet, None).await;
 			sleep(Duration::from_secs(6)).await;

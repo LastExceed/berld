@@ -31,9 +31,9 @@ pub struct CreatureUpdate {
 	pub rotation: Option<EulerAngles>,
 	pub velocity: Option<Vector3<f32>>,
 	pub acceleration: Option<Vector3<f32>>,
-	///used by the 'retreat' ability
+	/// used by the 'retreat' ability
 	pub velocity_extra: Option<Vector3<f32>>,
-	///used for climbing, vertical attacking, stuns, respawns, and maybe more
+	/// used for climbing, vertical attacking, stuns, respawns, and maybe more
 	pub head_tilt: Option<f32>,
 	pub flags_physics: Option<FlagSet<u32, PhysicsFlag>>,
 	pub affiliation: Option<Affiliation>,
@@ -49,14 +49,14 @@ pub struct CreatureUpdate {
 	pub effect_time_fear: Option<i32>,
 	pub effect_time_chill: Option<i32>,
 	pub effect_time_wind: Option<i32>,
-	///unknown purpose, name adopted from cuwo
+	/// unknown purpose, name adopted from cuwo
 	pub show_patch_time: Option<i32>,
 	pub occupation: Option<Occupation>,
 	pub specialization: Option<Specialization>,
 	pub mana_charge: Option<f32>,
 	pub unknown24: Option<[f32; 3]>,
 	pub unknown25: Option<[f32; 3]>,
-	///coordinates of the location this creature is aiming at>, relative to its own position
+	/// coordinates of the location this creature is aiming at>, relative to its own position
 	pub aim_offset: Option<Point3<f32>>,
 	pub health: Option<f32>,
 	pub mana: Option<f32>,
@@ -66,17 +66,19 @@ pub struct CreatureUpdate {
 	pub unknown32: Option<i8>,
 	pub level: Option<i32>,
 	pub experience: Option<i32>,
-	///for pets this is the [id] of their owner
+	/// for pets this is the [id] of their owner
 	pub master: Option<CreatureId>,
 	pub unknown36: Option<i64>,
-	///this is the '+#' that monsters in some dungeons have next to their [race]
+	/// this is the '+#' that monsters in some dungeons have next to their [race]
 	pub rarity: Option<u8>,
 	pub unknown38: Option<i32>,
-	pub home_zone: Option<Point3<i32>>,
+	/// determines offerings of vendors, maybe other things too
+	pub zone_data_index: Option<Point3<i32>>,
 	pub home: Option<Point3<i64>>,
-	///players within ±2 [level] of the dungeon in this zone see a green speech bubble above this creature, and can get this zone revealed on the map by talking to this creature
+	/// players within ±2 [level] of the dungeon in this zone see a green speech bubble above this creature, and can get this zone revealed on the map by talking to this creature
 	pub zone_to_reveal: Option<Point3<i32>>,
-	pub unknown42: Option<i8>, //todo: 0 3 4 for villages - 3 = dialog about pet food
+	/// todo: 0 3 4 for villagers - 3 = dialog about pet food
+	pub unknown42: Option<i8>,
 	pub consumable: Option<Item>,
 	pub equipment: Option<Equipment>,
 	pub name: Option<String>, //todo: AsciiString
@@ -125,8 +127,7 @@ pub struct IngameDatetime {
 #[derive(Debug, PartialEq, Eq, Hash, Clone)]//todo: Default
 pub struct CreatureAction {
 	pub item: Item,
-	pub zone: Point2<i32>,
-	pub item_index: i32,
+	pub zone_data_index: Point3<i32>,
 	pub unknown_a: i32,
 	pub kind: creature_action::Kind //definitely u8
 	//pad3

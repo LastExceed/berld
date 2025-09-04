@@ -42,8 +42,8 @@ to leave your team, use /team leave
 }
 
 fn get_current_team_string(team_id: Option<i32>) -> String {
-	let team_name = team_id.map_or(
-		"None".into(),
+	let team_name = team_id.map_or_else(
+		|| "None".into(),
 		|id| id.to_string()
 	);
 
