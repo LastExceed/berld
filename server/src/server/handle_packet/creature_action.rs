@@ -13,7 +13,6 @@ use crate::server::Server;
 
 impl HandlePacket<CreatureAction> for Server {
 	async fn handle_packet(&self, source: &Player, packet: CreatureAction) {
-		#[expect(clippy::match_same_arms, reason = "todo")]
 		match packet.kind {
 			Bomb => {
 				source.notify("bombs are disabled").await;
@@ -26,7 +25,7 @@ impl HandlePacket<CreatureAction> for Server {
 				source.send_ignoring(&WorldUpdate::from(pickup)).await;
 			}
 			Talk => {
-				// source.notify("quests coming soon(tm)").await;
+				self.addons.portals.on_interaction(source, packet.zone_data_index).await;
 			}
 			ObjectInteraction => {
 				source.notify("object interactions are disabled").await;
