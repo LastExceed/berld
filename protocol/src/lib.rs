@@ -3,6 +3,8 @@
 #![feature(associated_type_defaults)]
 #![feature(min_specialization)]
 #![feature(bool_to_result)]
+#![feature(const_index)]
+#![feature(const_trait_impl)]
 
 #![expect(async_fn_in_trait, reason = "TODO")] //TODO: investigate if AFIT desugaring could obsolete Unpin trait bounds
 

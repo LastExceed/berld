@@ -1,114 +1,51 @@
-use crate::packet::common::item::Material;
+use crate::packet::common::item::{self, Material};
 use crate::packet::common::item::Material::*;
+use crate::packet::creature_update::Occupation;
 
-pub const ACCESSORIES: [Material; 2] = [
-	Gold,
-	Silver
-];
+#[must_use]
+pub const fn by_item_kind(item_kind: item::Kind) -> &'static [Material] {
+	use item::Kind::*;
+	use item::kind::Weapon::*;
+	
+	#[expect(clippy::match_same_arms, reason = "happenstance")]
+	match item_kind {
+		Weapon(Sword)                          => &[Iron, Obsidian, Bone][..],
+		Weapon(Axe|Mace|Dagger|Fist|Longsword) => &[Iron                ][..],
+		Weapon(Bow|Crossbow|Boomerang)         => &[Wood                ][..],
+		Weapon(Arrow)                          => &[None,Wood           ][..],
+		Weapon(Staff)                          => &[Wood,Obsidian       ][..],
+		Weapon(Wand)                           => &[Wood                ][..],
+		Weapon(Bracelet)                       => &[Gold,Silver         ][..],
+		Weapon(Shield)                         => &[Iron,Wood           ][..],
+		Weapon(Quiver)                         => &[None                ][..],
+		Weapon(Greatsword)                     => &[Iron                ][..],
+		Weapon(Greataxe)                       => &[Iron,Saurian        ][..],
+		Weapon(Greatmace)                      => &[Iron,Wood           ][..],
+		Weapon(Pitchfork|Pickaxe)              => &[None,Iron,Wood      ][..],
+		Weapon(Torch)                          => &[None,Wood           ][..],
 
-pub const SPECIAL: [Material; 1] = [
-	Wood
-];
+		Chest|Boots|Gloves|Shoulder            => &[Bone, Mammoth, Gold,
+		                                            Iron, Obsidian, Saurian, Ice,
+													Parrot, Linen,
+													Licht, Silk,
+													Cotton              ][..],
 
-pub const LAMP: [Material; 1] = [
-	Iron
-];
+		Amulet|Ring                            => &[Gold,Silver][..],
 
+		Special(_)                             => &[Wood][..],
+		Lamp                                   => &[Iron][..],
+		_                                      => &[None][..],
+	}
+}
 
-
-pub const SWORD: [Material; 3] = [
-	Iron,
-	Obsidian,
-	Bone
-];
-
-pub const AXE: [Material; 1] = [
-	Iron
-];
-
-pub const MACE: [Material; 1] = [
-	Iron
-];
-
-pub const DAGGER: [Material; 1] = [
-	Iron
-];
-
-pub const FIST: [Material; 1] = [
-	Iron
-];
-
-pub const LONGSWORD: [Material; 1] = [
-	Iron
-];
-
-pub const BOW: [Material; 1] = [
-	Wood
-];
-
-pub const CROSSBOW: [Material; 1] = [
-	Wood
-];
-
-pub const BOOMERANG: [Material; 1] = [
-	Wood
-];
-
-pub const STAFF: [Material; 2] = [
-	Wood,
-	Obsidian
-];
-
-pub const WAND: [Material; 1] = [
-	Wood
-];
-
-pub const BRACELET: [Material; 2] = [
-	Gold,
-	Silver
-];
-
-pub const SHIELD: [Material; 2] = [
-	Iron,
-	Wood
-];
-
-pub const GREATSWORD: [Material; 1] = [
-	Iron
-];
-
-pub const GREATAXE: [Material; 2] = [
-	Iron,
-	Saurian
-];
-
-pub const GREATMACE: [Material; 2] = [
-	Iron,
-	Wood
-];
-
-pub const ARROW: [Material; 2] = [
-	None,
-	Wood
-];
-
-pub const QUIVER: [Material; 1] = [
-	None
-];
-
-pub const PITCHFORK: [Material; 3] = [
-	None,
-	Iron,
-	Wood
-];
-
-pub const PICKAXE: [Material; 3] = [
-	None,
-	Iron,
-	Wood
-];
-
-pub const TORCH: [Material; 2] = [
-	None,
-	Wood
-];
+#[must_use]
+pub const fn armour_exclusivity(material: Material) -> Option<Occupation> {
+	use Occupation::*;
+	match material {
+		Iron|Obsidian|Saurian|Ice => Some(Warrior),
+		Parrot|Linen              => Some(Ranger),
+		Licht|Silk                => Some(Mage),
+		Cotton                    => Some(Rogue),
+		_                         => Option::None
+	}
+}

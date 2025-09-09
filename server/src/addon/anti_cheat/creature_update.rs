@@ -16,7 +16,7 @@ use protocol::packet::creature_update::Occupation::*;
 use protocol::packet::creature_update::skill_tree::Skill;
 use protocol::packet::creature_update::Specialization::*;
 use protocol::utils::{maximum_experience_of, power_of};
-use protocol::utils::constants::combat_classes::*;
+use protocol::utils::constants::{combat_classes::*, materials};
 use protocol::utils::constants::{PLAYABLE_RACES, TWO_HANDED_WEAPONS};
 use protocol::utils::constants::rarity::*;
 use protocol::utils::flagset::FlagSet;
@@ -24,13 +24,11 @@ use protocol::utils::flagset::FlagSet;
 use crate::addon::anti_cheat;
 use crate::addon::anti_cheat::*;
 use crate::addon::anti_cheat::creature_update::animation::animations_avilable_with;
-use crate::addon::anti_cheat::creature_update::equipment::allowed_materials;
 use crate::server::creature::Creature;
 
 use self::combo_timeout::check_for_timewarp;
 
 mod animation;
-mod equipment;
 mod combo_timeout;
 
 pub(super) fn inspect_position(previous_state: &Creature, updated_state: &Creature) -> anti_cheat::Result {
@@ -661,20 +659,23 @@ pub(super) fn inspect_equipment(previous_state: &Creature, updated_state: &Creat
 			continue; //empty item slots contain uninitialized memory
 		}
 
-		let property_name = |literal| { format!("equipment[{slot:?}].{literal}") };
+		let fmt = |literal| { format!("equipment[{slot:?}].{literal}") };
 
 		item.as_formula
-			.ensure_exact(&false, &property_name("as_formula"))?;
+			.ensure_exact(&false, &fmt("as_formula"))?;
 		item.kind.pipe(KindDiscriminants::from)
-			.ensure_one_of(allowed, &property_name("kind"))?;
+			.ensure_one_of(allowed, &fmt("kind"))?;
 		item.rarity
-			.ensure_at_most(LEGENDARY, &property_name("rarity"))?;
+			.ensure_at_most(LEGENDARY, &fmt("rarity"))?;
 		item.material
-			.ensure_one_of(allowed_materials(item.kind, updated_state.occupation), &property_name("material"))?;
+			.ensure_one_of(materials::by_item_kind(item.kind), &fmt("material"))?;
+		if let Some(specialist) = materials::armour_exclusivity(item.material) {
+			updated_state.occupation.ensure_exact(&specialist, &fmt("material.class_exclusivity"))?;
+		}
 		(item.level as i32).pipe(power_of)
-			.ensure_within(&(0..=power_of(updated_state.level)), &property_name("power"))?;
+			.ensure_within(&(0..=power_of(updated_state.level)), &fmt("power"))?;
 		item.spirit_counter
-			.ensure_within(&(0..=32), &property_name("spirit_counter"))?;
+			.ensure_within(&(0..=32), &fmt("spirit_counter"))?;
 		//normally only 2h weapons can have more than 16 (up to 32) spirits, but we're tolerating 32 on everyhting due to popularity
 
 		//item.flags
