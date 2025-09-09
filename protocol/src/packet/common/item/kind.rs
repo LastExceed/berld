@@ -1,7 +1,8 @@
-use strum_macros::{Display, EnumIter};
+use strum_macros::*;
 
 #[repr(u8)]
-#[derive(Debug, PartialEq, Eq, Hash, Clone, Copy, Default, EnumIter)]
+#[derive(Debug, PartialEq, Eq, Hash, Clone, Copy, Default, EnumIter, EnumString)]
+#[strum(ascii_case_insensitive)]
 pub enum Consumable {
 	#[default]
 	Cookie,
@@ -16,7 +17,8 @@ pub enum Consumable {
 }
 
 #[repr(u8)]
-#[derive(Debug, Display, PartialEq, Eq, Hash, Clone, Copy, Default, EnumIter)]
+#[derive(Debug, Display, PartialEq, Eq, Hash, Clone, Copy, Default, EnumIter, EnumString)]
+#[strum(ascii_case_insensitive)]
 pub enum Weapon {
 	#[default]
 	Sword,
@@ -43,7 +45,8 @@ pub enum Weapon {
 }
 
 #[repr(u8)]
-#[derive(Debug, PartialEq, Eq, Hash, Clone, Copy, Default, EnumIter)]
+#[derive(Debug, PartialEq, Eq, Hash, Clone, Copy, Default, EnumIter, EnumString)]
+#[strum(ascii_case_insensitive)]
 pub enum Resource {
 	#[default]
 	Nugget,
@@ -77,7 +80,8 @@ pub enum Resource {
 }
 
 #[repr(u8)]
-#[derive(Debug, PartialEq, Eq, Hash, Clone, Copy, Default, EnumIter)]
+#[derive(Debug, PartialEq, Eq, Hash, Clone, Copy, Default, EnumIter, EnumString)]
+#[strum(ascii_case_insensitive)]
 pub enum Candle {
 	#[default]
 	Red,
@@ -85,7 +89,8 @@ pub enum Candle {
 }
 
 #[repr(u8)]
-#[derive(Debug, PartialEq, Eq, Hash, Clone, Copy, Default, EnumIter)]
+#[derive(Debug, PartialEq, Eq, Hash, Clone, Copy, Default, EnumIter, EnumString)]
+#[strum(ascii_case_insensitive)]
 pub enum Quest {
 	#[default]
 	AmuletYellow,
@@ -101,7 +106,8 @@ pub enum Quest {
 }
 
 #[repr(u8)]
-#[derive(Debug, PartialEq, Eq, Hash, Clone, Copy, Default, EnumIter)]
+#[derive(Debug, PartialEq, Eq, Hash, Clone, Copy, Default, EnumIter, EnumString)]
+#[strum(ascii_case_insensitive)]
 pub enum Special {
 	#[default]
 	HangGlider,

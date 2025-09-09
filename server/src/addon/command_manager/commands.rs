@@ -8,6 +8,7 @@ mod level;
 mod countdown;
 mod who;
 mod gear;
+mod give;
 mod kick;
 mod player;
 mod tp;
@@ -38,6 +39,9 @@ pub struct Warp {
 
 #[derive(Debug, PartialEq, Eq, Hash, Clone, Default)]
 pub struct Gear;
+
+#[derive(Debug, PartialEq, Eq, Hash, Clone, Default)]
+pub struct Give;
 
 #[derive(Debug, PartialEq, Eq, Hash, Clone, Default)]
 pub struct Kick;

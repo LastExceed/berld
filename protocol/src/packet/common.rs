@@ -1,4 +1,4 @@
-use strum_macros::EnumIter;
+use strum_macros::{EnumIter, EnumString};
 
 use crate::utils::flagset::FlagSet;
 
@@ -10,7 +10,8 @@ pub mod item;
 pub struct CreatureId(pub i64);
 
 #[repr(u8)]
-#[derive(Debug, PartialEq, Eq, Hash, Clone, Copy, Default, EnumIter)]
+#[derive(Debug, PartialEq, Eq, Hash, Clone, Copy, Default, EnumIter, EnumString)]
+#[strum(ascii_case_insensitive)]
 pub enum Race {
 	#[default]
 	ElfMale,

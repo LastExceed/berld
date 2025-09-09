@@ -38,6 +38,7 @@ impl CommandManager {
 		manager.register(Countdown);
 		manager.register(Warp::new(config)?);
 		manager.register(Gear);
+		manager.register(Give);
 		manager.register(Kick);
 		manager.register(Tp);
 		manager.register(Test);
