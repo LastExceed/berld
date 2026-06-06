@@ -35,7 +35,6 @@ impl<Readable: AsyncRead + Unpin> ReadCwData<CreatureUpdate> for Readable {
 
 		//todo: macro
 
-		#[expect(clippy::if_then_some_else_none, reason = "false positive")]
 		let instance = CreatureUpdate {
 			id,
 			position          : if bitfield & (1 <<  0) > 0 { Some(decoder.read_arbitrary().await?) } else { None },
