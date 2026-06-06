@@ -1,4 +1,24 @@
+use nalgebra::Point3;
 use strum_macros::EnumIter;
+
+use crate::packet::common::{CreatureId, Hitbox};
+
+#[repr(C)]
+#[derive(Debug, PartialEq, Clone)]
+pub struct Inner {
+	pub kind: Kind,
+	//pad4
+	pub position: Point3<i64>,
+	pub orientation: i8,//i32 according to cuwo
+	//pad3
+	pub size: Hitbox,
+	pub is_closed: bool,
+	//pad3
+	pub transform_time: i32,
+	pub unknown_b: i32,
+	//pad4 //cuwo says 64bit padding??
+	pub interactor: CreatureId
+}
 
 #[repr(i32)]
 #[derive(Debug, PartialEq, Eq, Hash, Clone, Copy, EnumIter)]

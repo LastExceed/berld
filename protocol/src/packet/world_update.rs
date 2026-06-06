@@ -10,7 +10,7 @@ use tokio::io::{AsyncRead, AsyncReadExt, AsyncWrite, AsyncWriteExt};
 
 use crate::{ReadCwData, WriteCwData};
 use crate::packet::{Hit, Projectile, StatusEffect, WorldUpdate};
-use crate::packet::common::{CreatureId, Hitbox, Item, Race};
+use crate::packet::common::{CreatureId, Item, Race};
 use crate::packet::world_update::loot::GroundItem;
 
 use self::mission::*;
@@ -120,18 +120,7 @@ pub struct WorldObject {
 	pub zone: Point2<i32>,
 	pub id: i32,
 	pub unknown_a: i32,
-	pub kind: world_object::Kind,
-	//pad4
-	pub position: Point3<i64>,
-	pub orientation: i8,//i32 according to cuwo
-	//pad3
-	pub size: Hitbox,
-	pub is_closed: bool,
-	//pad3
-	pub transform_time: i32,
-	pub unknown_b: i32,
-	//pad4 //cuwo says 64bit padding??
-	pub interactor: CreatureId
+	pub inner: world_object::Inner,
 }
 
 #[repr(C)]
