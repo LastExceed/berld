@@ -2,6 +2,7 @@ use crate::packet::common::item::kind::Weapon;
 use crate::packet::common::item::kind::Weapon::*;
 use crate::packet::common::Race;
 use crate::packet::common::Race::*;
+use crate::packet::creature_update::equipment::Slot::{self,*};
 use crate::packet::creature_update::{Occupation, Specialization};
 
 pub mod combat_classes;
@@ -73,4 +74,11 @@ pub const TWO_HANDED_WEAPONS: [Weapon; 10] = [
 	Greataxe,
 	Greatmace,
 	Pitchfork
+];
+
+pub const ARMOUR_SLOTS: [Slot; 4] = [
+	Chest,
+	Feet,
+	Hands,
+	Shoulder
 ];

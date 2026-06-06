@@ -16,7 +16,7 @@ use protocol::packet::creature_update::Occupation::*;
 use protocol::packet::creature_update::skill_tree::Skill;
 use protocol::packet::creature_update::Specialization::*;
 use protocol::utils::{maximum_experience_of, power_of};
-use protocol::utils::constants::{combat_classes::*, materials};
+use protocol::utils::constants::{ARMOUR_SLOTS, combat_classes::*, materials};
 use protocol::utils::constants::{PLAYABLE_RACES, TWO_HANDED_WEAPONS};
 use protocol::utils::constants::rarity::*;
 use protocol::utils::flagset::FlagSet;
@@ -669,7 +669,7 @@ pub(super) fn inspect_equipment(previous_state: &Creature, updated_state: &Creat
 			.ensure_at_most(LEGENDARY, &fmt("rarity"))?;
 		item.material
 			.ensure_one_of(materials::by_item_kind(item.kind), &fmt("material"))?;
-		if let Some(specialist) = materials::armour_exclusivity(item.material) {
+		if let Some(specialist) = materials::armour_exclusivity(item.material) && ARMOUR_SLOTS.contains(&slot) {
 			updated_state.occupation.ensure_exact(&specialist, &fmt("material.class_exclusivity"))?;
 		}
 		(item.level as i32).pipe(power_of)
