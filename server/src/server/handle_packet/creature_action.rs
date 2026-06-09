@@ -1,8 +1,7 @@
 use protocol::nalgebra::Vector3;
-use protocol::packet::common::item::Material::Obsidian;
+use protocol::packet::common::item::Material::*;
 use protocol::packet::common::Item;
 use protocol::packet::{CreatureAction, WorldUpdate};
-use protocol::packet::common::item::Kind::*;
 use protocol::packet::creature_action::Kind::*;
 use protocol::packet::world_update::{Pickup, sound, Sound};
 use protocol::utils::constants::SIZE_BLOCK;
@@ -62,9 +61,12 @@ impl HandlePacket<CreatureAction> for Server {
 }
 
 const fn is_crash_item(item: &Item) -> bool {
-	matches!(
-		item,
-		Item { kind: Void, .. } |
-		Item { kind: Block, material: Obsidian, .. }
-	)
+	use protocol::packet::common::item::Kind;
+	use protocol::packet::common::item::kind::Resource;
+	matches!(item, Item { kind: Kind::Void, .. }) ||
+	matches!(item, Item { kind: Kind::Unknown, .. }) ||
+	matches!(item, Item { kind: Kind::Resource(Resource::Claw), .. }) ||
+	matches!(item, Item { kind: Kind::Resource(Resource::Cube), material, .. } if !matches!(material, Iron | Wood | Gold | Silver)) ||
+	matches!(item, Item { kind: Kind::Resource(Resource::Horn), .. }) ||
+	matches!(item, Item { kind: Kind::Resource(Resource::Nugget), material, .. } if !matches!(material, Iron | Wood | Gold | Silver | Emerald | Sapphire | Ruby | Diamond | Sandstone))
 }
