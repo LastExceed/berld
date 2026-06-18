@@ -482,7 +482,7 @@ pub enum AppearanceFlag {
 	Unknown4,//insect guard, onionling, all tamable
 	Unknown5,//town animals, town neutrals, ogre, witch, radishling
 	Trainer,
-	Unknown7,//might not exist
+	Unknown7,//might not exist (disables entity's interactive chat bubble)
 	Immovable,
 	BossGlow,
 	EyeGlow,
