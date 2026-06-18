@@ -66,7 +66,7 @@ impl Balancing {
 		if flags_physics.get(OnGround) ||
 			flags_physics.get(Swimming) ||
 			flags.get(Gliding) ||
-			flags.get(Climbing)
+			flags.get(Climbing) && flags_physics.get(TouchingWall)
 		{
 			airtime_map.remove(&source.id);
 			return;
