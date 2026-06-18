@@ -65,7 +65,7 @@ fn static_npcs() -> Vec<CreatureUpdate> {
                 body_model:  1,
                 ..appearance_template.clone()
             }),
-            occupation: Some(Occupation::Rogue),
+            occupation: Some(Occupation::Warrior),
             name: Some("Warrior\nTrainer".into()),
             ..Default::default()
         },
