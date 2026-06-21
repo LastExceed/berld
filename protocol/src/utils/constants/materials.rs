@@ -6,6 +6,7 @@ use crate::packet::creature_update::Occupation;
 pub const fn by_item_kind(item_kind: item::Kind) -> &'static [Material] {
 	use item::Kind::*;
 	use item::kind::Weapon::*;
+	use item::kind::Resource::*;
 	
 	#[expect(clippy::match_same_arms, reason = "happenstance")]
 	match item_kind {
@@ -25,17 +26,34 @@ pub const fn by_item_kind(item_kind: item::Kind) -> &'static [Material] {
 		Weapon(Pitchfork|Pickaxe)              => &[None,Iron,Wood    ][..],
 		Weapon(Torch)                          => &[None,Wood         ][..],
 
-		Chest|Boots|Gloves|Shoulder            => &[Bone, Mammoth, Gold,
-		                                            Iron, Obsidian, Saurian, Ice,
-													Parrot, Linen,
-													Licht, Silk,
-													Cotton            ][..],
+		Chest|Boots|Gloves|Shoulder            => &[Iron,Obsidian,Bone,
+													Gold,Saurian,Parrot,
+													Mammoth,Ice,Licht,
+													Silk,Linen,Cotton ][..],
 
-		Amulet|Ring                            => &[Gold,Silver][..],
+		Amulet|Ring                            => &[Gold,Silver		  ][..],
 
-		Special(_)                             => &[Wood][..],
-		Lamp                                   => &[Iron][..],
-		_                                      => &[None][..],
+		Resource(Nugget)					   => &[Iron,Wood,Gold,Silver,
+													Emerald,Sapphire,Ruby,
+													Diamond,Sandstone ][..],
+		Resource(Log)						   => &[Wood			  ][..],
+		Resource(Feather)					   => &[Parrot			  ][..],
+		Resource(Fiber)						   => &[Plant			  ][..],
+		Resource(Yarn)						   => &[Silk,Cotton		  ][..],
+		Resource(Cube)                         => &[Iron,Wood,Obsidian,
+											   		Bone,Gold,Silver  ][..],
+		Resource(Capsule)					   => &[Cotton			  ][..],
+		Resource(Flask)						   => &[Glass			  ][..],
+		Resource(Spirit)					   => &[Fire,Unholy,
+													IceSpirit,Wind	  ][..],
+
+		Coin								   => &[Copper,Gold,Silver][..],
+		Void|Block|Unknown|
+		Resource(Horn|Claw|Crystal)			   => &[				  ][..],
+
+		Special(_)                             => &[Wood			  ][..],
+		Lamp                                   => &[Iron			  ][..],
+		_                                      => &[None			  ][..],
 	}
 }
 

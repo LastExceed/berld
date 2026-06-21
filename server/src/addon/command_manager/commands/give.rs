@@ -3,7 +3,8 @@ use std::str::SplitWhitespace;
 use protocol::packet::common::{item, Item};
 use protocol::packet::world_update::Pickup;
 use protocol::packet::WorldUpdate;
-use protocol::utils::constants::materials;
+use protocol::utils::constants::materials::by_item_kind;
+use protocol::utils::constants::rarity::*;
 use protocol::utils::power_of;
 use tap::Pipe;
 
@@ -22,8 +23,9 @@ impl Command for super::Give {
         
         let param_1 = params.next().ok_or("usage: /give weapon.dagger level=500 tier=4 seed=6969 material=iron")?;
         
+
         let (input_kind, input_variant) = param_1.split_once('.').unwrap_or((param_1, ""));
-        
+    
         use item::Kind::*;
         item.kind = input_kind
             .parse::<item::Kind>()
@@ -40,7 +42,12 @@ impl Command for super::Give {
                 other => Ok(other)
             })
             .map_err(|_| "unknown item sub-type")?;
-        
+
+        let valid_materials = by_item_kind(item.kind);
+        if item.kind.uses_rarity() {item.rarity = LEGENDARY} else {item.rarity = NORMAL}
+        if item.kind.uses_level() {item.level = caller.character.read().await.level as i16} else {item.level = 1}
+        if !valid_materials.is_empty() {item.material = valid_materials[0]}
+
         for param in params {
             if param == "adapted" {
                 item.flags.set(item::Flag::Adapted, true);
@@ -57,10 +64,21 @@ impl Command for super::Give {
                 _ => return Err("unknown property")
             }
         }
-        
-        materials::by_item_kind(item.kind)
-            .contains(&item.material)
-            .ok_or("incompatible material")?;
+
+        if valid_materials.is_empty() {return Err("item has no valid materials")}
+        if !valid_materials.contains(&item.material) {
+            let materials_list = valid_materials
+                .iter()
+                .map(|m| format!("{:?}", m))
+                .collect::<Vec<_>>()
+                .join(", ");
+            caller.notify(format!("Try: {}", materials_list)).await;
+            return Err("incompatible material");
+        }
+
+        if !item.kind.uses_rarity() && item.rarity != NORMAL {return Err("item does not use rarity")}
+        if !item.kind.uses_level() && item.level != 1 {return Err("item does not use level")}
+        if !item.kind.uses_seed() && item.seed != 0 {return Err("item does not use seed")}
         
         (1..=power_of(500))
             .contains(&power_of(item.level as _))

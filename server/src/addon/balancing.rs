@@ -20,7 +20,7 @@ use protocol::packet::common::item::kind::Weapon::*;
 use protocol::packet::creature_update::CreatureFlag::{Climbing, Gliding};
 use protocol::packet::creature_update::equipment::Slot::RightWeapon;
 use protocol::packet::creature_update::Occupation::Rogue;
-use protocol::packet::creature_update::PhysicsFlag::{OnGround, Swimming};
+use protocol::packet::creature_update::PhysicsFlag::{OnGround, Swimming, TouchingWall};
 use protocol::packet::hit;
 use protocol::packet::status_effect::Kind::{Anger, Swiftness};
 use protocol::packet::world_update::Sound;
