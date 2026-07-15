@@ -33,7 +33,7 @@ use protocol::utils::io_extensions::{ReadPacket, WriteArbitrary, WritePacket};
 
 use crate::addon::{Addons, announce_join_leave};
 use crate::addon::pvp::map_head;
-use crate::addon::pvp;
+use crate::addon::{pvp, events};
 use crate::server::creature::Creature;
 use crate::server::creature_id_pool::CreatureIdPool;
 use crate::server::handle_packet::HandlePacket;
@@ -367,6 +367,7 @@ async fn send_existing_creatures(server: &Server, player: &Player) {
 	
 	server.addons.npcs.load_npcs(player).await;
 	server.addons.shop.shop_keeper(player).await;
+	events::on_join(player).await;
 }
 
 fn configure_stream(stream: TcpStream) -> io::Result<(BufReader<OwnedReadHalf>, WriteHalf<SimplexStream>, JoinHandle<()>)>{
