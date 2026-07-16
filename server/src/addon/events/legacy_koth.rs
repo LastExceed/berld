@@ -20,7 +20,7 @@ use protocol::utils::constants::{SIZE_BLOCK, SIZE_ZONE, SIZE_SECTOR};
 use protocol::utils::constants::materials::by_item_kind;
 use protocol::utils::constants::rarity::{NORMAL, RARE, EPIC, LEGENDARY};
 
-use crate::addon::events::utils::{appearance_invisible, creatures_circular, config_fallback, config_optional, is_in_zone, pick_from, RENDER_DISTANCE_CREATURE};
+use crate::addon::events::utils::{appearance_invisible, config_fallback, config_optional, creatures_circular, is_in_zone, pick_from, NAME_OVERFLOW, RENDER_DISTANCE_CREATURE};
 use crate::addon::play_sound_at_player;
 use crate::server::{Server, player::Player, utils::give_xp};
 use crate::SERVER;
@@ -55,13 +55,13 @@ pub struct LegacyKoth {
 
 impl LegacyKoth {
     pub fn new(config: &Config) -> Result<Self, ConfigError> {
-        let center: Option<Point3<i64>> = config_optional(config, "events.legacy_koth_center")?
+        let center: Option<Point3<i64>> = config_optional(config, "legacykoth.center")?
             .map(|raw: Point3<i64>| Point3::new(raw.x, raw.y, raw.z + LKOTH_HEIGHT_OFFSET));
 
-        let radius_blocks: i64 = config_fallback(config, "events.legacy_koth_radius", 30i64)?;
-        let interval_seconds: u64 = config_fallback(config, "events.legacy_koth_interval", 5u64)?;
-        let reward_frequency: i32 = config_fallback(config, "events.legacy_koth_reward_frequency", 420i32)?;
-        let king_reward_frequency: i32 = config_fallback(config, "events.legacy_koth_king_reward_frequency", 180i32)?;
+        let radius_blocks: i64 = config_fallback(config, "legacykoth.radius", 30i64)?;
+        let interval_seconds: u64 = config_fallback(config, "legacykoth.interval", 5u64)?;
+        let reward_frequency: i32 = config_fallback(config, "legacykoth.reward_frequency", 420i32)?;
+        let king_reward_frequency: i32 = config_fallback(config, "legacykoth.king_reward_frequency", 180i32)?;
 
         Ok(Self {
             points: RwLock::new(HashMap::new()),
@@ -70,12 +70,12 @@ impl LegacyKoth {
             interval: Duration::from_secs(interval_seconds),
             points_per_interval: REWARD_POINTS / (reward_frequency / interval_seconds as i32).max(1),
             king_points_per_interval: REWARD_POINTS / (king_reward_frequency / interval_seconds as i32).max(1),
-            xp_per_interval: config_fallback(config, "events.legacy_koth_xp_per_interval", 2i32)?,
-            king_xp_bonus: config_fallback(config, "events.legacy_koth_king_xp_bonus", 5i32)?,
-            kill_king_points: config_fallback(config, "events.legacy_koth_kill_king_points", 500i32)?,
-            kill_king_xp: config_fallback(config, "events.legacy_koth_kill_king_xp", 20i32)?,
-            kill_points: config_fallback(config, "events.legacy_koth_kill_points", 200i32)?,
-            kill_xp: config_fallback(config, "events.legacy_koth_kill_xp", 10i32)?
+            xp_per_interval: config_fallback(config, "legacykoth.xp_per_interval", 2i32)?,
+            king_xp_bonus: config_fallback(config, "legacykoth.king_xp_bonus", 5i32)?,
+            kill_king_points: config_fallback(config, "legacykoth.kill_king_points", 500i32)?,
+            kill_king_xp: config_fallback(config, "legacykoth.kill_king_xp", 20i32)?,
+            kill_points: config_fallback(config, "legacykoth.kill_points", 200i32)?,
+            kill_xp: config_fallback(config, "legacykoth.kill_xp", 10i32)?
         })
     }
 }
@@ -115,7 +115,7 @@ async fn lkoth_interval() {
     }
 
     let king_name = match &new_king {
-        Some((player, _)) => player.character.read().await.name.clone(),
+        Some((player, _)) => player.character.read().await.name.chars().take(NAME_OVERFLOW).collect(),
         None => "KOTH".to_string()
     };
     send_pillar_name(center, king_name).await;
