@@ -366,7 +366,6 @@ async fn send_existing_creatures(server: &Server, player: &Player) {
 		.await;
 	
 	server.addons.npcs.load_npcs(player).await;
-	server.addons.shop.shop_keeper(player).await;
 	events::on_join(player).await;
 }
 

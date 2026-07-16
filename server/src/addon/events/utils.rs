@@ -11,7 +11,8 @@ use protocol::packet::creature_update::{Appearance, AppearanceFlag};
 use protocol::utils::constants::SIZE_BLOCK;
 use protocol::utils::flagset::FlagSet;
 
-const YAW_OFFSET: f64 = 90.0;
+pub const YAW_OFFSET: f64 = 90.0;
+pub const NAME_OVERFLOW: usize = 15;
 pub const RENDER_DISTANCE_NAME: i64 = SIZE_BLOCK * 60;
 pub const RENDER_DISTANCE_CREATURE: i64 = RENDER_DISTANCE_NAME * 3;
 

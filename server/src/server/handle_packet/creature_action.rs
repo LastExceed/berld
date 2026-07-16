@@ -25,7 +25,7 @@ impl HandlePacket<CreatureAction> for Server {
 				source.send_ignoring(&WorldUpdate::from(pickup)).await;
 			}
 			Talk => {
-				self.addons.shop.interaction(self, source, packet.zone_data_index).await;
+				self.addons.events.shop.interaction(self, source, packet.zone_data_index).await;
 				// source.notify("quests coming soon(tm)").await;
 			}
 			ObjectInteraction => {

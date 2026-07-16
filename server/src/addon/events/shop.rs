@@ -1,8 +1,6 @@
 use std::collections::{HashMap, HashSet};
-use std::f64::consts::PI;
 
 use config::{Config, ConfigError};
-use serde::de::DeserializeOwned;
 use strum::IntoEnumIterator;
 use tap::Tap;
 use tokio::sync::RwLock;
@@ -17,21 +15,20 @@ use protocol::packet::WorldUpdate;
 use protocol::packet::CreatureUpdate;
 use protocol::utils::constants::{materials, SIZE_BLOCK, SIZE_ZONE};
 use protocol::utils::constants::rarity::*;
-use protocol::utils::flagset::FlagSet;
 
+use crate::addon::events::utils::{appearance_invisible, config_fallback, config_optional, creatures_circular, NAME_OVERFLOW};
 use crate::addon::play_sound_at_player;
 use crate::server::player::Player;
 use crate::server::Server;
+use crate::SERVER;
 
-const SHOP_CENTER: Point3<i64> = Point3::new(550361514520, 550354653448, 5498473);
-const SHOP_RADIUS: i64 = SIZE_BLOCK * 15;
+const SHOP_RADIUS_BLOCKS: i64 = 15;
+const SHOP_HITBOX: Hitbox = Hitbox { width: 1.5, depth: 1.5, height: 2.5 };
 const SHOP_INDEX: i32 = 1000;
 const SHOP_ID: i64 = 100000;
 const KEEPER_INDEX: i32 = 2000;
 const KEEPER_ID: i64 = 200000;
 const DISABLED_ITEMS: [Kind; 2] = [Kind::PlatinumCoin, Kind::ManaCube];
-
-const NAME_OVERFLOW: usize = 15;
 
 #[derive(Default, Clone, Copy)]
 pub enum ShopState {
@@ -52,7 +49,7 @@ pub struct ShopSession {
 }
 
 pub struct ItemShop {
-    pub shop_center: Point3<i64>,
+    pub shop_center: Option<Point3<i64>>,
     pub shop_radius: i64,
     pub sessions: RwLock<HashMap<CreatureId, ShopSession>>,
 }
@@ -60,22 +57,24 @@ pub struct ItemShop {
 impl ItemShop {
     pub fn new(config: &Config) -> Result<Self, ConfigError> {
         Ok(Self {
-            shop_center: config_fallback(config, "shop.center", SHOP_CENTER)?,
-            shop_radius: config_fallback(config, "shop.radius", SHOP_RADIUS)?,
+            shop_center: config_optional(config, "shop.center")?,
+            shop_radius: config_fallback(config, "shop.radius", SHOP_RADIUS_BLOCKS)? * SIZE_BLOCK,
             sessions: RwLock::new(HashMap::new())
         })
     }
 
     pub async fn shop_keeper(&self, player: &Player) {
+        let Some(center) = self.shop_center else { return };
+
         let shop_keeper = CreatureUpdate {
-            appearance: Some(Appearance { body_model: 2111, ..appearance_template() }),
+            appearance: Some(Appearance { body_model: 2111, creature_size: SHOP_HITBOX, ..appearance_invisible() }),
             id: CreatureId(KEEPER_ID),
             race: Some(Race::Bandit),
             name: Some("Item\nShop".into()),
-            position: Some(self.shop_center),
+            position: Some(center),
             zone_data_index: Some(Point3::new(
-                (self.shop_center.x / SIZE_ZONE) as i32,
-                (self.shop_center.y / SIZE_ZONE) as i32,
+                (center.x / SIZE_ZONE) as i32,
+                (center.y / SIZE_ZONE) as i32,
                 KEEPER_INDEX)),
             ..Default::default()
         };
@@ -84,12 +83,13 @@ impl ItemShop {
     }
 
     pub async fn interaction(&self, server: &Server, player: &Player, index: Point3<i32>) {
+        let Some(center) = self.shop_center else { return };
         self.cleanup_stale_sessions(server).await;
 
-        if index == Point3::new((self.shop_center.x / SIZE_ZONE) as i32, (self.shop_center.y / SIZE_ZONE) as i32, KEEPER_INDEX) {
+        if index == Point3::new((center.x / SIZE_ZONE) as i32, (center.y / SIZE_ZONE) as i32, KEEPER_INDEX) {
             play_sound_at_player(player, sound::Kind::CraftProc, 1.0, 1.0).await;
             self.reset_session(player).await;
-            self.update_shop(player).await;
+            self.update_shop(player, center).await;
             return
         }
 
@@ -125,7 +125,7 @@ impl ItemShop {
             Ok(None)       =>  play_sound_at_player(player, sound::Kind::Craft, 1.0, 1.0).await
         }
 
-        self.update_shop(player).await
+        self.update_shop(player, center).await
     }
 
     async fn reset_session(&self, player: &Player) {
@@ -146,14 +146,14 @@ impl ItemShop {
         self.sessions.write().await.retain(|id, _| online_ids.contains(id))
     }
 
-    async fn update_shop(&self, player: &Player) {
+    async fn update_shop(&self, player: &Player, center: Point3<i64>) {
         let (old_npcs, new_npcs) = {
             let mut sessions = self.sessions.write().await;
             let session = sessions.entry(player.id).or_default();
 
             let old_npcs = std::mem::take(&mut session.npcs);
             let options = shop_options(&session.state, &session.item);
-            let new_npcs = shop_npcs(self.shop_center, self.shop_radius, &options, &session.state, &session.item);
+            let new_npcs = shop_npcs(center, self.shop_radius, &options, &session.state, &session.item);
             session.npcs = new_npcs.clone();
 
             (old_npcs, new_npcs)
@@ -173,36 +173,8 @@ impl ItemShop {
     }
 }
 
-fn config_fallback<T: DeserializeOwned>(config: &Config, key: &str, default: T) -> Result<T, ConfigError> {
-    match config.get(key) {
-        Ok(value)                     => Ok(value),
-        Err(ConfigError::NotFound(_)) => Ok(default),
-        Err(err)                      => Err(err)
-    }
-}
-
-fn appearance_template() -> Appearance {
-    Appearance {
-        flags: FlagSet::default().tap_mut(|fs| {
-            fs.set(AppearanceFlag::Unknown7, true);
-            fs.set(AppearanceFlag::Immovable, true);
-        }),
-        creature_size: Hitbox {
-            width: 1.5,
-            depth: 1.5,
-            height: 2.5
-        },
-        head_model    : -1,
-        hair_model    : -1,
-        hand_model    : -1,
-        foot_model    : -1,
-        body_model    : -1,
-        tail_model    : -1,
-        shoulder2model: -1,
-        wing_model    : -1,
-        body_size     : 1.0,
-        ..Default::default()
-    }
+pub async fn on_join(player: &Player) {
+    SERVER.addons.events.shop.shop_keeper(player).await;
 }
 
 fn shop_npcs(center: Point3<i64>, radius: i64, options: &[i32], state: &ShopState, item: &Item) -> Vec<CreatureUpdate> {
@@ -210,33 +182,27 @@ fn shop_npcs(center: Point3<i64>, radius: i64, options: &[i32], state: &ShopStat
         .iter()
         .enumerate()
         .map(|(i, &option)| {
-            let angle = 2.0 * PI * (i as f64) / (options.len() as f64);
-            let x = (center.x as f64) + (radius as f64) * angle.cos();
-            let y = (center.y as f64) + (radius as f64) * angle.sin();
-
-            const YAW_OFFSET: f64 = 90.0;
-            let dx = center.x as f64 - x;
-            let dy = center.y as f64 - y;
-            let yaw = (dy.atan2(dx) * 180.0 / PI - YAW_OFFSET) as f32;
+            let (position, yaw) = creatures_circular(center, radius, options.len(), i);
 
             let preview = item_preview(*state, item, option).unwrap_or_else(|| item.clone());
             let mut equipment = Equipment::default();
             equipment[Slot::Chest] = preview;
 
             CreatureUpdate {
-                appearance: Some(appearance_template().tap_mut(|a| {
-                    a.body_model = 2316; 
-                    a.body_offset.z = 5.0
+                appearance: Some(appearance_invisible().tap_mut(|a| {
+                    a.body_model = 2316;
+                    a.body_offset.z = 5.0;
+                    a.creature_size = SHOP_HITBOX;
                 })),
                 id: CreatureId(SHOP_ID + i as i64),
                 race: Some(Race::Bandit),
                 name: Some(npc_names(*state, item, option).chars().take(NAME_OVERFLOW).collect()),
                 health: Some(0.0001),
                 rotation: Some(EulerAngles { pitch: 0.0, roll: 0.0, yaw }),
-                position: Some(Point3::new(x.round() as i64, y.round() as i64, center.z)),
+                position: Some(position),
                 zone_data_index: Some(Point3::new(
-                    (x.round() as i64 / SIZE_ZONE) as i32,
-                    (y.round() as i64 / SIZE_ZONE) as i32,
+                    (position.x / SIZE_ZONE) as i32,
+                    (position.y / SIZE_ZONE) as i32,
                     SHOP_INDEX + option)),
                 equipment: Some(equipment),
                 ..Default::default()

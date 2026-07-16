@@ -22,7 +22,6 @@ use listforge_api::ListforgeApi;
 
 use self::models::Models;
 use self::npcs::Npcs as Npcs;
-use self::shop::ItemShop as Shop;
 use self::events::Events;
 
 pub mod anti_cheat;
@@ -35,7 +34,6 @@ pub mod listforge_api;
 pub mod kill_feed;
 pub mod models;
 pub mod npcs;
-pub mod shop;
 pub mod events;
 
 pub struct Addons {
@@ -45,7 +43,6 @@ pub struct Addons {
 	pub listforge_api: ListforgeApi,
 	pub models: Models,
 	pub npcs: Npcs,
-	pub shop: Shop,
 	pub events: Events
 }
 
@@ -58,7 +55,6 @@ impl Addons {
 			listforge_api: ListforgeApi::new(config)?,
 			models: Models::new(config)?,
 			npcs: Npcs::new(),
-			shop: Shop::new(config)?,
 			events: Events::new(config)?
 		};
 
