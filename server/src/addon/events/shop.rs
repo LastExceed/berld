@@ -106,7 +106,7 @@ impl ItemShop {
         let option = index.z - SHOP_INDEX;
         let player_level = player.character.read().await.level as i16;
 
-        let item_state: Result<Option<Box<Item>>, &'static str> = {
+        let item_state: Result<Option<Box<Item>>, String> = {
             let mut sessions = self.sessions.write().await;
             let session = sessions.entry(player.id).or_default();
             item_selection(&mut session.state, &mut session.item, option);
@@ -269,8 +269,8 @@ fn item_preview(state: ShopState, item: &Item, option: i32) -> Option<Item> {
     Some(preview)
 }
 
-fn item_validation(state: &mut ShopState, item: &mut Item, player_level: i16) -> Result<(), &'static str> {
-    if DISABLED_ITEMS.contains(&item.kind) { return Err("this item is currently disabled") }
+fn item_validation(state: &mut ShopState, item: &mut Item, player_level: i16) -> Result<(), String> {
+    if DISABLED_ITEMS.contains(&item.kind) { return Err(format!("{} is currently disabled", item_name(&item.kind))) }
     loop {
         match *state {
             ShopState::MainType => return Ok(()),
@@ -278,7 +278,7 @@ fn item_validation(state: &mut ShopState, item: &mut Item, player_level: i16) ->
                                     else { return Ok(()) }}
             ShopState::Material => {let valid_materials = materials::by_item_kind(item.kind);
                                     match valid_materials.len() {
-                                        0 => return Err("item has no valid materials"),
+                                        0 => return Err(format!("{} has no valid materials", item_name(&item.kind))),
                                         1 => {item.material = valid_materials[0];
                                              *state = ShopState::Rarity}
                                         _ => return Ok(())}}
@@ -292,6 +292,11 @@ fn item_validation(state: &mut ShopState, item: &mut Item, player_level: i16) ->
                                     return Ok(())}
         }
     }
+}
+
+fn item_name(kind: &Kind) -> String {
+    let subtype = subtype_names(kind);
+    if subtype.is_empty() { kind.to_string() } else { subtype }
 }
 
 fn subtype_names(kind: &Kind) -> String {
