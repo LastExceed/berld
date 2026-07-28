@@ -32,9 +32,7 @@ pub trait Packet //: where for<T: AsyncRead> T: ReadCwData<Self> //TODO: investi
 
 
 pub trait ReadCwData<CwStruct>: AsyncRead + Unpin + Sized {
-	async fn read_cw_data(&mut self) -> io::Result<CwStruct>
-		where [(); size_of::<CwStruct>()]:
-	{
+	async fn read_cw_data(&mut self) -> io::Result<CwStruct> {
 		self.read_arbitrary().await
 	}
 }

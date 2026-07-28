@@ -1,3 +1,4 @@
+use std::mem::MaybeUninit;
 use std::{ptr, slice};
 
 use tokio::io;
@@ -6,15 +7,16 @@ use tokio::io::{AsyncRead, AsyncReadExt, AsyncWrite, AsyncWriteExt};
 use crate::{Packet, packet, ReadCwData, Validate, Validator, WriteCwData};
 
 pub trait ReadArbitrary: AsyncRead + Unpin {
-	async fn read_arbitrary<T>(&mut self) -> io::Result<T>
-		where [(); size_of::<T>()]:
-	{
-		let mut buffer = [0_u8; size_of::<T>()];
-		self.read_exact(&mut buffer).await?;
+	async fn read_arbitrary<T>(&mut self) -> io::Result<T> {
+		let mut buffer = MaybeUninit::<T>::uninit();
+
+		let uninit_bytes = unsafe {
+			slice::from_raw_parts_mut(buffer.as_mut_ptr().cast::<u8>(), size_of::<T>())
+		};
+		self.read_exact(uninit_bytes).await?;
 
 		//SAFETY: consumer is expected to validate the struct (terrible, i know)
-		Ok(unsafe { buffer.as_ptr().cast::<T>().read() })
-		//Ok(unsafe { transmute(buffer)}) //compiler is not smart enough to recognize that matching sizes for input and output are guaranteed
+		Ok(unsafe { buffer.assume_init() })
 	}
 }
 
@@ -37,9 +39,7 @@ impl<Writable: AsyncWrite + Unpin> WriteArbitrary for Writable {}
 
 pub trait ReadPacket: AsyncRead + Unpin + Sized {
 	async fn read_packet<P: Packet>(&mut self) -> io::Result<P>
-		where
-			[(); size_of::<P>()]:,
-			Self: ReadCwData<P>,
+		where Self: ReadCwData<P>
 	{
 		let instance = ReadCwData::<P>::read_cw_data(self).await?;
 		Validator::validate(&instance)?;

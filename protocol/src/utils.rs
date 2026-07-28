@@ -61,13 +61,9 @@ macro_rules! bulk_impl {
 	}
 }
 
-impl<Element, Readable: ReadCwData<Element>> ReadCwData<Vec<Element>> for Readable
-	where [(); size_of::<Element>()]:
-{
+impl<Element, Readable: ReadCwData<Element>> ReadCwData<Vec<Element>> for Readable {
 	//todo: relax to iterable
-	async fn read_cw_data(&mut self) -> io::Result<Vec<Element>>
-		where [(); size_of::<Element>()]:
-	{
+	async fn read_cw_data(&mut self) -> io::Result<Vec<Element>> {
 		let count = self.read_u32_le().await?;
 		let mut vec = Vec::with_capacity(count as usize);
 		for _ in 0..count {
@@ -88,11 +84,7 @@ impl<Element, Writable: WriteCwData<Element>> WriteCwData<Vec<Element>> for Writ
 	}
 }
 
-impl<Key: Eq + Hash, Value, Readable: AsyncRead + Unpin + ReadCwData<Value>> ReadCwData<HashMap<Key, Value>> for Readable
-	where
-		[(); size_of::<Key>()]:,
-		[(); size_of::<Value>()]:
-{
+impl<Key: Eq + Hash, Value, Readable: AsyncRead + Unpin + ReadCwData<Value>> ReadCwData<HashMap<Key, Value>> for Readable {
 	async fn read_cw_data(&mut self) -> io::Result<HashMap<Key, Value>> {
 		let mut map = HashMap::new();
 		let n_keys = self.read_u32_le().await?;
