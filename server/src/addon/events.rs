@@ -9,24 +9,24 @@ pub mod utils;
 
 pub struct Events {
     pub legacy_koth: legacy_koth::LegacyKoth,
-    pub shop: shop::ItemShop
+    pub shop: shop::Shop
 }
 
 impl Events {
     pub fn new(config: &Config) -> Result<Self, ConfigError> {
         Ok(Self {
             legacy_koth: legacy_koth::LegacyKoth::new(config)?,
-            shop: shop::ItemShop::new(config)?
+            shop: shop::Shop::new(config)?
         })
     }
 }
 
 pub fn start() {
-    legacy_koth::start()
+    legacy_koth::start();
 }
 
 pub async fn on_kill(server: &Server, killer: &Player, victim: &Player) {
-    legacy_koth::on_kill(server, killer, victim).await
+    legacy_koth::on_kill(server, killer, victim).await;
 }
 
 pub async fn on_join(player: &Player) {

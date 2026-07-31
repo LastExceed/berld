@@ -1,12 +1,12 @@
+#![expect(unstable_features, reason = "living on the edge")]
 #![expect(incomplete_features, reason = "generic_const_exprs is incomplete, but works for our purposes")]
 #![feature(generic_const_exprs)]
-#![feature(associated_type_defaults)]
 #![feature(min_specialization)]
-#![feature(bool_to_result)]
 #![feature(const_index)]
 #![feature(const_trait_impl)]
 
 #![expect(async_fn_in_trait, reason = "TODO")] //TODO: investigate if AFIT desugaring could obsolete Unpin trait bounds
+#![expect(clippy::cargo_common_metadata, reason = "TODO")]
 
 use std::io::ErrorKind::InvalidData;
 
@@ -27,7 +27,7 @@ mod tests;
 
 pub trait Packet //: where for<T: AsyncRead> T: ReadCwData<Self> //TODO: investigate if #![feature(non_lifetime_binders)] is usable yet
 {
-	const ID: packet::Id;//dedicated type ensures this can't be used in arithmetic operations
+	const ID: Id;//dedicated type ensures this can't be used in arithmetic operations
 }
 
 

@@ -12,7 +12,6 @@ use crate::server::Server;
 
 impl HandlePacket<CreatureAction> for Server {
 	async fn handle_packet(&self, source: &Player, packet: CreatureAction) {
-		#[expect(clippy::match_same_arms, reason = "todo")]
 		match packet.kind {
 			Bomb => {
 				source.notify("bombs are disabled").await;

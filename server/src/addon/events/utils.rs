@@ -41,7 +41,7 @@ pub fn appearance_invisible() -> Appearance {
     Appearance {
         flags: FlagSet::default().tap_mut(|fs| {
             fs.set(AppearanceFlag::Unknown7, true);
-            fs.set(AppearanceFlag::Immovable, true)
+            fs.set(AppearanceFlag::Immovable, true);
         }),
         creature_size: Hitbox { width: 1.0, depth: 1.0, height: 1.0 },
         head_model: -1,

@@ -3,7 +3,6 @@ use std::str::SplitWhitespace;
 
 use protocol::packet::creature_update::{Affiliation, Appearance, AppearanceFlag};
 use protocol::packet::{CreatureUpdate, StatusEffect};
-use protocol::packet::world_update::block::Kind;
 use protocol::packet::status_effect;
 use protocol::nalgebra::{Point3, Vector3};
 use protocol::packet::WorldUpdate;
@@ -159,7 +158,7 @@ pub async fn zone_grid(server: &Server, caller: &Player) {
 							.map(|block_offset| Block {
 								position: start + Vector3::new(zone_x, zone_y, 1) * 256 + block_offset * 2,
 								color: [0,0,0].into(),
-								kind: Kind::Solid,
+								kind: Solid,
 								padding: 0,
 							})
 					})
@@ -198,7 +197,6 @@ pub async fn checkerboard(server: &Server, caller: &Player) {
 			let chunk_alt = ((dx / 32) + (dy / 32)) % 2 == 1;
 			let zone_alt = ((dx / 256) + (dy / 256)) % 2 == 1;
 
-			#[expect(clippy::collapsible_else_if, reason = "TODO")]
 			let color =
 				if zone_alt {
 					if chunk_alt {

@@ -58,10 +58,10 @@ impl LegacyKoth {
         let center: Option<Point3<i64>> = config_optional(config, "legacykoth.center")?
             .map(|raw: Point3<i64>| Point3::new(raw.x, raw.y, raw.z + LKOTH_HEIGHT_OFFSET));
 
-        let radius_blocks: i64 = config_fallback(config, "legacykoth.radius", 30i64)?;
-        let interval_seconds: u64 = config_fallback(config, "legacykoth.interval", 5u64)?;
-        let reward_frequency: i32 = config_fallback(config, "legacykoth.reward_frequency", 420i32)?;
-        let king_reward_frequency: i32 = config_fallback(config, "legacykoth.king_reward_frequency", 180i32)?;
+        let radius_blocks: i64 = config_fallback(config, "legacykoth.radius", 30_i64)?;
+        let interval_seconds: u64 = config_fallback(config, "legacykoth.interval", 5_u64)?;
+        let reward_frequency: i32 = config_fallback(config, "legacykoth.reward_frequency", 420_i32)?;
+        let king_reward_frequency: i32 = config_fallback(config, "legacykoth.king_reward_frequency", 180_i32)?;
 
         Ok(Self {
             points: RwLock::new(HashMap::new()),
@@ -70,12 +70,12 @@ impl LegacyKoth {
             interval: Duration::from_secs(interval_seconds),
             points_per_interval: REWARD_POINTS / (reward_frequency / interval_seconds as i32).max(1),
             king_points_per_interval: REWARD_POINTS / (king_reward_frequency / interval_seconds as i32).max(1),
-            xp_per_interval: config_fallback(config, "legacykoth.xp_per_interval", 2i32)?,
-            king_xp_bonus: config_fallback(config, "legacykoth.king_xp_bonus", 5i32)?,
-            kill_king_points: config_fallback(config, "legacykoth.kill_king_points", 500i32)?,
-            kill_king_xp: config_fallback(config, "legacykoth.kill_king_xp", 20i32)?,
-            kill_points: config_fallback(config, "legacykoth.kill_points", 200i32)?,
-            kill_xp: config_fallback(config, "legacykoth.kill_xp", 10i32)?
+            xp_per_interval: config_fallback(config, "legacykoth.xp_per_interval", 2_i32)?,
+            king_xp_bonus: config_fallback(config, "legacykoth.king_xp_bonus", 5_i32)?,
+            kill_king_points: config_fallback(config, "legacykoth.kill_king_points", 500_i32)?,
+            kill_king_xp: config_fallback(config, "legacykoth.kill_king_xp", 20_i32)?,
+            kill_points: config_fallback(config, "legacykoth.kill_points", 200_i32)?,
+            kill_xp: config_fallback(config, "legacykoth.kill_xp", 10_i32)?
         })
     }
 }
@@ -86,7 +86,7 @@ pub fn start() {
     tokio::spawn(async move {
         loop {
             sleep(SERVER.addons.events.legacy_koth.interval).await;
-            lkoth_interval().await
+            lkoth_interval().await;
         }
     });
 }
@@ -110,20 +110,20 @@ async fn lkoth_interval() {
         handle_points(player, threshold, reward).await;
 
         if new_king.as_ref().is_none_or(|(_, best)| new_total >= *best) {
-            new_king = Some((Arc::clone(player), new_total))
+            new_king = Some((Arc::clone(player), new_total));
         }
     }
 
     let king_name = match &new_king {
         Some((player, _)) => player.character.read().await.name.chars().take(NAME_OVERFLOW).collect(),
-        None => "KOTH".to_string()
+        None => "KOTH".to_owned()
     };
     send_pillar_name(center, king_name).await;
 
     for (player, level) in &scorers {
         if *level < 500 {
             let is_king = Some(player.id) == king_id;
-            give_xp(player, lkoth.xp_per_interval + if is_king { lkoth.king_xp_bonus } else { 0 }).await
+            give_xp(player, lkoth.xp_per_interval + if is_king { lkoth.king_xp_bonus } else { 0 }).await;
         }
     }
 }
@@ -136,14 +136,14 @@ async fn scan_players(server: &Server, center: Point3<i64>, radius: i64) -> (Vec
     for player in players.iter() {
         let character = player.character.read().await;
         if character.health > 0.0 && is_in_zone(character.position, center, radius) {
-            scorers.push((Arc::clone(player), character.level))
+            scorers.push((Arc::clone(player), character.level));
         }
     }
 
     (scorers, online_ids)
 }
 
-fn find_king<'p>(candidates: impl Iterator<Item = &'p Arc<Player>>, points: &HashMap<CreatureId, i32>) -> Option<&'p Arc<Player>> {
+fn find_king<'player>(candidates: impl Iterator<Item = &'player Arc<Player>>, points: &HashMap<CreatureId, i32>) -> Option<&'player Arc<Player>> {
     candidates.max_by_key(|player| points.get(&player.id).copied().unwrap_or(0))
 }
 
@@ -187,9 +187,9 @@ async fn handle_points(player: &Player, threshold: Option<i32>, reward: bool) {
             text: format!("{name} has reached {REWARD_POINTS} points, and receives an additional reward!")
         };
         for everyone in SERVER.players.read().await.iter() {
-            everyone.send_ignoring(&message).await
+            everyone.send_ignoring(&message).await;
         }
-        give_reward(player).await
+        give_reward(player).await;
     }
 }
 
@@ -197,7 +197,7 @@ async fn give_reward(player: &Player) {
     let level = player.character.read().await.level as i16;
     let pickup = Pickup { interactor: player.id, item: reward_item(level) };
     play_sound_at_player(player, sound::Kind::Missioncomplete, 0.62, 1.0).await;
-    player.send_ignoring(&WorldUpdate::from(pickup)).await
+    player.send_ignoring(&WorldUpdate::from(pickup)).await;
 }
 
 fn reward_item(level: i16) -> Item {
@@ -252,7 +252,7 @@ pub async fn on_kill(server: &Server, killer: &Player, victim: &Player) {
 
     if killer_level < 500 { give_xp(killer, xp).await }
 
-    killer.notify(message).await
+    killer.notify(message).await;
 }
 
 async fn send_pillar_name(center: Point3<i64>, name: String) {
@@ -263,7 +263,7 @@ async fn send_pillar_name(center: Point3<i64>, name: String) {
     };
     for player in SERVER.players.read().await.iter() {
         if is_in_zone(player.character.read().await.position, center, RENDER_DISTANCE_CREATURE) {
-            player.send_ignoring(&update).await
+            player.send_ignoring(&update).await;
         }
     }
 }
@@ -278,14 +278,14 @@ pub async fn on_join(player: &Player) {
     creatures.extend(torches(center, radius, amount));
 
     for packet in creatures {
-        player.send_ignoring(&packet).await
+        player.send_ignoring(&packet).await;
     }
 
     let id = player.id;
     tokio::spawn(async move {
         sleep(Duration::from_secs(3)).await;
         if let Some(player) = SERVER.find_player_by_id(id).await {
-            player.send_ignoring(&WorldUpdate::from(mission(center))).await
+            player.send_ignoring(&WorldUpdate::from(mission(center))).await;
         }
     });
 }
@@ -322,9 +322,9 @@ fn torches(center: Point3<i64>, radius: i64, count: usize) -> Vec<CreatureUpdate
             let (position, yaw) = creatures_circular(center, radius, count, i);
 
             CreatureUpdate {
-                appearance: Some(appearance_invisible().tap_mut(|a| {
-                    a.body_model = 2475;
-                    a.creature_size = Hitbox { width: 1.0, depth: 1.0, height: 1.5 }
+                appearance: Some(appearance_invisible().tap_mut(|appearance| {
+                    appearance.body_model = 2475;
+                    appearance.creature_size = Hitbox { width: 1.0, depth: 1.0, height: 1.5 }
                 })),
                 id: CreatureId(TORCHES_ID + i as i64),
                 race: Some(Race::DepositSapphire),
@@ -343,10 +343,10 @@ fn torches(center: Point3<i64>, radius: i64, count: usize) -> Vec<CreatureUpdate
 
 fn pillar(center: Point3<i64>) -> CreatureUpdate {
     CreatureUpdate {
-        appearance: Some(appearance_invisible().tap_mut(|a| {
-            a.body_model = 2565;
-            a.body_offset.z = 25.0;
-            a.creature_size = Hitbox { width: 3.0, depth: 3.0, height: 4.0 }
+        appearance: Some(appearance_invisible().tap_mut(|appearance| {
+            appearance.body_model = 2565;
+            appearance.body_offset.z = 25.0;
+            appearance.creature_size = Hitbox { width: 3.0, depth: 3.0, height: 4.0 }
         })),
         id: CreatureId(PILLAR_ID),
         race: Some(Race::DepositDiamond),

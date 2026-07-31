@@ -69,10 +69,10 @@ impl Command for super::Give {
         if !valid_materials.contains(&item.material) {
             let materials_list = valid_materials
                 .iter()
-                .map(|m| format!("{:?}", m))
+                .map(|material| format!("{material:?}"))
                 .collect::<Vec<_>>()
                 .join(", ");
-            caller.notify(format!("Try: {}", materials_list)).await;
+            caller.notify(format!("Try: {materials_list}")).await;
             return Err("incompatible material");
         }
 

@@ -1,12 +1,13 @@
+#![expect(unstable_features, reason = "living on the edge")]
 #![expect(incomplete_features, reason = "generic_const_exprs is incomplete, but works for our purposes")]
 #![feature(generic_const_exprs)]
 #![feature(future_join)]
 #![feature(iter_collect_into)]
 #![feature(iter_intersperse)]
-#![feature(bool_to_result)]
 
 #![allow(unreachable_pub, reason = "this isn't a lib, so adding `(crate)` to every `pub` is just pointless noise")]
 #![allow(clippy::partial_pub_fields, reason = "OOP...")]
+#![expect(clippy::cargo_common_metadata, reason = "TODO")]
 
 use std::sync::LazyLock;
 

@@ -3,31 +3,35 @@ use strum_macros::*;
 use crate::packet::common::item::Kind;
 
 impl Kind {
+	#[must_use]
 	pub const fn is_stackable(&self) -> bool {
 		matches!(self,
-			Kind::Consumable(_) | Kind::Resource(_) | Kind::Coin | Kind::PlatinumCoin | Kind::Quest(_)
+			Self::Consumable(_) | Self::Resource(_) | Self::Coin | Self::PlatinumCoin | Self::Quest(_)
 		)
 	}
 
+	#[must_use]
 	pub const fn uses_rarity(&self) -> bool {
 		matches!(self,
-			Kind::Weapon(_) | Kind::Chest | Kind::Gloves | Kind::Boots | Kind::Shoulder | Kind::Amulet |
-			Kind::Ring | Kind::Resource(Resource::Spirit) | Kind::Leftovers | Kind::Lamp
+			Self::Weapon(_) | Self::Chest | Self::Gloves | Self::Boots | Self::Shoulder | Self::Amulet |
+			Self::Ring | Self::Resource(Resource::Spirit) | Self::Leftovers | Self::Lamp
 		)
 	}
 
+	#[must_use]
 	pub const fn uses_level(&self) -> bool {
 		matches!(self,
-			Kind::Consumable(_) | Kind::Weapon(_) | Kind::Chest | Kind::Gloves | Kind::Boots |
-			Kind::Shoulder | Kind::Amulet | Kind::Ring | Kind::Resource(Resource::Spirit) |
-			Kind::Coin | Kind::PlatinumCoin | Kind::Leftovers | Kind::Pet(_)
+			Self::Consumable(_) | Self::Weapon(_) | Self::Chest | Self::Gloves | Self::Boots |
+			Self::Shoulder | Self::Amulet | Self::Ring | Self::Resource(Resource::Spirit) |
+			Self::Coin | Self::PlatinumCoin | Self::Leftovers | Self::Pet(_)
 		)
 	}
 
+	#[must_use]
 	pub const fn uses_seed(&self) -> bool {
 		matches!(self,
-			Kind::Weapon(_) | Kind::Chest | Kind::Gloves | Kind::Boots | Kind::Shoulder | Kind::Amulet |
-			Kind::Ring | Kind::Painting | Kind::Vase | Kind::Candle(_) | Kind::Quest(_)
+			Self::Weapon(_) | Self::Chest | Self::Gloves | Self::Boots | Self::Shoulder | Self::Amulet |
+			Self::Ring | Self::Painting | Self::Vase | Self::Candle(_) | Self::Quest(_)
 		)
 	}
 }

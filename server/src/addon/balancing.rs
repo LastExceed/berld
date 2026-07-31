@@ -13,12 +13,11 @@ use protocol::rgb::RGBA;
 use protocol::utils::constants::combat_classes::WATER_MAGE;
 use protocol::packet::world_update::{particle, sound, Particle};
 use protocol::packet::creature_update::equipment::Slot;
-use protocol::packet::common::item::{Kind, Material};
+use protocol::packet::common::item::Material;
 use protocol::packet::common::CreatureId;
 use protocol::packet::common::item::Kind::*;
 use protocol::packet::common::item::kind::Weapon::*;
 use protocol::packet::creature_update::CreatureFlag::{Climbing, Gliding};
-use protocol::packet::creature_update::equipment::Slot::RightWeapon;
 use protocol::packet::creature_update::Occupation::Rogue;
 use protocol::packet::creature_update::PhysicsFlag::{OnGround, Swimming, TouchingWall};
 use protocol::packet::hit;
@@ -120,12 +119,12 @@ impl Balancing {
 	}
 
 	pub fn adjust_hit(&self, hit: &mut Hit, source: &Creature, target: &Creature) {
-		let weapon_offense_multiplier = match source.equipment[RightWeapon].kind {
+		let weapon_offense_multiplier = match source.equipment[Slot::RightWeapon].kind {
 			Weapon(weapon)  => *self.values.damage.get(&weapon.to_string().to_lowercase()).unwrap_or(&1.0),
 			_               => 1.0
 		};
 
-		let weapon_stun_bonus = match source.equipment[RightWeapon].kind {
+		let weapon_stun_bonus = match source.equipment[Slot::RightWeapon].kind {
 			Weapon(weapon)  => *self.values.stun.get(&weapon.to_string().to_lowercase()).unwrap_or(&0),
 			_               => 0
 		};
@@ -199,7 +198,7 @@ impl Balancing {
 			Slot::RightWeapon
 		].map(|slot| {
 			let item = &source.equipment[slot];
-			if item.kind == Kind::Void {
+			if item.kind == Void {
 				return 0;
 			}
 

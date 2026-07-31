@@ -283,7 +283,7 @@ impl Server {
 		announce_join_leave(self, &player, false).await;
 		pvp::team::change_to(self, player_to_remove, None).await;
 		self.remove_creature(&player_to_remove.id).await;
-		self.broadcast(&pvp::map_head::create_toggle_packet(&player, false), None).await;
+		self.broadcast(&map_head::create_toggle_packet(&player, false), None).await;
 	}
 
 	async fn remove_creature(&self, creature_id: &CreatureId) {
