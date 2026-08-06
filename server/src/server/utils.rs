@@ -19,6 +19,7 @@ use protocol::packet::creature_update::Affiliation;
 use protocol::packet::creature_update::Affiliation::Pet;
 use protocol::packet::creature_update::Animation::Riding;
 use protocol::packet::world_update::Kill;
+use protocol::utils::zone_of;
 
 use crate::server::player::Player;
 use crate::addon::kill_feed;
@@ -55,6 +56,8 @@ impl Server {
 	}
 
 	pub async fn teleport(&self, player: &Player, destination: Point3<i64>) {
+		self.prune_zone_states(player, zone_of(destination)).await;
+		
 		let server_creature = CreatureUpdate {
 			id: CreatureId(0),
 			position: Some(destination),

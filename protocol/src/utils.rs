@@ -4,13 +4,13 @@ use std::ops::{Index, IndexMut};
 use std::slice::Iter;
 
 use array_init::array_init;
-use nalgebra::Point3;
+use nalgebra::{Point2, Point3};
 use strum::EnumCount;
 use tokio::io;
 use tokio::io::{AsyncRead, AsyncReadExt, AsyncWriteExt};
 
 use crate::{ReadCwData, WriteCwData};
-use crate::utils::constants::SIZE_BLOCK;
+use crate::utils::constants::{SIZE_BLOCK, SIZE_ZONE};
 use crate::utils::io_extensions::{ReadArbitrary, WriteArbitrary};
 
 pub mod io_extensions;
@@ -50,6 +50,13 @@ pub fn maximum_experience_of(level: i32) -> i32 {
 #[must_use]
 pub fn sound_position_of(position: Point3<i64>) -> Point3<f32> { //todo: move to SoundEffect ?
 	position.map(|scalar| scalar as f32 / SIZE_BLOCK as f32)
+}
+
+#[must_use]
+pub fn zone_of(position: Point3<i64>) -> Point2<i32> {
+	position
+		.xy()
+		.map(|scalar| scalar.div_euclid(SIZE_ZONE) as i32)
 }
 
 ///ideally this would be done with a `#[derive()]` macro instead,

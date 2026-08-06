@@ -64,6 +64,7 @@ impl Addons {
 	pub async fn start(&self) {
 		self.listforge_api.run().await;
 		self.discord_integration.run();
+		self.models.prepare().await;
 		freeze_time();
 		events::start();
 	}

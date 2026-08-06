@@ -1,21 +1,22 @@
 use std::ops::{Div as _, Mul as _, Sub as _};
 use std::str::SplitWhitespace;
 
-use protocol::packet::creature_update::{Affiliation, Appearance, AppearanceFlag};
-use protocol::packet::{CreatureUpdate, StatusEffect};
-use protocol::packet::world_update::block::Kind;
-use protocol::packet::status_effect;
+use strum::IntoEnumIterator;
+use tap::{Pipe, Tap};
+
 use protocol::nalgebra::{Point3, Vector3};
-use protocol::packet::WorldUpdate;
+use protocol::packet::{CreatureUpdate, StatusEffect, WorldUpdate};
 use protocol::packet::common::{CreatureId, Hitbox, Race};
+use protocol::packet::creature_update::{Affiliation, Appearance, AppearanceFlag};
+use protocol::packet::status_effect;
 use protocol::packet::world_update::{Block, WorldObject};
+use protocol::packet::world_update::block::Kind;
 use protocol::packet::world_update::block::Kind::*;
+use protocol::packet::world_update::sound;
 use protocol::packet::world_update::world_object::Kind::{Crate, FireTrap};
 use protocol::utils::constants::{SIZE_BLOCK, SIZE_ZONE};
 use protocol::utils::flagset::FlagSet;
-use strum::IntoEnumIterator;
-use protocol::packet::world_update::sound;
-use tap::{Pipe, Tap};
+use protocol::utils::zone_of;
 
 use crate::addon::{command_manager::{Command, CommandResult}, models, play_sound_at_player};
 use crate::addon::command_manager::commands::Test;
@@ -282,11 +283,13 @@ async fn model(params: &mut SplitWhitespace<'_>, server: &Server, caller: &Playe
 		};
 	let mut blocks = models::parse_model(file);
 
-	let offset = caller
+	let position = caller
 		.character
 		.read()
 		.await
-		.position
+		.position;
+
+	let offset = position
 		.div(SIZE_BLOCK)
 		.cast()
 		.coords;
@@ -295,7 +298,7 @@ async fn model(params: &mut SplitWhitespace<'_>, server: &Server, caller: &Playe
 		block.position += offset;
 	}
 
-	server.broadcast(&WorldUpdate::from(blocks), None).await;
+	server.broadcast_near(&WorldUpdate::from(blocks), zone_of(position)).await;
 
 	Ok(())
 }
