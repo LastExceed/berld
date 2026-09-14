@@ -222,7 +222,7 @@ fn reward_item(level: i16) -> Item {
 
     item.material = pick_from(by_item_kind(item.kind));
     item.level = if item.kind.uses_level() { level } else { 1 };
-    item.seed = if item.kind.uses_seed() { random() } else { 0 };
+    item.seed = if item.uses_seed() { random() } else { 0 };
 
     item
 }

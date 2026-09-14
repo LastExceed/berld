@@ -28,10 +28,9 @@ impl Kind {
 	}
 
 	#[must_use]
-	pub const fn uses_seed(&self) -> bool {
+	pub const fn uses_stats(&self) -> bool {
 		matches!(self,
-			Self::Weapon(_) | Self::Chest | Self::Gloves | Self::Boots | Self::Shoulder | Self::Amulet |
-			Self::Ring | Self::Painting | Self::Vase | Self::Candle(_) | Self::Quest(_)
+			Self::Weapon(_) | Self::Chest | Self::Gloves | Self::Boots | Self::Shoulder | Self::Amulet | Self::Ring
 		)
 	}
 }
