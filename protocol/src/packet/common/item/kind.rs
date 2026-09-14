@@ -28,6 +28,14 @@ impl Kind {
 	}
 
 	#[must_use]
+	pub const fn uses_power(&self) -> bool {
+		matches!(self,
+			Self::Weapon(_) | Self::Chest | Self::Gloves | Self::Boots | Self::Shoulder | Self::Amulet |
+			Self::Ring | Self::Resource(Resource::Spirit)
+		)
+	}
+
+	#[must_use]
 	pub const fn uses_stats(&self) -> bool {
 		matches!(self,
 			Self::Weapon(_) | Self::Chest | Self::Gloves | Self::Boots | Self::Shoulder | Self::Amulet | Self::Ring
