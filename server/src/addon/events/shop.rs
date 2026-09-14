@@ -17,6 +17,7 @@ use protocol::packet::WorldUpdate;
 use protocol::packet::CreatureUpdate;
 use protocol::utils::constants::{materials, SIZE_BLOCK, SIZE_ZONE};
 use protocol::utils::constants::rarity::*;
+use protocol::utils::max_level_of;
 
 use crate::addon::events::utils::{appearance_invisible, config_fallback, config_optional, creatures_circular, NAME_OVERFLOW};
 use crate::addon::play_sound_at_player;
@@ -234,7 +235,7 @@ fn subtypes(kind: Kind) -> Vec<(i32, Kind)> {
 
 fn model_seeds(item: &Item) -> Range<i32> {
     let count = item.model_count();
-    if matches!(item.kind, Kind::Weapon(_)) { -count..count } else { 0..count }
+    if matches!(item.kind, Kind::Weapon(_)) { -(count - 1)..count } else { 0..count }
 }
 
 fn stat_seed(item: &Item, option: i32) -> Option<i32> {
@@ -305,15 +306,21 @@ fn item_validation(state: &mut State, item: &mut Item, player_level: i16) -> Res
             State::Rarity   => {if item.kind.uses_rarity() { return Ok(()) }
                                     item.rarity = NORMAL;
                                     *state = State::Model;}
-            State::Model    => {if item.uses_models() { return Ok(()) }
+            State::Model    => {item.level = item_level(item.kind, player_level);
+                                    if item.uses_models() { return Ok(()) }
                                     item.seed = 0;
                                     *state = State::Stat;}
             State::Stat     => {if item.kind.uses_stats() { return Ok(()) }
                                     *state = State::Complete;}
-            State::Complete => {item.level = if item.kind.uses_level() { player_level } else { 1 };
-                                    return Ok(())}
+            State::Complete => return Ok(())
         }
     }
+}
+
+fn item_level(kind: Kind, player_level: i16) -> i16 {
+    if kind.uses_power() { max_level_of(player_level.into()) as i16 }
+    else if kind.uses_level() { player_level }
+    else { 1 }
 }
 
 fn item_name(kind: Kind) -> String {
@@ -357,8 +364,10 @@ fn npc_names(state: State, item: &Item, option: i32) -> String {
         State::Material => Material::from_repr(option as i8).map(|material| material.to_string()).unwrap_or_default(),
         State::Rarity   => rarity_names(option).to_owned(),
         State::Model    => format!("Model\n{option}"),
-        State::Stat     => {let tempo = option * 100 / (SUB_STATS - 1);
-                                format!("C {}\nT {tempo}", 100 - tempo)}
+        State::Stat     => item_preview(state, item, option)
+            .map(|preview| preview.stats())
+            .map(|stats| format!("C:{:.1}%\nT:{:.1}%", stats[Stat::Crit] * 100.0, stats[Stat::Tempo] * 100.0))
+            .unwrap_or_default(),
         State::Complete => String::new()
     }
 }

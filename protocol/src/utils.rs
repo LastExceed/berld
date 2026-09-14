@@ -42,6 +42,12 @@ pub fn power_of(level: i32) -> i32 {
 }
 
 #[must_use]
+pub fn max_level_of(level: i32) -> i32 {
+	let power = power_of(level);
+	(level..=i32::from(i16::MAX)).take_while(|&l| power_of(l) == power).last().unwrap_or(level)
+}
+
+#[must_use]
 pub fn maximum_experience_of(level: i32) -> i32 {
 	// order of operations matches cubeworld's rounding behaviour
 	(50.0 + something(level as f32) * 1000.0) as i32
