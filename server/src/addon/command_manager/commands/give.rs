@@ -78,7 +78,7 @@ impl Command for super::Give {
 
         if !item.kind.uses_rarity() && item.rarity != NORMAL {return Err("item does not use rarity")}
         if !item.kind.uses_level() && item.level != 1 {return Err("item does not use level")}
-        if !item.kind.uses_seed() && item.seed != 0 {return Err("item does not use seed")}
+        if !item.uses_seed() && item.seed != 0 {return Err("item does not use seed")}
         
         (1..=power_of(500))
             .contains(&power_of(item.level as _))

@@ -216,6 +216,14 @@ impl ArrayWrapperIndex for Stat {
 
 type Stats = ArrayWrapper<Stat>;
 
+pub const SUB_STATS: i32 = 21;
+
+#[must_use]
+#[expect(clippy::cast_sign_loss, reason = "intentional")]
+pub const fn sub_stat(seed: i32) -> i32 {
+	(seed as u32 % SUB_STATS as u32) as i32
+}
+
 impl Item {
 	#[must_use]
 	pub fn stats(&self) -> Stats {
@@ -310,5 +318,35 @@ impl Item {
 				* level_scaling_factor(self.level as f32 + if apply_spirit_bonus { spirit_bonus } else { 0.0 })
 				* rarity_scaling_factor(self.rarity)
 		}).into()
+	}
+
+	#[must_use]
+	pub const fn model_count(&self) -> i32 {
+		use Kind::*;
+		use kind::Weapon::*;
+		use Material::*;
+
+		match (self.kind, self.material) {
+			(Weapon(Sword | Axe | Mace | Dagger | Fist | Longsword |
+			        Shield | Greatsword | Greataxe | Greatmace), Iron) |
+			(Weapon(Bow | Crossbow | Boomerang | Staff | Wand), Wood)        => 11,
+			(Weapon(Bracelet), _)                                             => 6,
+			(Chest | Gloves | Boots | Shoulder, Iron | Silk | Linen | Cotton) |
+			(Amulet | Ring, _)                                                => 5,
+			(Vase, _)                                                         => 4,
+			(Candle(_), _)                                                    => 3,
+			(Painting, _)                                                     => 2,
+			_                                                                 => 1
+		}
+	}
+
+	#[must_use]
+	pub const fn uses_models(&self) -> bool {
+		self.model_count() > 1
+	}
+
+	#[must_use]
+	pub const fn uses_seed(&self) -> bool {
+		self.kind.uses_stats() || self.uses_models()
 	}
 }
