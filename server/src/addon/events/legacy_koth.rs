@@ -4,8 +4,9 @@ use std::sync::Arc;
 use std::time::Duration;
 
 use config::{Config, ConfigError};
-use rand::{random, random_range};
-use strum::IntoEnumIterator;
+use rand::{random_range, rng};
+use rand::seq::IndexedRandom;
+use serde::Deserialize;
 use tap::Tap;
 use tokio::sync::RwLock;
 use tokio::time::sleep;
@@ -18,7 +19,7 @@ use protocol::packet::world_update::{Mission, Pickup, sound};
 use protocol::packet::world_update::mission::{Objective, State};
 use protocol::utils::constants::{SIZE_BLOCK, SIZE_ZONE, SIZE_SECTOR};
 use protocol::utils::constants::materials::by_item_kind;
-use protocol::utils::constants::rarity::{NORMAL, RARE, EPIC, LEGENDARY};
+use protocol::utils::constants::rarity::{NORMAL, UNCOMMON, RARE, EPIC, LEGENDARY};
 
 use crate::addon::events::utils::{appearance_invisible, config_fallback, config_optional, creatures_circular, is_in_zone, pick_from, NAME_OVERFLOW, RENDER_DISTANCE_CREATURE};
 use crate::addon::play_sound_at_player;
@@ -33,9 +34,14 @@ const TORCHES_ID: i64 = 75000;
 const REWARD_POINTS: i32 = 10000;
 const REWARD_THRESHOLDS: [i32; 4] = [20, 40, 60, 80];
 
-const REWARD_WEAPON_ODDS: f32 = 0.30;
-const REWARD_ARMOR_ODDS: f32 = 0.30;
-const REWARD_SPIRIT_ODDS: f32 = 0.35;
+const VANILLA_PETS: &[Race] = {
+    use Race::*;
+    &[Collie, Alpaca, AlpacaBrown, Turtle, Terrier, TerrierScottish, Cat, Pig, Sheep, Bunny, Porcupine,
+      SlimeGreen, SlimePink, SlimeYellow, SlimeBlue, Monkey, Hornet, Crow, Chicken, Seagull, Parrot, Bat,
+      Fly, Midge, Mosquito, RunnerPlain, RunnerLeaf, RunnerSnow, RunnerDesert, Peacock, Duckbill, Crocodile,
+      Spitter, Mole, Biter, Squirrel, Raccoon, Owl, Penguin, Horse, Camel, BeetleDark, BeetleFire,
+      BeetleSnout, BeetleLemon, Crab, Bumblebee]
+};
 
 #[derive(Debug)]
 pub struct LegacyKoth {
@@ -50,7 +56,9 @@ pub struct LegacyKoth {
     kill_king_points: i32,
     kill_king_xp: i32,
     kill_points: i32,
-    kill_xp: i32
+    kill_xp: i32,
+    loot: LootWeights,
+    rarity: RarityWeights
 }
 
 impl LegacyKoth {
@@ -62,6 +70,11 @@ impl LegacyKoth {
         let interval_seconds: u64 = config_fallback(config, "legacykoth.interval", 5_u64)?;
         let reward_frequency: i32 = config_fallback(config, "legacykoth.reward_frequency", 420_i32)?;
         let king_reward_frequency: i32 = config_fallback(config, "legacykoth.king_reward_frequency", 180_i32)?;
+
+        let loot: LootWeights = config_fallback(config, "legacykoth.loot", LootWeights::default())?;
+        let rarity: RarityWeights = config_fallback(config, "legacykoth.rarity", RarityWeights::default())?;
+        if loot.table().iter().all(|&(_, weight)| weight == 0) { return Err(ConfigError::Message("legacykoth.loot needs a non-zero weight".into())) }
+        if rarity.table().iter().all(|&(_, weight)| weight == 0) { return Err(ConfigError::Message("legacykoth.rarity needs a non-zero weight".into())) }
 
         Ok(Self {
             points: RwLock::new(HashMap::new()),
@@ -75,7 +88,9 @@ impl LegacyKoth {
             kill_king_points: config_fallback(config, "legacykoth.kill_king_points", 500_i32)?,
             kill_king_xp: config_fallback(config, "legacykoth.kill_king_xp", 20_i32)?,
             kill_points: config_fallback(config, "legacykoth.kill_points", 200_i32)?,
-            kill_xp: config_fallback(config, "legacykoth.kill_xp", 10_i32)?
+            kill_xp: config_fallback(config, "legacykoth.kill_xp", 10_i32)?,
+            loot,
+            rarity
         })
     }
 }
@@ -198,9 +213,49 @@ async fn give_reward(player: &Player) {
         let character = player.character.read().await;
         (character.level as i16, character.occupation)
     };
-    let pickup = Pickup { interactor: player.id, item: reward_item(level, occupation) };
+    let pickup = Pickup { interactor: player.id, item: reward_item(&SERVER.addons.events.legacy_koth, level, occupation) };
     play_sound_at_player(player, sound::Kind::Missioncomplete, 0.62, 1.0).await;
     player.send_ignoring(&WorldUpdate::from(pickup)).await;
+}
+
+#[derive(Debug, Clone, Copy)]
+enum Loot { Weapon, Armor, Amulet, Ring, Leftovers, Spirit, Pet }
+
+#[derive(Debug, Deserialize)]
+#[serde(default, deny_unknown_fields)]
+struct LootWeights { weapon: u32, armor: u32, amulet: u32, ring: u32, leftovers: u32, spirit: u32, pet: u32 }
+
+impl Default for LootWeights {
+    fn default() -> Self {
+        Self { weapon: 25, armor: 25, amulet: 7, ring: 7, leftovers: 6, spirit: 25, pet: 5 }
+    }
+}
+
+impl LootWeights {
+    const fn table(&self) -> [(Loot, u32); 7] {
+        [(Loot::Weapon, self.weapon), (Loot::Armor, self.armor), (Loot::Amulet, self.amulet), (Loot::Ring, self.ring),
+         (Loot::Leftovers, self.leftovers), (Loot::Spirit, self.spirit), (Loot::Pet, self.pet)]
+    }
+}
+
+#[derive(Debug, Deserialize)]
+#[serde(default, deny_unknown_fields)]
+struct RarityWeights { normal: u32, uncommon: u32, rare: u32, epic: u32, legendary: u32 }
+
+impl Default for RarityWeights {
+    fn default() -> Self {
+        Self { normal: 0, uncommon: 0, rare: 0, epic: 1, legendary: 1 }
+    }
+}
+
+impl RarityWeights {
+    const fn table(&self) -> [(u8, u32); 5] {
+        [(NORMAL, self.normal), (UNCOMMON, self.uncommon), (RARE, self.rare), (EPIC, self.epic), (LEGENDARY, self.legendary)]
+    }
+}
+
+fn pick_weighted<T: Copy>(table: &[(T, u32)]) -> Option<T> {
+    table.choose_weighted(&mut rng(), |(_, weight)| *weight).ok().map(|(value, _)| *value)
 }
 
 type ClassWeapons = &'static [(kind::Weapon, &'static [Material])];
@@ -219,27 +274,37 @@ fn class_gear(occupation: Occupation) -> Option<(Material, ClassWeapons)> {
     }
 }
 
-fn reward_item(level: i16, occupation: Occupation) -> Item {
+fn reward_item(lkoth: &LegacyKoth, level: i16, occupation: Occupation) -> Item {
     let mut item = Item::default();
 
-    let roll = random::<f32>();
-    (item.kind, item.material) = match class_gear(occupation) {
-        Some((_, weapons)) if roll < REWARD_WEAPON_ODDS => {
+    let gear = class_gear(occupation);
+    let table = lkoth.loot.table().map(|(loot, weight)| match loot {
+        Loot::Weapon | Loot::Armor if gear.is_none() => (loot, 0),
+        _ => (loot, weight)
+    });
+
+    (item.kind, item.material) = match (pick_weighted(&table), gear) {
+        (Some(Loot::Weapon), Some((_, weapons))) => {
             let (weapon, materials) = pick_from(weapons);
             (Kind::Weapon(weapon), pick_from(materials))
         }
-        Some((armor, _)) if roll < REWARD_WEAPON_ODDS + REWARD_ARMOR_ODDS
+        (Some(Loot::Armor), Some((armor, _)))
             => (pick_from(&[Kind::Chest, Kind::Gloves, Kind::Boots, Kind::Shoulder]), armor),
-        _ => {
-            let kind = if roll < REWARD_WEAPON_ODDS + REWARD_ARMOR_ODDS + REWARD_SPIRIT_ODDS { Kind::Resource(kind::Resource::Spirit) }
-                       else { Kind::Pet(pick_from(&Race::iter().collect::<Vec<_>>())) };
+        (loot, _) => {
+            let kind = match loot {
+                Some(Loot::Amulet)    => Kind::Amulet,
+                Some(Loot::Ring)      => Kind::Ring,
+                Some(Loot::Leftovers) => Kind::Leftovers,
+                Some(Loot::Pet)       => Kind::Pet(pick_from(VANILLA_PETS)),
+                _                     => Kind::Resource(kind::Resource::Spirit)
+            };
             (kind, pick_from(by_item_kind(kind)))
         }
     };
 
     item.rarity = match item.kind {
-        Kind::Weapon(_) | Kind::Chest | Kind::Gloves | Kind::Boots | Kind::Shoulder
-            => pick_from(&[EPIC, LEGENDARY]),
+        Kind::Weapon(_) | Kind::Chest | Kind::Gloves | Kind::Boots | Kind::Shoulder | Kind::Amulet | Kind::Ring | Kind::Leftovers
+            => pick_weighted(&lkoth.rarity.table()).expect("validated at startup"),
         Kind::Resource(kind::Resource::Spirit) => RARE,
         _   => if item.kind.uses_rarity() { LEGENDARY } else { NORMAL }
     };
