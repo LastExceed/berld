@@ -62,7 +62,7 @@ pub(super) fn inspect_acceleration(previous_state: &Creature, updated_state: &Cr
 //		actual_xy.ensure_within(&(0.0..=limit_xy), "acceleration.horizontal")?;
 //	}
 
-	if updated_state.flags_physics.get(PhysicsFlag::Swimming) {
+	if updated_state.flags_physics.get(PhysicsFlag::Swimming) || updated_state.flags.get(CreatureFlag::Gliding) { // walk into corner, open glider, hold ctrl, jump
 		updated_state.acceleration.z.ensure_within(&(-80.0..=80.0), "acceleration.vertical")
 	} else if updated_state.flags.get(CreatureFlag::Climbing) || previous_state.flags.get(CreatureFlag::Climbing) {//possible fix for a false positive
 		updated_state.acceleration.z.ensure_one_of(&[-16.0, 0.0, 16.0], "acceleration.vertical")
