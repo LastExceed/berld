@@ -54,6 +54,10 @@ impl Models {
 			.cloned()
 			.collect()
 	}
+
+	pub fn has_model(&self, zone: Point2<i32>) -> bool {
+		self.models.iter().any(|(model_zone, _blocks)| *model_zone == zone)
+	}
 }
 
 const PURE_BLUE: RGB8 = RGB8::new(0, 0, 255);
