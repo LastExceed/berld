@@ -45,7 +45,7 @@ impl Command for super::Give {
 
         let valid_materials = by_item_kind(item.kind);
         if item.kind.uses_rarity() {item.rarity = LEGENDARY} else {item.rarity = NORMAL}
-        if item.kind.uses_level() {item.level = caller.character.read().await.level as i16} else {item.level = 1}
+        item.level = item.kind.item_level(caller.character.read().await.level as i16);
         if !valid_materials.is_empty() {item.material = valid_materials[0]}
 
         for param in params {

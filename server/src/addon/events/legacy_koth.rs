@@ -4,7 +4,7 @@ use std::sync::Arc;
 use std::time::Duration;
 
 use config::{Config, ConfigError};
-use rand::random;
+use rand::{random, random_range};
 use strum::IntoEnumIterator;
 use tap::Tap;
 use tokio::sync::RwLock;
@@ -12,8 +12,8 @@ use tokio::time::sleep;
 
 use protocol::nalgebra::Point3;
 use protocol::packet::{ChatMessageFromServer, CreatureUpdate, WorldUpdate};
-use protocol::packet::common::{CreatureId, EulerAngles, Hitbox, Item, Race, item::{Kind, kind}};
-use protocol::packet::creature_update::Affiliation;
+use protocol::packet::common::{CreatureId, EulerAngles, Hitbox, Item, Race, item::{Kind, Material, kind}};
+use protocol::packet::creature_update::{Affiliation, Occupation};
 use protocol::packet::world_update::{Mission, Pickup, sound};
 use protocol::packet::world_update::mission::{Objective, State};
 use protocol::utils::constants::{SIZE_BLOCK, SIZE_ZONE, SIZE_SECTOR};
@@ -194,23 +194,47 @@ async fn handle_points(player: &Player, threshold: Option<i32>, reward: bool) {
 }
 
 async fn give_reward(player: &Player) {
-    let level = player.character.read().await.level as i16;
-    let pickup = Pickup { interactor: player.id, item: reward_item(level) };
+    let (level, occupation) = {
+        let character = player.character.read().await;
+        (character.level as i16, character.occupation)
+    };
+    let pickup = Pickup { interactor: player.id, item: reward_item(level, occupation) };
     play_sound_at_player(player, sound::Kind::Missioncomplete, 0.62, 1.0).await;
     player.send_ignoring(&WorldUpdate::from(pickup)).await;
 }
 
-fn reward_item(level: i16) -> Item {
+type ClassWeapons = &'static [(kind::Weapon, &'static [Material])];
+
+fn class_gear(occupation: Occupation) -> Option<(Material, ClassWeapons)> {
+    use kind::Weapon::{Axe, Boomerang, Bow, Bracelet, Crossbow, Dagger, Fist, Greataxe, Greatmace, Greatsword, Longsword, Mace, Shield, Staff, Sword, Wand};
+    use Material::{Cotton, Gold, Iron, Linen, Silk, Silver, Wood};
+
+    match occupation {
+        Occupation::Warrior => Some((Iron, &[(Sword, &[Iron]), (Axe, &[Iron]), (Mace, &[Iron]), (Shield, &[Iron]),
+                                             (Greatsword, &[Iron]), (Greataxe, &[Iron]), (Greatmace, &[Iron, Wood])])),
+        Occupation::Ranger  => Some((Linen, &[(Bow, &[Wood]), (Crossbow, &[Wood]), (Boomerang, &[Wood])])),
+        Occupation::Mage    => Some((Silk, &[(Wand, &[Wood]), (Staff, &[Wood]), (Bracelet, &[Gold, Silver])])),
+        Occupation::Rogue   => Some((Cotton, &[(Longsword, &[Iron]), (Dagger, &[Iron]), (Fist, &[Iron])])),
+        _ => None
+    }
+}
+
+fn reward_item(level: i16, occupation: Occupation) -> Item {
     let mut item = Item::default();
 
-    item.kind = match random::<f32>() {
-        roll if roll < REWARD_WEAPON_ODDS
-            => Kind::Weapon(pick_from(&kind::Weapon::iter().collect::<Vec<_>>())),
-        roll if roll < REWARD_WEAPON_ODDS + REWARD_ARMOR_ODDS
-            => pick_from(&[Kind::Chest, Kind::Gloves, Kind::Boots, Kind::Shoulder]),
-        roll if roll < REWARD_WEAPON_ODDS + REWARD_ARMOR_ODDS + REWARD_SPIRIT_ODDS
-            => Kind::Resource(kind::Resource::Spirit),
-        _   => Kind::Pet(pick_from(&Race::iter().collect::<Vec<_>>()))
+    let roll = random::<f32>();
+    (item.kind, item.material) = match class_gear(occupation) {
+        Some((_, weapons)) if roll < REWARD_WEAPON_ODDS => {
+            let (weapon, materials) = pick_from(weapons);
+            (Kind::Weapon(weapon), pick_from(materials))
+        }
+        Some((armor, _)) if roll < REWARD_WEAPON_ODDS + REWARD_ARMOR_ODDS
+            => (pick_from(&[Kind::Chest, Kind::Gloves, Kind::Boots, Kind::Shoulder]), armor),
+        _ => {
+            let kind = if roll < REWARD_WEAPON_ODDS + REWARD_ARMOR_ODDS + REWARD_SPIRIT_ODDS { Kind::Resource(kind::Resource::Spirit) }
+                       else { Kind::Pet(pick_from(&Race::iter().collect::<Vec<_>>())) };
+            (kind, pick_from(by_item_kind(kind)))
+        }
     };
 
     item.rarity = match item.kind {
@@ -220,9 +244,8 @@ fn reward_item(level: i16) -> Item {
         _   => if item.kind.uses_rarity() { LEGENDARY } else { NORMAL }
     };
 
-    item.material = pick_from(by_item_kind(item.kind));
-    item.level = if item.kind.uses_level() { level } else { 1 };
-    item.seed = if item.uses_seed() { random() } else { 0 };
+    item.level = item.kind.item_level(level);
+    item.seed = if item.uses_seed() { random_range(0..=i32::MAX) } else { 0 };
 
     item
 }
