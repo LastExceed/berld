@@ -219,22 +219,22 @@ async fn give_reward(player: &Player) {
 }
 
 #[derive(Debug, Clone, Copy)]
-enum Loot { Weapon, Armor, Amulet, Ring, Leftovers, Spirit, Pet }
+enum Loot { Weapon, Armor, Amulet, Ring, Leftovers, Spirit, Lamp, Pet }
 
 #[derive(Debug, Deserialize)]
 #[serde(default, deny_unknown_fields)]
-struct LootWeights { weapon: u32, armor: u32, amulet: u32, ring: u32, leftovers: u32, spirit: u32, pet: u32 }
+struct LootWeights { weapon: u32, armor: u32, amulet: u32, ring: u32, leftovers: u32, spirit: u32, lamp: u32, pet: u32 }
 
 impl Default for LootWeights {
     fn default() -> Self {
-        Self { weapon: 25, armor: 25, amulet: 7, ring: 7, leftovers: 6, spirit: 25, pet: 5 }
+        Self { weapon: 25, armor: 25, amulet: 7, ring: 7, leftovers: 4, spirit: 25, lamp: 2, pet: 5 }
     }
 }
 
 impl LootWeights {
-    const fn table(&self) -> [(Loot, u32); 7] {
+    const fn table(&self) -> [(Loot, u32); 8] {
         [(Loot::Weapon, self.weapon), (Loot::Armor, self.armor), (Loot::Amulet, self.amulet), (Loot::Ring, self.ring),
-         (Loot::Leftovers, self.leftovers), (Loot::Spirit, self.spirit), (Loot::Pet, self.pet)]
+         (Loot::Leftovers, self.leftovers), (Loot::Spirit, self.spirit), (Loot::Lamp, self.lamp), (Loot::Pet, self.pet)]
     }
 }
 
@@ -295,6 +295,7 @@ fn reward_item(lkoth: &LegacyKoth, level: i16, occupation: Occupation) -> Item {
                 Some(Loot::Amulet)    => Kind::Amulet,
                 Some(Loot::Ring)      => Kind::Ring,
                 Some(Loot::Leftovers) => Kind::Leftovers,
+                Some(Loot::Lamp)      => Kind::Lamp,
                 Some(Loot::Pet)       => Kind::Pet(pick_from(VANILLA_PETS)),
                 _                     => Kind::Resource(kind::Resource::Spirit)
             };
