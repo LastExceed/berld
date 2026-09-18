@@ -10,6 +10,7 @@ use tokio::io;
 use tokio::io::{AsyncRead, AsyncReadExt, AsyncWriteExt};
 
 use crate::{ReadCwData, WriteCwData};
+use crate::packet::common::item::Kind;
 use crate::utils::constants::SIZE_BLOCK;
 use crate::utils::io_extensions::{ReadArbitrary, WriteArbitrary};
 
@@ -45,6 +46,13 @@ pub fn power_of(level: i32) -> i32 {
 pub fn max_level_of(level: i32) -> i32 {
 	let power = power_of(level);
 	(level..=i32::from(i16::MAX)).take_while(|&l| power_of(l) == power).last().unwrap_or(level)
+}
+
+#[must_use]
+pub fn max_valid_item_level(kind: Kind, player_level: i16) -> i16 {
+	if kind.uses_power() { max_level_of(player_level.into()) as i16 }
+	else if kind.uses_level() { player_level }
+	else { 1 }
 }
 
 #[must_use]

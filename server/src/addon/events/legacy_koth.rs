@@ -17,9 +17,10 @@ use protocol::packet::common::{CreatureId, EulerAngles, Hitbox, Item, Race, item
 use protocol::packet::creature_update::{Affiliation, Occupation};
 use protocol::packet::world_update::{Mission, Pickup, sound};
 use protocol::packet::world_update::mission::{Objective, State};
-use protocol::utils::constants::{SIZE_BLOCK, SIZE_ZONE, SIZE_SECTOR};
+use protocol::utils::constants::{SIZE_BLOCK, SIZE_ZONE, SIZE_SECTOR, VANILLA_PETS};
 use protocol::utils::constants::materials::by_item_kind;
 use protocol::utils::constants::rarity::{NORMAL, UNCOMMON, RARE, EPIC, LEGENDARY};
+use protocol::utils::max_valid_item_level;
 
 use crate::addon::events::utils::{appearance_invisible, config_fallback, config_optional, creatures_circular, is_in_zone, pick_from, NAME_OVERFLOW, RENDER_DISTANCE_CREATURE};
 use crate::addon::play_sound_at_player;
@@ -33,15 +34,6 @@ const TORCHES_ID: i64 = 75000;
 
 const REWARD_POINTS: i32 = 10000;
 const REWARD_THRESHOLDS: [i32; 4] = [20, 40, 60, 80];
-
-const VANILLA_PETS: &[Race] = {
-    use Race::*;
-    &[Collie, Alpaca, AlpacaBrown, Turtle, Terrier, TerrierScottish, Cat, Pig, Sheep, Bunny, Porcupine,
-      SlimeGreen, SlimePink, SlimeYellow, SlimeBlue, Monkey, Hornet, Crow, Chicken, Seagull, Parrot, Bat,
-      Fly, Midge, Mosquito, RunnerPlain, RunnerLeaf, RunnerSnow, RunnerDesert, Peacock, Duckbill, Crocodile,
-      Spitter, Mole, Biter, Squirrel, Raccoon, Owl, Penguin, Horse, Camel, BeetleDark, BeetleFire,
-      BeetleSnout, BeetleLemon, Crab, Bumblebee]
-};
 
 #[derive(Debug)]
 pub struct LegacyKoth {
@@ -296,7 +288,7 @@ fn reward_item(lkoth: &LegacyKoth, level: i16, occupation: Occupation) -> Item {
                 Some(Loot::Ring)      => Kind::Ring,
                 Some(Loot::Leftovers) => Kind::Leftovers,
                 Some(Loot::Lamp)      => Kind::Lamp,
-                Some(Loot::Pet)       => Kind::Pet(pick_from(VANILLA_PETS)),
+                Some(Loot::Pet)       => Kind::Pet(pick_from(&VANILLA_PETS)),
                 _                     => Kind::Resource(kind::Resource::Spirit)
             };
             (kind, pick_from(by_item_kind(kind)))
@@ -310,7 +302,7 @@ fn reward_item(lkoth: &LegacyKoth, level: i16, occupation: Occupation) -> Item {
         _   => if item.kind.uses_rarity() { LEGENDARY } else { NORMAL }
     };
 
-    item.level = item.kind.item_level(level);
+    item.level = max_valid_item_level(item.kind, level);
     item.seed = if item.uses_seed() { random_range(0..=i32::MAX) } else { 0 };
 
     item
