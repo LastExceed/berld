@@ -1,7 +1,6 @@
 use strum_macros::*;
 
 use crate::packet::common::item::Kind;
-use crate::utils::max_level_of;
 
 impl Kind {
 	#[must_use]
@@ -41,13 +40,6 @@ impl Kind {
 		matches!(self,
 			Self::Weapon(_) | Self::Chest | Self::Gloves | Self::Boots | Self::Shoulder | Self::Amulet | Self::Ring
 		)
-	}
-
-	#[must_use]
-	pub fn item_level(&self, player_level: i16) -> i16 {
-		if self.uses_power() { max_level_of(player_level.into()) as i16 }
-		else if self.uses_level() { player_level }
-		else { 1 }
 	}
 }
 
