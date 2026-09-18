@@ -5,7 +5,7 @@ use protocol::packet::world_update::Pickup;
 use protocol::packet::WorldUpdate;
 use protocol::utils::constants::materials::by_item_kind;
 use protocol::utils::constants::rarity::*;
-use protocol::utils::power_of;
+use protocol::utils::{max_valid_item_level, power_of};
 use tap::Pipe;
 
 use crate::addon::command_manager::{Command, CommandResult};
@@ -45,7 +45,7 @@ impl Command for super::Give {
 
         let valid_materials = by_item_kind(item.kind);
         if item.kind.uses_rarity() {item.rarity = LEGENDARY} else {item.rarity = NORMAL}
-        if item.kind.uses_level() {item.level = caller.character.read().await.level as i16} else {item.level = 1}
+        item.level = max_valid_item_level(item.kind, caller.character.read().await.level as i16);
         if !valid_materials.is_empty() {item.material = valid_materials[0]}
 
         for param in params {

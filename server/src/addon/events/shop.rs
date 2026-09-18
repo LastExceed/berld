@@ -17,7 +17,7 @@ use protocol::packet::WorldUpdate;
 use protocol::packet::CreatureUpdate;
 use protocol::utils::constants::{materials, SIZE_BLOCK, SIZE_ZONE};
 use protocol::utils::constants::rarity::*;
-use protocol::utils::max_level_of;
+use protocol::utils::max_valid_item_level;
 
 use crate::addon::events::utils::{appearance_invisible, config_fallback, config_optional, creatures_circular, NAME_OVERFLOW};
 use crate::addon::play_sound_at_player;
@@ -306,7 +306,7 @@ fn item_validation(state: &mut State, item: &mut Item, player_level: i16) -> Res
             State::Rarity   => {if item.kind.uses_rarity() { return Ok(()) }
                                     item.rarity = NORMAL;
                                     *state = State::Model;}
-            State::Model    => {item.level = item_level(item.kind, player_level);
+            State::Model    => {item.level = max_valid_item_level(item.kind, player_level);
                                     if item.uses_models() { return Ok(()) }
                                     item.seed = 0;
                                     *state = State::Stat;}
@@ -315,12 +315,6 @@ fn item_validation(state: &mut State, item: &mut Item, player_level: i16) -> Res
             State::Complete => return Ok(())
         }
     }
-}
-
-fn item_level(kind: Kind, player_level: i16) -> i16 {
-    if kind.uses_power() { max_level_of(player_level.into()) as i16 }
-    else if kind.uses_level() { player_level }
-    else { 1 }
 }
 
 fn item_name(kind: Kind) -> String {
