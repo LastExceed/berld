@@ -484,7 +484,7 @@ pub(super) fn inspect_show_patch_time(previous_state: &Creature, updated_state: 
 pub(super) fn inspect_occupation(previous_state: &Creature, updated_state: &Creature) -> AntiCheatResult {
 	updated_state.occupation
 		.ensure_one_of([Warrior, Ranger, Mage, Rogue].as_slice(), "occupation")?;
-	inspect_equipment(updated_state, previous_state)
+	inspect_equipment(previous_state, updated_state)
 }
 
 pub(super) fn inspect_specialization(previous_state: &Creature, updated_state: &Creature) -> AntiCheatResult {
@@ -666,12 +666,37 @@ pub(super) fn inspect_equipment(previous_state: &Creature, updated_state: &Creat
 			.ensure_exact(&false, &fmt("as_formula"))?;
 		item.kind.pipe(KindDiscriminants::from)
 			.ensure_one_of(allowed, &fmt("kind"))?;
+		if let Kind::Weapon(weapon) = item.kind {
+			use protocol::packet::common::item::kind::Weapon::*;
+			let class_exclusivity = match weapon {
+				Sword|Axe|Mace|Shield|
+				Greatsword|Greataxe|Greatmace => Some(Warrior),
+				Bow|Crossbow|Boomerang        => Some(Ranger),
+				Staff|Wand|Bracelet           => Some(Mage),
+				Dagger|Fist|Longsword         => Some(Rogue),
+				Arrow|Quiver|
+				Pitchfork|Pickaxe|Torch       => Option::None
+			};
+			if let Some(specialist) = class_exclusivity {
+				updated_state.occupation.ensure_exact(&specialist, &fmt("kind.class_exclusivity"))?;
+			}
+		}
 		item.rarity
 			.ensure_at_most(LEGENDARY, &fmt("rarity"))?;
-		item.material
-			.ensure_one_of(materials::by_item_kind(item.kind), &fmt("material"))?;
-		if let Some(specialist) = materials::armour_exclusivity(item.material) && ARMOUR_SLOTS.contains(&slot) {
-			updated_state.occupation.ensure_exact(&specialist, &fmt("material.class_exclusivity"))?;
+		if ARMOUR_SLOTS.contains(&slot) {
+			if let Some(specialist) = materials::armour_exclusivity(item.material) {
+				updated_state.occupation.ensure_exact(&specialist, &fmt("material.class_exclusivity"))?;
+			}
+			let allowed_materials = materials::by_item_kind(item.kind)
+				.iter()
+				.copied()
+				.filter(|&material| materials::armour_exclusivity(material).is_none_or(|specialist| specialist == updated_state.occupation))
+				.collect::<Vec<_>>();
+			item.material
+				.ensure_one_of(&allowed_materials, &fmt("material"))?;
+		} else {
+			item.material
+				.ensure_one_of(materials::by_item_kind(item.kind), &fmt("material"))?;
 		}
 		(item.level as i32).pipe(power_of)
 			.ensure_within(&(0..=power_of(updated_state.level)), &fmt("power"))?;
