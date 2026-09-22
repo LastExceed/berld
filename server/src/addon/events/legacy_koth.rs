@@ -63,10 +63,10 @@ impl LegacyKoth {
         let reward_frequency: i32 = config_fallback(config, "legacykoth.reward_frequency", 420_i32)?;
         let king_reward_frequency: i32 = config_fallback(config, "legacykoth.king_reward_frequency", 180_i32)?;
 
-        let loot: LootWeights = config_fallback(config, "legacykoth.loot", LootWeights::default())?;
-        let rarity: RarityWeights = config_fallback(config, "legacykoth.rarity", RarityWeights::default())?;
-        if loot.table().iter().all(|&(_, weight)| weight == 0) { return Err(ConfigError::Message("legacykoth.loot needs a non-zero weight".into())) }
-        if rarity.table().iter().all(|&(_, weight)| weight == 0) { return Err(ConfigError::Message("legacykoth.rarity needs a non-zero weight".into())) }
+        let loot: LootWeights = config_fallback(config, "legacykoth.loot_weights", LootWeights::default())?;
+        let rarity: RarityWeights = config_fallback(config, "legacykoth.rarity_weights", RarityWeights::default())?;
+        if loot.table().iter().all(|&(_, weight)| weight == 0) { return Err(ConfigError::Message("legacykoth.loot_weights needs a non-zero weight".into())) }
+        if rarity.table().iter().all(|&(_, weight)| weight == 0) { return Err(ConfigError::Message("legacykoth.rarity_weights needs a non-zero weight".into())) }
 
         Ok(Self {
             points: RwLock::new(HashMap::new()),
