@@ -41,8 +41,11 @@ impl Server {
 	}
 
 	pub async fn kick(&self, player: &Player, reason: impl Into<String>) {
-		self.announce(format!("kicked {} because {}", player.character.read().await.name, reason.into())).await;
-		//wait a bit to make sure the message arrives at the player about to be kicked
+		let name = player.character.read().await.name.clone();
+		self.announce(format!("kicked {name} because {}", reason.into())).await;
+		// wait a bit to make sure the message arrives at the player about to be kicked
+		// 100ms sleep, because delivery can never be 100% confirmed and
+		// trying to raise the odds adds too much unnecessary code complexity
 		sleep(Duration::from_millis(100)).await;
 
 		player
