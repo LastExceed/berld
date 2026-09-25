@@ -12,6 +12,9 @@ use crate::addon::command_manager::{Command, CommandResult};
 use crate::server::player::Player;
 use crate::server::Server;
 
+const AMOUNT_DEFAULT: i32 = 50;
+const AMOUNT_MAX: i32 = 1000;
+
 impl Command for super::Give {
     const LITERAL: &'static str = "give";
     const ADMIN_ONLY: bool = false;
@@ -21,7 +24,7 @@ impl Command for super::Give {
         
         let mut item = Item::default();
         
-        let param_1 = params.next().ok_or("usage: /give weapon.dagger level=500 tier=4 seed=6969 material=iron")?;
+        let param_1 = params.next().ok_or("usage: /give weapon.dagger level=500 tier=4 seed=6969 material=iron amount=1")?;
         
 
         let (input_kind, input_variant) = param_1.split_once('.').unwrap_or((param_1, ""));
@@ -47,6 +50,7 @@ impl Command for super::Give {
         if item.kind.uses_rarity() {item.rarity = LEGENDARY} else {item.rarity = NORMAL}
         item.level = max_valid_item_level(item.kind, caller.character.read().await.level as i16);
         if !valid_materials.is_empty() {item.material = valid_materials[0]}
+        let mut amount = None;
 
         for param in params {
             if param == "adapted" {
@@ -61,6 +65,7 @@ impl Command for super::Give {
                 "tier"     => item.rarity   = value.parse().map_err(|_| "invalid tier/rarity")?,
                 "material" => item.material = value.parse().map_err(|_| "invalid material"   )?,
                 "level"    => item.level    = value.parse().map_err(|_| "invalid level"      )?,
+                "amount"   => amount        = Some(value.parse().map_err(|_| "invalid amount")?),
                 _ => return Err("unknown property")
             }
         }
@@ -83,12 +88,24 @@ impl Command for super::Give {
         (1..=power_of(500))
             .contains(&power_of(item.level as _))
             .ok_or("item level out of bounds")?;
-        
-        let pickup = Pickup {
-            interactor: caller.id,
-            item
-        };
-        caller.send_ignoring(&WorldUpdate::from(pickup)).await;
+
+        let amount = amount.unwrap_or(if item.kind.is_stackable() { AMOUNT_DEFAULT } else { 1 });
+        if amount < 1 {return Err("amount must be at least 1")}
+        if !item.kind.is_stackable() && amount > 1 {return Err("item does not use amount")}
+        if amount > AMOUNT_MAX {
+            caller.notify(format!("max amount = {AMOUNT_MAX}")).await;
+            return Err("amount too high");
+        }
+
+        let pickups = item
+            .with_amount(amount as i16)
+            .into_iter()
+            .map(|item| Pickup {
+                interactor: caller.id,
+                item
+            })
+            .collect::<Vec<_>>();
+        caller.send_ignoring(&WorldUpdate::from(pickups)).await;
         
         Ok(None)
     }
