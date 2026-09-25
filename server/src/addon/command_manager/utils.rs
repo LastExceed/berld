@@ -15,17 +15,17 @@ impl Server {
 			return Some(Arc::clone(player));
 		}
 
+		let mut partial_match = None;
 		for player in players.iter() {
-			let matches_query = player.character
-				.read().await
-				.name
-				.to_lowercase()
-				.contains(query);
-			if matches_query {
-				return Some(Arc::clone(player))
+			let name = player.character.read().await.name.to_lowercase();
+			if name == query {
+				return Some(Arc::clone(player));
+			}
+			if partial_match.is_none() && name.contains(query) {
+				partial_match = Some(Arc::clone(player));
 			}
 		}
 
-		None
+		partial_match
 	}
 }
