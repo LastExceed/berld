@@ -32,6 +32,7 @@ const SHOP_ID: i64 = 100000;
 const KEEPER_INDEX: i32 = 2000;
 const KEEPER_ID: i64 = 200000;
 const DISABLED_ITEMS: [Kind; 2] = [Kind::PlatinumCoin, Kind::ManaCube];
+const SHOP_AMOUNT: i16 = 50;
 
 #[derive(Default, Clone, Copy)]
 pub enum State {
@@ -123,8 +124,9 @@ impl Shop {
                                player.notify(reason).await;
                                self.reset_session(player).await;}
             Ok(Some(item)) => {play_sound_at_player(player, sound::Kind::DropCoin, 1.0, 1.0).await;
-                               let pickup = Pickup { interactor: player.id, item: *item };
-                               player.send_ignoring(&WorldUpdate::from(pickup)).await;
+                               let amount = if item.kind.is_stackable() { SHOP_AMOUNT } else { 1 };
+                               let pickups: Vec<_> = item.with_amount(amount).into_iter().map(|item| Pickup { interactor: player.id, item }).collect();
+                               player.send_ignoring(&WorldUpdate::from(pickups)).await;
                                self.reset_session(player).await;}
             Ok(None)       =>  play_sound_at_player(player, sound::Kind::Craft, 1.0, 1.0).await
         }

@@ -349,4 +349,14 @@ impl Item {
 	pub const fn uses_seed(&self) -> bool {
 		self.kind.uses_stats() || self.uses_models()
 	}
+
+	#[must_use]
+	pub fn with_amount(mut self, amount: i16) -> Vec<Self> {
+		if self.kind.is_stackable() && self.kind.uses_level_as_amount() {
+			self.level = amount;
+			vec![self]
+		} else {
+			vec![self; amount as usize]
+		}
+	}
 }
