@@ -8,7 +8,7 @@ use config::{Config, ConfigError};
 use serde::Deserialize;
 use tokio::sync::RwLock;
 
-use protocol::packet::{Hit, StatusEffect, WorldUpdate};
+use protocol::packet::{CreatureUpdate, Hit, StatusEffect, WorldUpdate};
 use protocol::rgb::RGBA;
 use protocol::utils::constants::combat_classes::WATER_MAGE;
 use protocol::packet::world_update::{particle, sound, Particle};
@@ -17,7 +17,7 @@ use protocol::packet::common::item::Material;
 use protocol::packet::common::CreatureId;
 use protocol::packet::common::item::Kind::*;
 use protocol::packet::common::item::kind::Weapon::*;
-use protocol::packet::creature_update::CreatureFlag::{Climbing, Gliding};
+use protocol::packet::creature_update::CreatureFlag::{Climbing, Gliding, Sprinting};
 use protocol::packet::creature_update::Occupation::Rogue;
 use protocol::packet::creature_update::PhysicsFlag::{OnGround, Swimming, TouchingWall};
 use protocol::packet::hit;
@@ -49,7 +49,7 @@ impl Balancing {
 		self.adjust_hit(hit, source, &target_creature);
 	}
 
-	pub async fn track_airtime(&self, source: &Player) {
+	pub async fn track_airtime(&self, source: &Player, packet: &CreatureUpdate) {
 		let character = source.character.read().await;
 
 		if character.occupation != Rogue {
@@ -59,10 +59,20 @@ impl Balancing {
 		let flags_physics = character.flags_physics.clone();
 		let flags = character.flags.clone();
 		let position = character.position;
+		// bhops don't set OnGround client-side, which means bhopping players are flying server-side
+		// without a separate check players with perfect bhops would get punished for optimal inputs
+		// a creature's z-velocity switching from negative to positive is the prerequisite of a bhop
+		let bhop = packet.velocity.is_some_and(|velocity| character.velocity.z < 0.0 && velocity.z > 0.0)
+			// disqualify players using free aim (holding shift) or currently attacking
+			// free aim = no creature flags | attacking = Aiming
+			&& packet.flags.as_ref().unwrap_or(&character.flags).get(Sprinting)
+			// without this ninjas can hold stealth to cancel intercept/shuriken to reset airtime
+			&& packet.animation_time.unwrap_or(character.animation_time) > 25; // stealth cancel = 0 ~ 15 ms
 		drop(character); //otherwise we might hold this lock over multiple awaits
 
 		let mut airtime_map = self.airtime_map.write().await;
-		if flags_physics.get(OnGround) ||
+		if bhop ||
+			flags_physics.get(OnGround) ||
 			flags_physics.get(Swimming) ||
 			flags.get(Gliding) ||
 			flags.get(Climbing) && flags_physics.get(TouchingWall)

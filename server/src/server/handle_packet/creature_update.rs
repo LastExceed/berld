@@ -17,7 +17,7 @@ impl HandlePacket<CreatureUpdate> for Server {
 			return;
 		}
 
-		self.addons.balancing.track_airtime(source).await;
+		self.addons.balancing.track_airtime(source, &packet).await;
 		pvp::on_creature_update(self, source, &packet).await;
 		kill_feed::on_creature_update(self, source, &packet).await;
 
