@@ -1,17 +1,18 @@
 mod addon_data;
 
+use std::io::ErrorKind::BrokenPipe;
 use std::net::SocketAddr;
 use std::sync::atomic::AtomicBool;
 
-use tokio::io::{self, SimplexStream, WriteHalf};
+use tokio::io;
 use tokio::sync::{oneshot, RwLock};
 
 use protocol::packet::{ChatMessageFromServer, FromServer};
 use protocol::packet::common::CreatureId;
-use protocol::utils::io_extensions::WritePacket;
 use protocol::WriteCwData;
 
 use crate::server::creature::Creature;
+use crate::server::outbound::{serialize, Outbound};
 use crate::server::player::addon_data::AddonData;
 
 #[derive(Debug)]
@@ -19,7 +20,7 @@ pub struct Player {
 	pub address: SocketAddr,
 	pub id: CreatureId,
 	pub character: RwLock<Creature>,
-	pub writer: RwLock<WriteHalf<SimplexStream>>,
+	pub outbound: Outbound,
 	pub admin: AtomicBool, //todo: move to AddonData
 	pub ac_immune: AtomicBool,
 	pub kick_sender: RwLock<Option<oneshot::Sender<()>>>,
@@ -27,14 +28,14 @@ pub struct Player {
 }
 
 impl Player {
-	pub fn new(address: SocketAddr, id: CreatureId, creature: Creature, writer: WriteHalf<SimplexStream>) -> (Self, oneshot::Receiver<()>) {
+	pub fn new(address: SocketAddr, id: CreatureId, creature: Creature, outbound: Outbound) -> (Self, oneshot::Receiver<()>) {
 		let (kick_sender, kick_receiver) = oneshot::channel();
 
 		let instance = Self {
 			address,
 			id,
 			character: RwLock::new(creature),
-			writer: RwLock::new(writer),
+			outbound,
 			admin: AtomicBool::default(),
 			ac_immune: AtomicBool::default(),
 			kick_sender: RwLock::new(Some(kick_sender)),
@@ -45,17 +46,19 @@ impl Player {
 	}
 
 	pub async fn send<Packet: FromServer>(&self, packet: &Packet) -> io::Result<()>
-		where WriteHalf<SimplexStream>: WriteCwData<Packet>//todo: specialization could obsolete this
+		where Vec<u8>: WriteCwData<Packet>//todo: specialization could obsolete this
 	{
-		let mut writer = self.writer.write().await;
-		#[expect(trivial_casts, reason = "todo: why is this cast necessary?")]
-		(&mut writer as &mut WriteHalf<SimplexStream>).write_packet(packet).await
+		if self.outbound.enqueue(serialize(packet).await) {
+			Ok(())
+		} else {
+			Err(BrokenPipe.into())
+		}
 	}
 
 	///sends a packet to this player and ignores any io errors.
 	///useful when errors are already handled by the reading thread
 	pub async fn send_ignoring<Packet: FromServer>(&self, packet: &Packet)
-		where WriteHalf<SimplexStream>: WriteCwData<Packet>//todo: specialization could obsolete this
+		where Vec<u8>: WriteCwData<Packet>//todo: specialization could obsolete this
 	{
 		#[expect(let_underscore_drop, clippy::let_underscore_must_use, reason="deliberate")]
 		let _ = self.send(packet).await;

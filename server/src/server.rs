@@ -12,7 +12,6 @@ use futures::future::join_all;
 use tap::{Pipe, Tap};
 use tokio::task::JoinHandle;
 use tokio::{io, select};
-use tokio::io::{copy, simplex, AsyncWrite, AsyncWriteExt, SimplexStream, WriteHalf};
 use tokio::io::BufReader;
 use tokio::net::{TcpListener, TcpStream};
 use tokio::net::tcp::OwnedReadHalf;
@@ -29,7 +28,7 @@ use protocol::packet::world_update::loot::GroundItem;
 use protocol::packet::world_update::Sound;
 use protocol::packet::world_update::sound::Kind::*;
 use protocol::utils::constants::{SIZE_BLOCK, SIZE_ZONE};
-use protocol::utils::io_extensions::{ReadPacket, WriteArbitrary, WritePacket};
+use protocol::utils::io_extensions::{ReadPacket, WriteArbitrary};
 
 use crate::addon::{Addons, announce_join_leave};
 use crate::addon::pvp::map_head;
@@ -37,12 +36,14 @@ use crate::addon::{pvp, events};
 use crate::server::creature::Creature;
 use crate::server::creature_id_pool::CreatureIdPool;
 use crate::server::handle_packet::HandlePacket;
+use crate::server::outbound::{serialize, Outbound, FLUSH_GRACE};
 use crate::server::player::Player;
 use crate::SERVER;
 
 use self::utils::log_error;
 
 pub mod creature_id_pool;
+pub mod outbound;
 pub mod player;
 mod handle_packet;
 pub mod creature;
@@ -114,22 +115,40 @@ impl Server {
 	}
 
 	async fn initialize_session(&self, stream: TcpStream, address: SocketAddr) -> io::Result<()> {
-		let (mut reader, mut writer, join_handle) = configure_stream(stream)?;
+		let (reader, outbound, writer_task) = configure_stream(stream)?;
 
-		match check_version(&mut reader, &mut writer).await {
-			Ok(())                                      => writer.write_packet(&ConnectionAcceptance).await?,
+		let result = self.run_session(reader, &outbound, address).await;
+
+		outbound.begin_shutdown();
+		_ = timeout(FLUSH_GRACE * 2, writer_task).await;
+
+		result
+	}
+
+	async fn run_session(&self, mut reader: BufReader<OwnedReadHalf>, outbound: &Outbound, address: SocketAddr) -> io::Result<()> {
+		match check_version(&mut reader, outbound).await {
+			Ok(())                                      => _ = outbound.enqueue(serialize(&ConnectionAcceptance).await),
 			Err(error) if error.kind() == UnexpectedEof => return Ok(()), // prevent listforge's preiodic connections from flooding the logs,
 			Err(error)                                  => return Err(error)
 		}
 
-		let assigned_id = self.assign_id(&mut writer).await?;
+		let assigned_id = self.assign_id(outbound).await;
+
+		let result = self.run_player(reader, outbound, address, assigned_id).await;
+
+		self.id_pool.write().await.free(assigned_id);
+
+		result
+	}
+
+	async fn run_player(&self, mut reader: BufReader<OwnedReadHalf>, outbound: &Outbound, address: SocketAddr, assigned_id: CreatureId) -> io::Result<()> {
 		let (initial_creature_update, character) = read_character_data(&mut reader).await?;
 
 		let (player, kick_receiver) = Player::new(
 			address,
 			assigned_id,
 			character,
-			writer,
+			outbound.clone(),
 		);
 		let player = Arc::new(player);
 
@@ -141,16 +160,16 @@ impl Server {
 		select! {
 			biased;
 			_ = kick_receiver => {},
+			() = outbound.closed() => {},
 			() = self.read_packets_forever(&player, reader) => {}
 		};
-		join_handle.abort();
+
 		self.remove_player(&player).await;
-		self.id_pool.write().await.free(assigned_id);
 
 		Ok(())
 	}
 	
-	async fn assign_id<Writable: AsyncWrite + Unpin + Send>(&self, writable: &mut Writable) -> io::Result<CreatureId> {
+	async fn assign_id(&self, outbound: &Outbound) -> CreatureId {
 		let assigned_id = self
 			.id_pool
 			.write()
@@ -167,13 +186,15 @@ impl Server {
 		// the last non-zero bytes in pixxie are the equipped weapons, which are positioned correctly.
 		// from that it can be deduced that the missing bytes belong to the last 3 properties.
 		// it's probably a cut-off at the end resulting from an incorrectly sized buffer
-		writable.write_arbitrary(&CreatureUpdate::ID).await?;
-		writable.write_arbitrary(&assigned_id).await?; //luckily the only thing the alpha client does with this data is acquiring its assigned CreatureId
-		writable.write_all(&[0_u8; 4456]).await?; //so we can simply zero out everything else and not worry about the missing bytes
-		writable.flush().await?;
+		let mut frame = vec![];
+		frame.write_arbitrary(&CreatureUpdate::ID).await.expect("in-memory write cannot fail");
+		frame.write_arbitrary(&assigned_id).await.expect("in-memory write cannot fail"); //luckily the only thing the alpha client does with this data is acquiring its assigned CreatureId
+		frame.extend_from_slice(&[0_u8; 4456]); //so we can simply zero out everything else and not worry about the missing bytes
 		//TODO: move this to protocol crate and construct this from an actual [CreatureUpdate]
-		
-		Ok(assigned_id)
+
+		outbound.enqueue(frame.into());
+
+		assigned_id
 	}
 
 	async fn initialize_player(&self, player: &Player) {
@@ -193,29 +214,27 @@ impl Server {
 		player.notify(message).await;
 	}
 
-	pub async fn broadcast<Packet: FromServer>(&self, packet: &Packet, player_to_skip: Option<&Player>)
-		where Vec<u8>: WriteCwData<Packet>//todo: specialization could obsolete this
-	{
-		let mut data = vec![];
-		
-		data.write_packet(packet).await.expect("failed to serialize a packet in-memory");
-		
-		_ = self.players
+	pub async fn roster(&self) -> Vec<Arc<Player>> {
+		self.players
 			.read()
 			.await
 			.iter()
-			.filter(|player| !player_to_skip.is_some_and(|pts| ptr::eq(player.as_ref(), pts)))
-			.map(async |player| {
-				let mut writer = player
-					.writer
-					.write()
-					.await;
+			.map(Arc::clone)
+			.collect()
+	}
 
-				writer.write_all(&data).await?;
-				writer.flush().await
-			})
-			.pipe(join_all)
-			.await;
+	pub async fn broadcast<Packet: FromServer>(&self, packet: &Packet, player_to_skip: Option<&Player>)
+		where Vec<u8>: WriteCwData<Packet>//todo: specialization could obsolete this
+	{
+		let frame = serialize(packet).await;
+
+		for player in self.roster().await {
+			if player_to_skip.is_some_and(|pts| ptr::eq(player.as_ref(), pts)) {
+				continue;
+			}
+
+			player.outbound.enqueue(Arc::clone(&frame));
+		}
 	}
 
 	pub async fn add_drop(&self, item: Item, position: Point3<i64>, rotation: f32) {
@@ -369,27 +388,22 @@ async fn send_existing_creatures(server: &Server, player: &Player) {
 	events::on_join(player).await;
 }
 
-fn configure_stream(stream: TcpStream) -> io::Result<(BufReader<OwnedReadHalf>, WriteHalf<SimplexStream>, JoinHandle<()>)>{
+fn configure_stream(stream: TcpStream) -> io::Result<(BufReader<OwnedReadHalf>, Outbound, JoinHandle<()>)>{
 	stream.set_nodelay(true)?;
 
-	let (tcp_read, mut tcp_write) = stream.into_split();
-	let (mut sim_read, sim_write) = simplex(1_000_000);
-	let buf_read = BufReader::new(tcp_read);
-	let join_handle = tokio::spawn(async move {
-		_ = copy(&mut sim_read, &mut tcp_write).await;
-	});
-	
+	let (tcp_read, tcp_write) = stream.into_split();
+	let (outbound, writer_task) = Outbound::new(tcp_write);
 
-	Ok((buf_read, sim_write, join_handle))
+	Ok((BufReader::new(tcp_read), outbound, writer_task))
 }
 
-async fn check_version(reader: &mut impl ReadPacket, writer: &mut impl WritePacket<ProtocolVersion>) -> io::Result<()> {
+async fn check_version(reader: &mut impl ReadPacket, outbound: &Outbound) -> io::Result<()> {
 	if reader.read_id().await? != ProtocolVersion::ID {
 		return Err(InvalidData.into());
 	}
 
 	if reader.read_packet::<ProtocolVersion>().await?.0 != 3 {
-		writer.write_packet(&ProtocolVersion(3)).await?;
+		outbound.enqueue(serialize(&ProtocolVersion(3)).await);
 		return Err(InvalidInput.into());
 	}
 
