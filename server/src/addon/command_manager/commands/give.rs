@@ -1,19 +1,15 @@
 use std::str::SplitWhitespace;
 
 use protocol::packet::common::{item, Item};
-use protocol::packet::world_update::Pickup;
-use protocol::packet::WorldUpdate;
 use protocol::utils::constants::materials::by_item_kind;
 use protocol::utils::constants::rarity::*;
 use protocol::utils::{max_valid_item_level, power_of};
 use tap::Pipe;
 
 use crate::addon::command_manager::{Command, CommandResult};
+use crate::addon::give_item;
 use crate::server::player::Player;
 use crate::server::Server;
-
-const AMOUNT_DEFAULT: i32 = 50;
-const AMOUNT_MAX: i32 = 1000;
 
 impl Command for super::Give {
     const LITERAL: &'static str = "give";
@@ -65,7 +61,7 @@ impl Command for super::Give {
                 "tier"     => item.rarity   = value.parse().map_err(|_| "invalid tier/rarity")?,
                 "material" => item.material = value.parse().map_err(|_| "invalid material"   )?,
                 "level"    => item.level    = value.parse().map_err(|_| "invalid level"      )?,
-                "amount"   => amount        = Some(value.parse().map_err(|_| "invalid amount")?),
+                "amount"   => amount        = Some(value.parse::<i16>().ok().filter(|&amount| amount >= 1).ok_or("amount must be between 1 and 32767")?),
                 _ => return Err("unknown property")
             }
         }
@@ -89,24 +85,11 @@ impl Command for super::Give {
             .contains(&power_of(item.level as _))
             .ok_or("item level out of bounds")?;
 
-        let amount = amount.unwrap_or(if item.kind.is_stackable() { AMOUNT_DEFAULT } else { 1 });
-        if amount < 1 {return Err("amount must be at least 1")}
+        let amount = amount.unwrap_or(1);
         if !item.kind.is_stackable() && amount > 1 {return Err("item does not use amount")}
-        if amount > AMOUNT_MAX {
-            caller.notify(format!("max amount = {AMOUNT_MAX}")).await;
-            return Err("amount too high");
-        }
 
-        let pickups = item
-            .with_amount(amount as i16)
-            .into_iter()
-            .map(|item| Pickup {
-                interactor: caller.id,
-                item
-            })
-            .collect::<Vec<_>>();
-        caller.send_ignoring(&WorldUpdate::from(pickups)).await;
-        
+        give_item(caller, item, amount).await;
+
         Ok(None)
     }
 }

@@ -6,7 +6,8 @@ use tap::Pipe;
 use tokio::time::sleep;
 
 use protocol::packet::{CreatureUpdate, IngameDatetime, WorldUpdate};
-use protocol::packet::world_update::{Sound, sound};
+use protocol::packet::common::Item;
+use protocol::packet::world_update::{Pickup, Sound, sound};
 use protocol::utils::sound_position_of;
 use protocol::packet::world_update::sound::Kind::{MenuOpen2, MenuClose2};
 
@@ -114,4 +115,18 @@ pub async fn play_sound_at_player(player: &Player, kind: sound::Kind, pitch: f32
 		volume,
 	};
 	player.send_ignoring(&WorldUpdate::from(sound)).await;
+}
+
+pub async fn give_item(player: &Player, mut item: Item, amount: i16) {
+	let items = if !item.kind.is_stackable() {
+		vec![item]
+	} else if item.kind.uses_level_as_amount() {
+		item.level = amount;
+		vec![item]
+	} else {
+		vec![item; amount as usize]
+	};
+
+	let pickups: Vec<_> = items.into_iter().map(|item| Pickup { interactor: player.id, item }).collect();
+	player.send_ignoring(&WorldUpdate::from(pickups)).await;
 }
