@@ -23,7 +23,16 @@ impl Kind {
 		matches!(self,
 			Self::Consumable(_) | Self::Weapon(_) | Self::Chest | Self::Gloves | Self::Boots |
 			Self::Shoulder | Self::Amulet | Self::Ring | Self::Resource(Resource::Spirit) |
-			Self::Coin | Self::PlatinumCoin | Self::Leftovers | Self::Pet(_)
+			Self::Leftovers | Self::Pet(_)
+		)
+	}
+
+	// level is converted to amount on pickup for these items
+	#[must_use]
+	pub const fn uses_level_as_amount(&self) -> bool {
+		!matches!(self, Self::Resource(Resource::Spirit)) && matches!(self,
+			Self::Resource(_) | Self::Coin | Self::PlatinumCoin | Self::PetFood(_) | Self::Quest(_) |
+			Self::Special(_) | Self::Lamp
 		)
 	}
 

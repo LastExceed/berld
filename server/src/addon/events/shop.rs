@@ -1,5 +1,5 @@
 use std::collections::{HashMap, HashSet};
-use std::mem;
+use std::{iter, mem};
 use std::ops::Range;
 
 use config::{Config, ConfigError};
@@ -12,15 +12,14 @@ use protocol::packet::common::*;
 use protocol::packet::common::item::*;
 use protocol::packet::creature_update::*;
 use protocol::packet::creature_update::equipment::Slot;
-use protocol::packet::world_update::{Pickup, sound};
-use protocol::packet::WorldUpdate;
+use protocol::packet::world_update::sound;
 use protocol::packet::CreatureUpdate;
 use protocol::utils::constants::{materials, SIZE_BLOCK, SIZE_ZONE};
 use protocol::utils::constants::rarity::*;
 use protocol::utils::max_valid_item_level;
 
 use crate::addon::events::utils::{appearance_invisible, config_fallback, config_optional, creatures_circular, NAME_OVERFLOW};
-use crate::addon::play_sound_at_player;
+use crate::addon::{give_item, play_sound_at_player};
 use crate::server::player::Player;
 use crate::server::Server;
 use crate::SERVER;
@@ -42,6 +41,7 @@ pub enum State {
     Rarity,
     Model,
     Stat,
+    Amount,
     Complete,
 }
 
@@ -110,10 +110,11 @@ impl Shop {
         let option = index.z - SHOP_INDEX;
         let player_level = player.character.read().await.level as i16;
 
+        let mut amount = 1;
         let item_state: Result<Option<Box<Item>>, String> = {
             let mut sessions = self.sessions.write().await;
             let session = sessions.entry(player.id).or_default();
-            item_selection(&mut session.state, &mut session.item, option);
+            item_selection(&mut session.state, &mut session.item, &mut amount, option);
             item_validation(&mut session.state, &mut session.item, player_level)
                 .map(|()| matches!(session.state, State::Complete).then(|| Box::new(session.item.clone())))
         };
@@ -123,8 +124,7 @@ impl Shop {
                                player.notify(reason).await;
                                self.reset_session(player).await;}
             Ok(Some(item)) => {play_sound_at_player(player, sound::Kind::DropCoin, 1.0, 1.0).await;
-                               let pickup = Pickup { interactor: player.id, item: *item };
-                               player.send_ignoring(&WorldUpdate::from(pickup)).await;
+                               give_item(player, *item, amount).await;
                                self.reset_session(player).await;}
             Ok(None)       =>  play_sound_at_player(player, sound::Kind::Craft, 1.0, 1.0).await
         }
@@ -246,6 +246,10 @@ fn stat_seed(item: &Item, option: i32) -> Option<i32> {
         .find(|&seed| sub_stat(seed) == option)
 }
 
+fn amount_of(option: i32) -> Option<i16> {
+    iter::successors(Some(1), |amount: &i16| amount.checked_mul(10)).nth(usize::try_from(option).ok()?)
+}
+
 fn shop_options(state: State, item: &Item) -> Vec<i32> {
     match state {
         State::MainType => Kind::iter().map(|kind| KindDiscriminants::from(kind) as i32).collect(),
@@ -254,23 +258,29 @@ fn shop_options(state: State, item: &Item) -> Vec<i32> {
         State::Rarity   => [NORMAL, UNCOMMON, RARE, EPIC, LEGENDARY].iter().map(|&rarity| rarity as i32).collect(),
         State::Model    => model_seeds(item).collect(),
         State::Stat     => (0..SUB_STATS).filter(|&option| stat_seed(item, option).is_some()).collect(), // Bracelet cannot reach all 21 stat variants
+        State::Amount   => (0..).take_while(|&option| amount_of(option).is_some()).collect(),
         State::Complete => Vec::new()
     }
 }
 
 #[expect(clippy::match_same_arms, reason = "hack")]
-fn item_selection(state: &mut State, item: &mut Item, option: i32) {
-    if let Some(preview) = item_preview(*state, item, option) {
+fn item_selection(state: &mut State, item: &mut Item, amount: &mut i16, option: i32) {
+    if let State::Amount = *state {
+        let Some(selected) = amount_of(option) else { return };
+        *amount = selected;
+    } else {
+        let Some(preview) = item_preview(*state, item, option) else { return };
         *item = preview;
-        *state = match *state {
-            State::MainType => State::SubType,
-            State::SubType  => State::Material,
-            State::Material => State::Rarity,
-            State::Rarity   => State::Model,
-            State::Model    => State::Stat,
-            State::Stat     => State::Complete,
-            State::Complete => State::Complete
-        }
+    }
+    *state = match *state {
+        State::MainType => State::SubType,
+        State::SubType  => State::Material,
+        State::Material => State::Rarity,
+        State::Rarity   => State::Model,
+        State::Model    => State::Stat,
+        State::Stat     => State::Amount,
+        State::Amount   => State::Complete,
+        State::Complete => State::Complete
     }
 }
 
@@ -285,6 +295,7 @@ fn item_preview(state: State, item: &Item, option: i32) -> Option<Item> {
         State::Model    => {if !model_seeds(item).contains(&option) { return None }
                                 preview.seed = option;}
         State::Stat     => {preview.seed = stat_seed(item, option)?}
+        State::Amount   |
         State::Complete => return None
     }
     Some(preview)
@@ -311,6 +322,8 @@ fn item_validation(state: &mut State, item: &mut Item, player_level: i16) -> Res
                                     item.seed = 0;
                                     *state = State::Stat;}
             State::Stat     => {if item.kind.uses_stats() { return Ok(()) }
+                                    *state = State::Amount;}
+            State::Amount   => {if item.kind.is_stackable() { return Ok(()) }
                                     *state = State::Complete;}
             State::Complete => return Ok(())
         }
@@ -362,6 +375,7 @@ fn npc_names(state: State, item: &Item, option: i32) -> String {
             .map(|preview| preview.stats())
             .map(|stats| format!("C:{:.1}%\nT:{:.1}%", stats[Stat::Crit] * 100.0, stats[Stat::Tempo] * 100.0))
             .unwrap_or_default(),
+        State::Amount   => amount_of(option).map(|amount| format!("Amount:\n{amount}")).unwrap_or_default(),
         State::Complete => String::new()
     }
 }
