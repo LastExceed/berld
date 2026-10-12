@@ -4,9 +4,7 @@ use std::sync::Arc;
 use std::time::Duration;
 
 use config::{Config, ConfigError};
-use rand::{random_range, rng};
-use rand::seq::IndexedRandom;
-use serde::Deserialize;
+use rand::random_range;
 use tap::Tap;
 use tokio::sync::RwLock;
 use tokio::time::sleep;
@@ -14,13 +12,14 @@ use tokio::time::sleep;
 use protocol::nalgebra::Point3;
 use protocol::packet::{ChatMessageFromServer, CreatureUpdate, WorldUpdate};
 use protocol::packet::common::{CreatureId, EulerAngles, Hitbox, Item, Race, item::{Kind, Material, kind}};
-use protocol::packet::creature_update::{Affiliation, Occupation};
+use protocol::packet::creature_update::{Affiliation, Equipment, Occupation};
+use protocol::packet::creature_update::equipment::Slot;
 use protocol::packet::world_update::{Mission, Pickup, sound};
 use protocol::packet::world_update::mission::{Objective, State};
-use protocol::utils::constants::{SIZE_BLOCK, SIZE_ZONE, SIZE_SECTOR, VANILLA_PETS};
-use protocol::utils::constants::materials::by_item_kind;
-use protocol::utils::constants::rarity::{NORMAL, UNCOMMON, RARE, EPIC, LEGENDARY};
+use protocol::utils::constants::{SIZE_BLOCK, SIZE_ZONE, SIZE_SECTOR, ARMOUR_SLOTS};
 use protocol::utils::max_valid_item_level;
+use protocol::utils::constants::materials::by_item_kind;
+use protocol::utils::constants::rarity::{NORMAL, LEGENDARY};
 
 use crate::addon::events::utils::{appearance_invisible, config_fallback, config_optional, creatures_circular, is_in_zone, pick_from, NAME_OVERFLOW, RENDER_DISTANCE_CREATURE};
 use crate::addon::play_sound_at_player;
@@ -38,6 +37,7 @@ const REWARD_THRESHOLDS: [i32; 4] = [20, 40, 60, 80];
 #[derive(Debug)]
 pub struct LegacyKoth {
     points: RwLock<HashMap<CreatureId, i32>>,
+    queue: RwLock<Vec<CreatureId>>,
     center: Option<Point3<i64>>,
     radius: i64,
     interval: Duration,
@@ -48,9 +48,7 @@ pub struct LegacyKoth {
     kill_king_points: i32,
     kill_king_xp: i32,
     kill_points: i32,
-    kill_xp: i32,
-    loot: LootWeights,
-    rarity: RarityWeights
+    kill_xp: i32
 }
 
 impl LegacyKoth {
@@ -63,13 +61,9 @@ impl LegacyKoth {
         let reward_frequency: i32 = config_fallback(config, "legacykoth.reward_frequency", 420_i32)?;
         let king_reward_frequency: i32 = config_fallback(config, "legacykoth.king_reward_frequency", 180_i32)?;
 
-        let loot: LootWeights = config_fallback(config, "legacykoth.loot_weights", LootWeights::default())?;
-        let rarity: RarityWeights = config_fallback(config, "legacykoth.rarity_weights", RarityWeights::default())?;
-        if loot.table().iter().all(|&(_, weight)| weight == 0) { return Err(ConfigError::Message("legacykoth.loot_weights needs a non-zero weight".into())) }
-        if rarity.table().iter().all(|&(_, weight)| weight == 0) { return Err(ConfigError::Message("legacykoth.rarity_weights needs a non-zero weight".into())) }
-
         Ok(Self {
             points: RwLock::new(HashMap::new()),
+            queue: RwLock::new(Vec::new()),
             center,
             radius: radius_blocks * SIZE_BLOCK,
             interval: Duration::from_secs(interval_seconds),
@@ -80,9 +74,7 @@ impl LegacyKoth {
             kill_king_points: config_fallback(config, "legacykoth.kill_king_points", 500_i32)?,
             kill_king_xp: config_fallback(config, "legacykoth.kill_king_xp", 20_i32)?,
             kill_points: config_fallback(config, "legacykoth.kill_points", 200_i32)?,
-            kill_xp: config_fallback(config, "legacykoth.kill_xp", 10_i32)?,
-            loot,
-            rarity
+            kill_xp: config_fallback(config, "legacykoth.kill_xp", 10_i32)?
         })
     }
 }
@@ -105,23 +97,16 @@ async fn lkoth_interval() {
     let (scorers, online_ids) = scan_players(&SERVER, center, lkoth.radius).await;
     lkoth.points.write().await.retain(|id, _| online_ids.contains(id));
 
-    let king_id = {
-        let points = lkoth.points.read().await;
-        find_king(scorers.iter().map(|(player, _)| player), &points).map(|player| player.id)
-    };
+    let scorer_ids: Vec<CreatureId> = scorers.iter().map(|(player, _)| player.id).collect();
+    let king_id = update_queue(&mut *lkoth.queue.write().await, &scorer_ids);
 
-    let mut new_king: Option<(Arc<Player>, i32)> = None;
     for (player, _) in &scorers {
         let amount = if Some(player.id) == king_id { lkoth.king_points_per_interval } else { lkoth.points_per_interval };
-        let (new_total, threshold, reward) = add_points(&mut *lkoth.points.write().await, player.id, amount);
+        let (threshold, reward) = add_points(&mut *lkoth.points.write().await, player.id, amount);
         handle_points(player, threshold, reward).await;
-
-        if new_king.as_ref().is_none_or(|(_, best)| new_total >= *best) {
-            new_king = Some((Arc::clone(player), new_total));
-        }
     }
 
-    let king_name = match &new_king {
+    let king_name = match scorers.iter().find(|(player, _)| Some(player.id) == king_id) {
         Some((player, _)) => player.character.read().await.name.chars().take(NAME_OVERFLOW).collect(),
         None => "KOTH".to_owned()
     };
@@ -150,20 +135,15 @@ async fn scan_players(server: &Server, center: Point3<i64>, radius: i64) -> (Vec
     (scorers, online_ids)
 }
 
-fn find_king<'player>(candidates: impl Iterator<Item = &'player Arc<Player>>, points: &HashMap<CreatureId, i32>) -> Option<&'player Arc<Player>> {
-    candidates.max_by_key(|player| points.get(&player.id).copied().unwrap_or(0))
+fn update_queue(queue: &mut Vec<CreatureId>, scorer_ids: &[CreatureId]) -> Option<CreatureId> {
+    queue.retain(|id| scorer_ids.contains(id));
+    for id in scorer_ids {
+        if !queue.contains(id) { queue.push(*id) }
+    }
+    queue.first().copied()
 }
 
-async fn current_king(server: &Server) -> Option<Arc<Player>> {
-    let lkoth = &server.addons.events.legacy_koth;
-    let center = lkoth.center?;
-
-    let (scorers, _) = scan_players(server, center, lkoth.radius).await;
-    let points = lkoth.points.read().await;
-    find_king(scorers.iter().map(|(player, _)| player), &points).cloned()
-}
-
-fn add_points(points: &mut HashMap<CreatureId, i32>, id: CreatureId, amount: i32) -> (i32, Option<i32>, bool) {
+fn add_points(points: &mut HashMap<CreatureId, i32>, id: CreatureId, amount: i32) -> (Option<i32>, bool) {
     let old_points = points.get(&id).copied().unwrap_or(0);
     let mut new_points = old_points + amount;
 
@@ -179,7 +159,7 @@ fn add_points(points: &mut HashMap<CreatureId, i32>, id: CreatureId, amount: i32
     if reward { new_points -= REWARD_POINTS }
 
     points.insert(id, new_points);
-    (new_points, threshold, reward)
+    (threshold, reward)
 }
 
 async fn handle_points(player: &Player, threshold: Option<i32>, reward: bool) {
@@ -201,53 +181,13 @@ async fn handle_points(player: &Player, threshold: Option<i32>, reward: bool) {
 }
 
 async fn give_reward(player: &Player) {
-    let (level, occupation) = {
+    let item = {
         let character = player.character.read().await;
-        (character.level as i16, character.occupation)
+        reward_item(character.level as i16, character.occupation, &character.equipment)
     };
-    let pickup = Pickup { interactor: player.id, item: reward_item(&SERVER.addons.events.legacy_koth, level, occupation) };
+    let pickup = Pickup { interactor: player.id, item };
     play_sound_at_player(player, sound::Kind::Missioncomplete, 0.62, 1.0).await;
     player.send_ignoring(&WorldUpdate::from(pickup)).await;
-}
-
-#[derive(Debug, Clone, Copy)]
-enum Loot { Weapon, Armor, Amulet, Ring, Leftovers, Spirit, Lamp, Pet }
-
-#[derive(Debug, Deserialize)]
-#[serde(default, deny_unknown_fields)]
-struct LootWeights { weapon: u32, armor: u32, amulet: u32, ring: u32, leftovers: u32, spirit: u32, lamp: u32, pet: u32 }
-
-impl Default for LootWeights {
-    fn default() -> Self {
-        Self { weapon: 25, armor: 25, amulet: 7, ring: 7, leftovers: 4, spirit: 25, lamp: 2, pet: 5 }
-    }
-}
-
-impl LootWeights {
-    const fn table(&self) -> [(Loot, u32); 8] {
-        [(Loot::Weapon, self.weapon), (Loot::Armor, self.armor), (Loot::Amulet, self.amulet), (Loot::Ring, self.ring),
-         (Loot::Leftovers, self.leftovers), (Loot::Spirit, self.spirit), (Loot::Lamp, self.lamp), (Loot::Pet, self.pet)]
-    }
-}
-
-#[derive(Debug, Deserialize)]
-#[serde(default, deny_unknown_fields)]
-struct RarityWeights { normal: u32, uncommon: u32, rare: u32, epic: u32, legendary: u32 }
-
-impl Default for RarityWeights {
-    fn default() -> Self {
-        Self { normal: 0, uncommon: 0, rare: 0, epic: 1, legendary: 1 }
-    }
-}
-
-impl RarityWeights {
-    const fn table(&self) -> [(u8, u32); 5] {
-        [(NORMAL, self.normal), (UNCOMMON, self.uncommon), (RARE, self.rare), (EPIC, self.epic), (LEGENDARY, self.legendary)]
-    }
-}
-
-fn pick_weighted<T: Copy>(table: &[(T, u32)]) -> Option<T> {
-    table.choose_weighted(&mut rng(), |(_, weight)| *weight).ok().map(|(value, _)| *value)
 }
 
 type ClassWeapons = &'static [(kind::Weapon, &'static [Material])];
@@ -266,43 +206,63 @@ fn class_gear(occupation: Occupation) -> Option<(Material, ClassWeapons)> {
     }
 }
 
-fn reward_item(lkoth: &LegacyKoth, level: i16, occupation: Occupation) -> Item {
+fn reward_slots(equipment: &Equipment, has_class: bool) -> Vec<Slot> {
+    let mut slots = vec![Slot::Neck, Slot::LeftRing, Slot::RightRing, Slot::Lamp];
+    if has_class {
+        slots.extend(ARMOUR_SLOTS);
+        let held: Vec<Slot> = [Slot::LeftWeapon, Slot::RightWeapon].into_iter().filter(|&hand| equipment[hand].kind != Kind::Void).collect();
+        slots.extend(if held.is_empty() { vec![Slot::RightWeapon] } else { held });
+    }
+    slots
+}
+
+fn rank(item: &Item, player_level: i16) -> (Option<u8>, bool, i16) {
+    if item.kind == Kind::Void { return (None, false, 0) }
+    let max_level = !item.kind.uses_level() || item.level >= max_valid_item_level(item.kind, player_level);
+    (Some(item.rarity), max_level, item.level)
+}
+
+fn stronger(current: &Item, player_level: i16) -> Item {
     let mut item = Item::default();
+    (item.kind, item.material, item.seed) = (current.kind, current.material, current.seed);
+    item.rarity = LEGENDARY;
+    item.level = max_valid_item_level(item.kind, player_level);
+    item
+}
 
+fn reward_item(player_level: i16, occupation: Occupation, equipment: &Equipment) -> Item {
     let gear = class_gear(occupation);
-    let table = lkoth.loot.table().map(|(loot, weight)| match loot {
-        Loot::Weapon | Loot::Armor if gear.is_none() => (loot, 0),
-        _ => (loot, weight)
-    });
+    let slots = reward_slots(equipment, gear.is_some());
+    let worst = slots.iter().copied().min_by_key(|&slot| rank(&equipment[slot], player_level)).expect("rings are always checked");
 
-    (item.kind, item.material) = match (pick_weighted(&table), gear) {
-        (Some(Loot::Weapon), Some((_, weapons))) => {
+    let (slot, rarity) = match rank(&equipment[worst], player_level) {
+        (None, ..)                               => (worst, NORMAL),
+        (Some(rarity), ..) if rarity < LEGENDARY => (worst, rarity + 1),
+        (_, false, _)                            => return stronger(&equipment[worst], player_level),
+        _ => {
+            let rerollable: Vec<Slot> = slots.into_iter().filter(|&slot| equipment[slot].kind.uses_level()).collect();
+            (pick_from(&rerollable), LEGENDARY)
+        }
+    };
+
+    let mut item = Item::default();
+    (item.kind, item.material) = match (slot, gear) {
+        (Slot::LeftWeapon | Slot::RightWeapon, Some((_, weapons))) => {
             let (weapon, materials) = pick_from(weapons);
             (Kind::Weapon(weapon), pick_from(materials))
         }
-        (Some(Loot::Armor), Some((armor, _)))
-            => (pick_from(&[Kind::Chest, Kind::Gloves, Kind::Boots, Kind::Shoulder]), armor),
-        (loot, _) => {
-            let kind = match loot {
-                Some(Loot::Amulet)    => Kind::Amulet,
-                Some(Loot::Ring)      => Kind::Ring,
-                Some(Loot::Leftovers) => Kind::Leftovers,
-                Some(Loot::Lamp)      => Kind::Lamp,
-                Some(Loot::Pet)       => Kind::Pet(pick_from(&VANILLA_PETS)),
-                _                     => Kind::Resource(kind::Resource::Spirit)
-            };
+        (Slot::Chest, Some((armor, _)))    => (Kind::Chest, armor),
+        (Slot::Feet, Some((armor, _)))     => (Kind::Boots, armor),
+        (Slot::Hands, Some((armor, _)))    => (Kind::Gloves, armor),
+        (Slot::Shoulder, Some((armor, _))) => (Kind::Shoulder, armor),
+        (slot, _) => {
+            let kind = match slot { Slot::Neck => Kind::Amulet, Slot::Lamp => Kind::Lamp, _ => Kind::Ring };
             (kind, pick_from(by_item_kind(kind)))
         }
     };
 
-    item.rarity = match item.kind {
-        Kind::Weapon(_) | Kind::Chest | Kind::Gloves | Kind::Boots | Kind::Shoulder | Kind::Amulet | Kind::Ring | Kind::Leftovers
-            => pick_weighted(&lkoth.rarity.table()).expect("validated at startup"),
-        Kind::Resource(kind::Resource::Spirit) => RARE,
-        _   => if item.kind.uses_rarity() { LEGENDARY } else { NORMAL }
-    };
-
-    item.level = max_valid_item_level(item.kind, level);
+    item.rarity = rarity;
+    item.level = max_valid_item_level(item.kind, player_level);
     item.seed = if item.uses_seed() { random_range(0..=i32::MAX) } else { 0 };
 
     item
@@ -317,7 +277,7 @@ pub async fn on_kill(server: &Server, killer: &Player, victim: &Player) {
     let killer_level = killer_character.level;
     drop(killer_character);
 
-    let is_king_kill = current_king(server).await.is_some_and(|king| king.id == victim.id);
+    let is_king_kill = lkoth.queue.read().await.first() == Some(&victim.id);
     let (points, xp, message) = if is_king_kill {
         let points = lkoth.kill_king_points;
         let xp = lkoth.kill_king_xp;
@@ -328,7 +288,7 @@ pub async fn on_kill(server: &Server, killer: &Player, victim: &Player) {
         (points, xp, format!("you gain {points}(+{xp}xp) KotH points!"))
     };
 
-    let (_, threshold, reward) = add_points(&mut *lkoth.points.write().await, killer.id, points);
+    let (threshold, reward) = add_points(&mut *lkoth.points.write().await, killer.id, points);
     handle_points(killer, threshold, reward).await;
 
     if killer_level < 500 { give_xp(killer, xp).await }
